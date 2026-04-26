@@ -1,0 +1,16 @@
+{
+  "repos": [
+    {
+      "slug": "ai-backend-marketing-agent",
+      "url": "https://github.com/sixmo-team/ai-backend-marketing-agent.git",
+      "ref": "main",
+      "path": "ai-backend-marketing-agent",
+      "install_dependencies": true,
+      "package_manager": "auto",
+      "turbo_smoke": true,
+      "turbo_tasks": ["build", "test"],
+      "install_gsd_local": true,
+      "auto_start_docker": true
+    }
+  ]
+}

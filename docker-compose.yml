@@ -1,0 +1,232 @@
+name: ${COMPOSE_PROJECT_NAME:-opencode-lab}
+
+x-opencode-common: &opencode-common
+  build:
+    context: ./opencode
+  restart: unless-stopped
+  init: true
+  environment:
+    TZ: ${TZ:-UTC}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
+    GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    NPM_TOKEN: ${NPM_TOKEN:-}
+    PNPM_HOME: ${PNPM_HOME:-}
+    OPENCODE_AGENT: ${OPENCODE_AGENT:-build}
+    OPENCODE_SERVER_HOST: 0.0.0.0
+    OPENCODE_SERVER_PORT: 4096
+    OPENCODE_WORKSPACE_ROOT: /workspace
+    OPENCODE_CONFIG_ROOT: /workspace-config
+    OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+    OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
+    OPENCODE_AUTO_INSTALL_TOOLING: "1"
+    OPENCODE_PROVIDER_TIMEOUT_MS: ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}
+    OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS: ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+    OPENCODE_MCP_TIMEOUT_MS: ${OPENCODE_MCP_TIMEOUT_MS:-120000}
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./opencode/shared:/opt/opencode-shared
+  networks:
+    - control
+  stop_grace_period: 10m
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - data
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5678}:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+      N8N_HOST: ${N8N_HOST}
+      N8N_PROTOCOL: ${N8N_PROTOCOL}
+      N8N_PORT: 5678
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      N8N_PROXY_HOPS: ${N8N_PROXY_HOPS}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      TZ: ${GENERIC_TIMEZONE}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE}
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_CONCURRENCY_PRODUCTION_LIMIT: ${N8N_CONCURRENCY_PRODUCTION_LIMIT}
+      EXECUTIONS_TIMEOUT: ${N8N_EXECUTIONS_TIMEOUT:-604800}
+      EXECUTIONS_TIMEOUT_MAX: ${N8N_EXECUTIONS_TIMEOUT_MAX:-604800}
+      OPENCODE_DEFAULT_AGENT: ${OPENCODE_AGENT:-build}
+      OPENCODE_WORKER_1_ALIAS: ${OPENCODE_WORKER_1_ALIAS:-primary}
+      OPENCODE_WORKER_1_BASE_URL: ${OPENCODE_WORKER_1_BASE_URL:-http://opencode-worker-1:4096}
+      OPENCODE_WORKER_1_HEALTH_URL: ${OPENCODE_WORKER_1_HEALTH_URL:-http://opencode-worker-1:4096/global/health}
+      OPENCODE_WORKER_1_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
+      OPENCODE_GATEWAY_BASE_URL: http://opencode-gateway:9080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/local-files:/files
+    networks:
+      - edge
+      - control
+      - data
+    stop_grace_period: 10m
+
+  n8n-worker:
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: unless-stopped
+    command: worker --concurrency=${N8N_WORKER_CONCURRENCY:-2}
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      TZ: ${GENERIC_TIMEZONE}
+      N8N_CONCURRENCY_PRODUCTION_LIMIT: ${N8N_CONCURRENCY_PRODUCTION_LIMIT}
+      EXECUTIONS_TIMEOUT: ${N8N_EXECUTIONS_TIMEOUT:-604800}
+      EXECUTIONS_TIMEOUT_MAX: ${N8N_EXECUTIONS_TIMEOUT_MAX:-604800}
+      OPENCODE_DEFAULT_AGENT: ${OPENCODE_AGENT:-build}
+      OPENCODE_WORKER_1_ALIAS: ${OPENCODE_WORKER_1_ALIAS:-primary}
+      OPENCODE_WORKER_1_BASE_URL: ${OPENCODE_WORKER_1_BASE_URL:-http://opencode-worker-1:4096}
+      OPENCODE_WORKER_1_HEALTH_URL: ${OPENCODE_WORKER_1_HEALTH_URL:-http://opencode-worker-1:4096/global/health}
+      OPENCODE_WORKER_1_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
+      OPENCODE_GATEWAY_BASE_URL: http://opencode-gateway:9080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - control
+      - data
+    stop_grace_period: 10m
+
+  opencode-worker-1:
+    <<: *opencode-common
+    ports:
+      - "127.0.0.1:${OPENCODE_WORKER_1_PORT:-4096}:4096"
+    environment:
+      TZ: ${TZ:-UTC}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      NPM_TOKEN: ${NPM_TOKEN:-}
+      PNPM_HOME: ${PNPM_HOME:-}
+      OPENCODE_AGENT: ${OPENCODE_AGENT:-build}
+      OPENCODE_SERVER_HOST: 0.0.0.0
+      OPENCODE_SERVER_PORT: 4096
+      OPENCODE_SERVER_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
+      OPENCODE_INSTANCE_NAME: ${OPENCODE_WORKER_1_NAME:-worker-1}
+      OPENCODE_WORKSPACE_ROOT: /workspace
+      OPENCODE_CONFIG_ROOT: /workspace-config
+      OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+      OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
+      OPENCODE_AUTO_INSTALL_TOOLING: "1"
+      OPENCODE_PROVIDER_TIMEOUT_MS: ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}
+      OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS: ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+      OPENCODE_MCP_TIMEOUT_MS: ${OPENCODE_MCP_TIMEOUT_MS:-120000}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./opencode/shared:/opt/opencode-shared
+      - ./workers/worker-1:/workspace-config
+      - opencode_worker_1_config:/home/agent/.config/opencode
+      - opencode_worker_1_local:/home/agent/.local/share/opencode
+      - opencode_worker_1_workspace:/workspace
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -u opencode:${OPENCODE_WORKER_1_PASSWORD} http://127.0.0.1:4096/global/health >/dev/null"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  opencode-gateway:
+    profiles: ["gateway"]
+    build:
+      context: ./gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OPENCODE_GATEWAY_PORT:-9080}:9080"
+    environment:
+      PORT: 9080
+      OPENCODE_BASE_URL: http://opencode-worker-1:4096
+      OPENCODE_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
+      DEFAULT_AGENT: ${OPENCODE_AGENT:-build}
+      REQUEST_TIMEOUT_MS: 1800000
+      KEEP_ALIVE_TIMEOUT_MS: 1800000
+      HEADERS_TIMEOUT_MS: 1805000
+    depends_on:
+      - opencode-worker-1
+    networks:
+      - edge
+      - control
+    stop_grace_period: 10m
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
+  opencode_worker_1_config:
+  opencode_worker_1_local:
+  opencode_worker_1_workspace:
+
+networks:
+  edge:
+    driver: bridge
+  control:
+    driver: bridge
+    internal: true
+  data:
+    driver: bridge
+    internal: true

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -lt 3 ]; then
+  printf 'usage: %s <name> <host-port> <worker-config-dir>\n' "$0" >&2
+  exit 1
+fi
+
+NAME="$1"
+HOST_PORT="$2"
+CONFIG_DIR="$3"
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+OUT_DIR="${ROOT_DIR}/compose.overrides"
+OUT_FILE="${OUT_DIR}/opencode-${NAME}.yml"
+
+mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
+
+if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/repos.json" ]; then
+  cat > "${ROOT_DIR}/${CONFIG_DIR}/repos.json" <<'EOF'
+{
+  "repos": []
+}
+EOF
+fi
+
+cat > "${OUT_FILE}" <<EOF
+services:
+  opencode-${NAME}:
+    build:
+      context: ./opencode
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:${HOST_PORT}:4096"
+    environment:
+      TZ: \${TZ:-UTC}
+      OPENAI_API_KEY: \${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: \${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: \${OPENROUTER_API_KEY:-}
+      CONTEXT7_API_KEY: \${CONTEXT7_API_KEY:-}
+      GITHUB_TOKEN: \${GITHUB_TOKEN:-}
+      NPM_TOKEN: \${NPM_TOKEN:-}
+      PNPM_HOME: \${PNPM_HOME:-}
+      OPENCODE_AGENT: \${OPENCODE_AGENT:-build}
+      OPENCODE_SERVER_HOST: 0.0.0.0
+      OPENCODE_SERVER_PORT: 4096
+      OPENCODE_SERVER_PASSWORD: change-me-${NAME}
+      OPENCODE_INSTANCE_NAME: ${NAME}
+      OPENCODE_WORKSPACE_ROOT: /workspace
+      OPENCODE_CONFIG_ROOT: /workspace-config
+      OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+      OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
+      OPENCODE_AUTO_INSTALL_TOOLING: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./opencode/shared:/opt/opencode-shared
+      - ./${CONFIG_DIR}:/workspace-config
+      - opencode_${NAME}_config:/home/agent/.config/opencode
+      - opencode_${NAME}_local:/home/agent/.local/share/opencode
+      - opencode_${NAME}_workspace:/workspace
+    networks:
+      - control
+
+volumes:
+  opencode_${NAME}_config:
+  opencode_${NAME}_local:
+  opencode_${NAME}_workspace:
+EOF
+
+printf 'wrote %s\n' "${OUT_FILE}"

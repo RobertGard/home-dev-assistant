@@ -1,0 +1,484 @@
+{
+  "id": "900011",
+  "name": "Telegram Task Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "seconds", "secondsInterval": 10 }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 320]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "queued"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true,
+        "orderByColumn": "queued_at",
+        "orderByDirection": "ASC"
+      },
+      "id": "get-queued-rows",
+      "name": "Get Queued Rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [500, 240]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "running"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_input"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "get-blocking-rows",
+      "name": "Get Blocking Rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "id": "merge-rows",
+      "name": "Merge Rows",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [780, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs')\nconst routing = JSON.parse(fs.readFileSync('/files/opencode-routing.json', 'utf8'))\nconst queued = $('Get Queued Rows').all().map((item) => item.json)\nconst blocking = $('Get Blocking Rows').all().map((item) => item.json)\nconst blockedWorkers = new Set(blocking.map((row) => row.worker_alias))\nconst task = queued.find((row) => !blockedWorkers.has(row.worker_alias))\nif (!task) return []\nconst workerAlias = task.worker_alias || routing.defaultWorker || Object.keys(routing.workers)[0]\nconst worker = routing.workers[workerAlias]\nif (!worker) throw new Error(`Неизвестный worker alias: ${workerAlias}`)\nconst password = process.env[worker.passwordEnv || '']\nif (!password) throw new Error(`Не найден пароль для worker alias: ${workerAlias}`)\nconst authHeader = 'Basic ' + Buffer.from(`${worker.username}:${password}`, 'utf8').toString('base64')\nconst context = JSON.parse(task.context_json || '[]')\nreturn [{ task, workerAlias, worker, authHeader, context, opencodeAgent: routing.defaultAgent || 'build', endpoints: { health: `${worker.baseUrl}${routing.endpoints.health}`, openapi: `${worker.baseUrl}${routing.endpoints.openapi}`, sessionCreate: `${worker.baseUrl}${routing.endpoints.sessionCreate}`, sessionMessage: `${worker.baseUrl}${routing.endpoints.sessionMessage}`, sessionCommand: `${worker.baseUrl}${routing.endpoints.sessionCommand}` } }]"
+      },
+      "id": "pick-task",
+      "name": "Pick Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{$json.task.task_key}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-task-found",
+      "name": "Task Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1300, 320]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{$json.task.task_key}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "running"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "mark-running",
+      "name": "Mark Running",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1560, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.endpoints.sessionCreate}}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { title: 'telegram-task-' + ($json.task.task_key || 'unknown') } }}",
+        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
+      },
+      "id": "create-session",
+      "name": "Create Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1820, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "const route = $('Pick Task').first().json\nconst sessionResponse = $json\nconst sessionId = sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId\nif (!sessionId) throw new Error('Не удалось получить sessionId')\nconst structuredInstruction = 'Если задача завершена, верни JSON со status done и summary. Если нужен ответ пользователя, верни JSON со status needs_input, полем question и массивом options.'\nconst promptText = [ structuredInstruction, ...(route.context || []).map((item) => String(item)), String(route.task.prompt || '') ].filter(Boolean).join('\\n\\n')\nreturn [{ ...route, sessionId, promptText, messageUrl: route.endpoints.sessionMessage.replace(':id', sessionId), commandUrl: route.endpoints.sessionCommand.replace(':id', sessionId) }]"
+      },
+      "id": "prepare-dispatch",
+      "name": "Prepare Dispatch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2080, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{$json.task.command_name}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-command",
+      "name": "Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2340, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.commandUrl}}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { command: $json.task.command_name, arguments: {} } }}",
+        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
+      },
+      "id": "run-command",
+      "name": "Run Command",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2600, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.messageUrl}}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { agent: $json.opencodeAgent, parts: [{ type: 'text', content: $json.promptText }] } }}",
+        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
+      },
+      "id": "send-prompt",
+      "name": "Send Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2600, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "const route = $('Prepare Dispatch').first().json\nconst task = route.task\nconst response = $json\nconst textParts = Array.isArray(response.parts) ? response.parts.filter((p) => p.type === 'text').map((p) => p.content || p.text || '') : []\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst cleaned = rawText.replace(/^```json\\s*/, '').replace(/```$/, '').trim()\nlet parsed = null\ntry { parsed = JSON.parse(cleaned) } catch {}\nlet status = 'done'\nlet question = ''\nlet options = []\nlet replyText = cleaned\nif (parsed && typeof parsed === 'object') { status = parsed.status || 'done'; question = parsed.question || ''; options = Array.isArray(parsed.options) ? parsed.options : []; replyText = parsed.summary || question || cleaned } else if (cleaned.includes('?')) { status = 'needs_input'; question = cleaned; replyText = cleaned }\nif (!['done','needs_input','failed'].includes(status)) status = 'done'\nconst optionsText = options.length ? '\\n\\nВарианты:\\n' + options.map((o, i) => `${i + 1}. ${o.label || o.value || o}`).join('\\n') : ''\nreturn [{ task, response, sessionId: route.sessionId, status, question, optionsJson: JSON.stringify(options), replyText, askMessage: `${question || replyText}${optionsText}`.trim(), continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }]"
+      },
+      "id": "classify-result",
+      "name": "Classify Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{$json.status}}",
+              "rightValue": "needs_input",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-needs-input",
+      "name": "Needs Input?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3120, 320]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{$json.task.task_key}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "needs_input",
+            "session_id": "={{$json.sessionId}}",
+            "pending_question": "={{$json.question || $json.replyText}}",
+            "pending_options_json": "={{$json.optionsJson}}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "mark-needs-input",
+      "name": "Mark Needs Input",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [3380, 220]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{$('Pick Task').first().json.task.chat_id}}",
+        "message": "={{$json.askMessage}}",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "telegram-ask-clarification",
+      "name": "Telegram Ask Clarification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3640, 220],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const classify = $('Classify Result').first().json\nconst answerData = $json\nconst answer = String(answerData.text || answerData.message || answerData.data?.text || JSON.stringify(answerData)).trim()\nconst continuationText = `Ответ пользователя: ${answer}`\nreturn [{ ...classify, continuationText }]"
+      },
+      "id": "prepare-continuation",
+      "name": "Prepare Continuation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3900, 220]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{$json.task.task_key}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "running",
+            "pending_question": "",
+            "pending_options_json": "[]"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "resume-running",
+      "name": "Resume Running",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [4160, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.continueUrl}}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { agent: $json.opencodeAgent, parts: [{ type: 'text', content: $json.continuationText }] } }}",
+        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
+      },
+      "id": "send-continuation",
+      "name": "Send Continuation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4420, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const task = $('Pick Task').first().json.task\nconst result = $('Classify Result').first().json\nreturn [{ task, result, replyText: result.replyText || `Задача ${task.task_key} выполнена.` }]"
+      },
+      "id": "prepare-success",
+      "name": "Prepare Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3380, 420]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{$json.task.task_key}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "done",
+            "session_id": "={{$json.result.sessionId || ''}}",
+            "pending_question": "",
+            "pending_options_json": "[]",
+            "result_text": "={{$json.replyText}}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "mark-done",
+      "name": "Mark Done",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [3640, 420]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$('Pick Task').first().json.task.chat_id}}",
+        "text": "={{$('Prepare Success').first().json.replyText}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "telegram-send-result",
+      "name": "Telegram Send Result",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3900, 420],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Get Queued Rows", "type": "main", "index": 0 }, { "node": "Get Blocking Rows", "type": "main", "index": 0 }]] },
+    "Get Queued Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 0 }]] },
+    "Get Blocking Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 1 }]] },
+    "Merge Rows": { "main": [[{ "node": "Pick Task", "type": "main", "index": 0 }]] },
+    "Pick Task": { "main": [[{ "node": "Task Found?", "type": "main", "index": 0 }]] },
+    "Task Found?": { "main": [[{ "node": "Mark Running", "type": "main", "index": 0 }], []] },
+    "Mark Running": { "main": [[{ "node": "Create Session", "type": "main", "index": 0 }]] },
+    "Create Session": { "main": [[{ "node": "Prepare Dispatch", "type": "main", "index": 0 }]] },
+    "Prepare Dispatch": { "main": [[{ "node": "Command?", "type": "main", "index": 0 }]] },
+    "Command?": { "main": [[{ "node": "Run Command", "type": "main", "index": 0 }], [{ "node": "Send Prompt", "type": "main", "index": 0 }]] },
+    "Run Command": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
+    "Send Prompt": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
+    "Classify Result": { "main": [[{ "node": "Needs Input?", "type": "main", "index": 0 }]] },
+    "Needs Input?": { "main": [[{ "node": "Mark Needs Input", "type": "main", "index": 0 }], [{ "node": "Prepare Success", "type": "main", "index": 0 }]] },
+    "Mark Needs Input": { "main": [[{ "node": "Telegram Ask Clarification", "type": "main", "index": 0 }]] },
+    "Telegram Ask Clarification": { "main": [[{ "node": "Prepare Continuation", "type": "main", "index": 0 }]] },
+    "Prepare Continuation": { "main": [[{ "node": "Resume Running", "type": "main", "index": 0 }]] },
+    "Resume Running": { "main": [[{ "node": "Send Continuation", "type": "main", "index": 0 }]] },
+    "Send Continuation": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
+    "Prepare Success": { "main": [[{ "node": "Mark Done", "type": "main", "index": 0 }]] },
+    "Mark Done": { "main": [[{ "node": "Telegram Send Result", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
