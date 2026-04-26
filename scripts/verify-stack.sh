@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
+ENV_LIB_FILE="${ROOT_DIR}/scripts/lib/load-env.sh"
 
 log_info() {
   printf '[INFO] %s\n' "$1"
@@ -32,9 +33,15 @@ if [ ! -f "$ENV_FILE" ]; then
   die ".env не найден: ${ENV_FILE}"
 fi
 
-set -a
-. "$ENV_FILE"
-set +a
+if [ ! -f "$ENV_LIB_FILE" ]; then
+  die "Не найден helper загрузки env: ${ENV_LIB_FILE}"
+fi
+
+. "$ENV_LIB_FILE"
+
+if ! load_env_file "$ENV_FILE"; then
+  die 'Не удалось безопасно загрузить .env'
+fi
 
 if [ -f "${ROOT_DIR}/n8n/local-files/opencode-routing.json" ]; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
@@ -49,11 +56,13 @@ step_start() {
   printf '\n[INFO] [%s/%s] %s\n' "$STEP_COUNTER" "$TOTAL_STEPS" "$1"
 }
 
-BASE_COMPOSE=(docker compose -f docker-compose.yml)
+BASE_COMPOSE=(docker compose -f "${ROOT_DIR}/docker-compose.yml")
 if [ -d "${ROOT_DIR}/compose.overrides" ]; then
-  while IFS= read -r file; do
+  shopt -s nullglob
+  for file in "${ROOT_DIR}/compose.overrides"/*.yml; do
     BASE_COMPOSE+=(-f "$file")
-  done < <(ls "${ROOT_DIR}/compose.overrides"/*.yml 2>/dev/null || true)
+  done
+  shopt -u nullglob
 fi
 
 check_url() {

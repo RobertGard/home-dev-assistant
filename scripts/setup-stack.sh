@@ -51,6 +51,12 @@ load_env_file() {
   local bs_placeholder=$'\001'
   local dq_placeholder=$'\002'
   local dl_placeholder=$'\003'
+  local bt_placeholder=$'\004'
+  local esc_bs='\\'
+  local esc_dq='\"'
+  local esc_dl='\$'
+  local esc_bt='\`'
+  local bt_char=$'\140'
 
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
@@ -72,11 +78,13 @@ load_env_file() {
       value="${value:1:${#value}-2}"
     elif [[ "$value" =~ ^\".*\"$ ]]; then
       value="${value:1:${#value}-2}"
-      value="${value//\\\"/$dq_placeholder}"
-      value="${value//\\\$/$dl_placeholder}"
-      value="${value//\\\\/$bs_placeholder}"
+      value="${value//$esc_dq/$dq_placeholder}"
+      value="${value//$esc_dl/$dl_placeholder}"
+      value="${value//$esc_bt/$bt_placeholder}"
+      value="${value//$esc_bs/$bs_placeholder}"
       value="${value//$dq_placeholder/\"}"
       value="${value//$dl_placeholder/$}"
+      value="${value//$bt_placeholder/$bt_char}"
       value="${value//$bs_placeholder/\\}"
     fi
 
@@ -96,6 +104,7 @@ env_quote() {
   value="${value//\\/\\\\}"
   value="${value//\"/\\\"}"
   value="${value//\$/\\$}"
+  value="${value//\`/\\\`}"
   printf '"%s"' "$value"
 }
 
@@ -196,10 +205,9 @@ reset_worker_state() {
 }
 
 ensure_unique_worker_value() {
-  local field_label="$1"
-  local candidate="$2"
+  local candidate="$1"
   local existing
-  shift 2
+  shift
 
   for existing in "$@"; do
     if [ "$candidate" = "$existing" ]; then
@@ -213,7 +221,7 @@ ensure_unique_worker_name() {
   local worker_index="$1"
   local value="$2"
 
-  while ! ensure_unique_worker_value "worker name" "$value" "${WORKER_NAMES[@]}"; do
+  while ! ensure_unique_worker_value "$value" "${WORKER_NAMES[@]}"; do
     printf 'Имя worker должно быть уникальным.\n' >&2
     value="$(ask_worker_name "Имя worker ${worker_index}" "$value")"
   done
@@ -224,7 +232,7 @@ ensure_unique_worker_alias() {
   local worker_index="$1"
   local value="$2"
 
-  while ! ensure_unique_worker_value "worker alias" "$value" "${WORKER_ALIASES[@]}"; do
+  while ! ensure_unique_worker_value "$value" "${WORKER_ALIASES[@]}"; do
     printf 'Alias worker должен быть уникальным.\n' >&2
     value="$(ask_worker_alias "Короткий alias worker ${worker_index} для n8n" "$value")"
   done
@@ -235,7 +243,7 @@ ensure_unique_worker_port() {
   local worker_index="$1"
   local value="$2"
 
-  while ! ensure_unique_worker_value "worker port" "$value" "${WORKER_PORTS[@]}"; do
+  while ! ensure_unique_worker_value "$value" "${WORKER_PORTS[@]}"; do
     printf 'Порт worker должен быть уникальным.\n' >&2
     value="$(ask_port "Порт worker ${worker_index} на хосте" "$value")"
   done

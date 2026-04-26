@@ -136,6 +136,11 @@
               "keyName": "task_key",
               "condition": "eq",
               "keyValue": "={{$json.task.task_key}}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "queued"
             }
           ]
         },

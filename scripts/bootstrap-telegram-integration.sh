@@ -3,12 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
+ENV_LIB_FILE="${ROOT_DIR}/scripts/lib/load-env.sh"
 INGRESS_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-ingress.template.json"
 DISPATCH_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-dispatcher.template.json"
 INGRESS_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-ingress.json"
 DISPATCH_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-dispatcher.json"
 TASKS_TABLE_NAME="agent_tasks"
 STATE_FILE="${ROOT_DIR}/.n8n-bootstrap-state.json"
+INGRESS_WORKFLOW_NAME="Telegram Task Ingress"
+DISPATCH_WORKFLOW_NAME="Telegram Task Dispatcher"
 
 log_info() {
   printf '[INFO] %s\n' "$1"
@@ -43,9 +46,15 @@ if [ ! -f "$ENV_FILE" ]; then
   die ".env не найден: ${ENV_FILE}"
 fi
 
-set -a
-. "$ENV_FILE"
-set +a
+if [ ! -f "$ENV_LIB_FILE" ]; then
+  die "Не найден helper загрузки env: ${ENV_LIB_FILE}"
+fi
+
+. "$ENV_LIB_FILE"
+
+if ! load_env_file "$ENV_FILE"; then
+  die 'Не удалось безопасно загрузить .env'
+fi
 
 if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
   log_warn 'TELEGRAM_BOT_TOKEN не задан, Telegram интеграция пропущена.'
@@ -69,11 +78,13 @@ fi
 N8N_URL="http://127.0.0.1:${N8N_PORT:-5678}"
 TELEGRAM_CREDENTIAL_NAME="Telegram Bot"
 
-BASE_COMPOSE=(docker compose -f docker-compose.yml)
+BASE_COMPOSE=(docker compose -f "${ROOT_DIR}/docker-compose.yml")
 if [ -d "${ROOT_DIR}/compose.overrides" ]; then
-  while IFS= read -r file; do
+  shopt -s nullglob
+  for file in "${ROOT_DIR}/compose.overrides"/*.yml; do
     BASE_COMPOSE+=(-f "$file")
-  done < <(ls "${ROOT_DIR}/compose.overrides"/*.yml 2>/dev/null || true)
+  done
+  shopt -u nullglob
 fi
 
 wait_for_n8n() {
@@ -102,6 +113,13 @@ render_template() {
     -e "s/__TELEGRAM_CREDENTIAL_NAME__/${cred_name}/g" \
     -e "s/__TASKS_TABLE_ID__/${table_id}/g" \
     "$input" > "$output"
+}
+
+workflow_id_by_name() {
+  local workflow_name="$1"
+  curl -fsS \
+    -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+    "${N8N_URL}/api/v1/workflows" | jq -r --arg name "$workflow_name" '.data // . // [] | map(select(.name == $name)) | first | .id // empty'
 }
 
 step_start 'Ожидаю готовность n8n'
@@ -178,11 +196,21 @@ fi
 if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n import:workflow --input=/files/workflows/telegram-task-dispatcher.json >/dev/null; then
   die 'Не удалось импортировать workflow telegram-task-dispatcher.json.'
 fi
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id=900010 --active=true >/dev/null; then
-  die 'Не удалось активировать workflow 900010.'
+
+ingress_workflow_id="$(workflow_id_by_name "$INGRESS_WORKFLOW_NAME")"
+dispatch_workflow_id="$(workflow_id_by_name "$DISPATCH_WORKFLOW_NAME")"
+
+if [ -z "$ingress_workflow_id" ]; then
+  die "Не удалось найти workflow по имени: ${INGRESS_WORKFLOW_NAME}"
 fi
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id=900011 --active=true >/dev/null; then
-  die 'Не удалось активировать workflow 900011.'
+if [ -z "$dispatch_workflow_id" ]; then
+  die "Не удалось найти workflow по имени: ${DISPATCH_WORKFLOW_NAME}"
+fi
+if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id="$ingress_workflow_id" --active=true >/dev/null; then
+  die "Не удалось активировать workflow ${INGRESS_WORKFLOW_NAME}."
+fi
+if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id="$dispatch_workflow_id" --active=true >/dev/null; then
+  die "Не удалось активировать workflow ${DISPATCH_WORKFLOW_NAME}."
 fi
 
 log_ok 'Workflow импортированы и активированы.'

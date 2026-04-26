@@ -3,20 +3,31 @@ set -euo pipefail
 
 WORKSPACE_ROOT="${OPENCODE_WORKSPACE_ROOT:-/workspace}"
 CATALOG_FILE="${OPENCODE_REPO_CATALOG_FILE:-}"
+ALLOW_POST_BOOTSTRAP="${OPENCODE_ALLOW_POST_BOOTSTRAP:-0}"
+WORKSPACE_ROOT_REAL="$(realpath -m -- "${WORKSPACE_ROOT}")"
 
 if [ -z "${CATALOG_FILE}" ] || [ ! -f "${CATALOG_FILE}" ]; then
   printf 'info: repo catalog not found at %s; skipping repo bootstrap\n' "${CATALOG_FILE:-<unset>}"
   exit 0
 fi
 
-auth_repo_url() {
+github_auth_header() {
   local repo_url="$1"
   if [ -n "${GITHUB_TOKEN:-}" ] && [[ "${repo_url}" == https://github.com/* ]]; then
-    printf 'https://x-access-token:%s@%s' "${GITHUB_TOKEN}" "${repo_url#https://}"
+    printf 'Authorization: Bearer %s' "${GITHUB_TOKEN}"
     return
   fi
 
-  printf '%s' "${repo_url}"
+  return 1
+}
+
+git_network_args() {
+  local repo_url="$1"
+  GIT_NETWORK_ARGS=()
+
+  if auth_header="$(github_auth_header "${repo_url}")"; then
+    GIT_NETWORK_ARGS=(-c "http.https://github.com/.extraHeader=${auth_header}")
+  fi
 }
 
 repo_items() {
@@ -26,6 +37,11 @@ repo_items() {
 compose_file_for_repo() {
   local repo_dir="$1"
   local declared_file="$2"
+
+  if [ -n "${declared_file}" ] && [ -f "${declared_file}" ]; then
+    printf '%s\n' "${declared_file}"
+    return
+  fi
 
   if [ -n "${declared_file}" ] && [ -f "${repo_dir}/${declared_file}" ]; then
     printf '%s\n' "${repo_dir}/${declared_file}"
@@ -41,6 +57,66 @@ compose_file_for_repo() {
     printf '%s\n' "${repo_dir}/docker-compose.yml"
     return
   fi
+}
+
+resolve_workspace_path() {
+  local input_path="$1"
+  local label="$2"
+  local resolved
+
+  if [ -z "${input_path}" ]; then
+    printf 'error: empty %s is not allowed\n' "${label}" >&2
+    exit 1
+  fi
+
+  if [[ "${input_path}" = /* ]]; then
+    printf 'error: absolute %s is not allowed: %s\n' "${label}" "${input_path}" >&2
+    exit 1
+  fi
+
+  resolved="$(realpath -m -- "${WORKSPACE_ROOT_REAL}/${input_path}")"
+  case "${resolved}" in
+    "${WORKSPACE_ROOT_REAL}"|"${WORKSPACE_ROOT_REAL}"/*) printf '%s' "${resolved}" ;;
+    *)
+      printf 'error: %s escapes workspace root: %s\n' "${label}" "${input_path}" >&2
+      exit 1
+      ;;
+  esac
+}
+
+resolve_repo_relative_path() {
+  local repo_dir="$1"
+  local input_path="$2"
+  local label="$3"
+  local repo_dir_real
+  local resolved
+
+  repo_dir_real="$(realpath -m -- "${repo_dir}")"
+
+  if [ -z "${input_path}" ]; then
+    return 0
+  fi
+
+  if [[ "${input_path}" = /* ]]; then
+    printf 'error: absolute %s is not allowed: %s\n' "${label}" "${input_path}" >&2
+    exit 1
+  fi
+
+  resolved="$(realpath -m -- "${repo_dir_real}/${input_path}")"
+  case "${resolved}" in
+    "${repo_dir_real}"|"${repo_dir_real}"/*) printf '%s' "${resolved}" ;;
+    *)
+      printf 'error: %s escapes repo root: %s\n' "${label}" "${input_path}" >&2
+      exit 1
+      ;;
+  esac
+}
+
+post_bootstrap_allowed() {
+  case "${ALLOW_POST_BOOTSTRAP}" in
+    1|true|TRUE|yes|YES) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 install_repo_dependencies() {
@@ -104,18 +180,20 @@ while IFS= read -r repo; do
   post_bootstrap="$(printf '%s' "${repo}" | jq -r '.post_bootstrap // empty')"
   auto_start_docker="$(printf '%s' "${repo}" | jq -r '.auto_start_docker // false')"
   docker_file="$(printf '%s' "${repo}" | jq -r '.docker_file // empty')"
-  repo_dir="${WORKSPACE_ROOT}/${repo_path}"
+  repo_dir="$(resolve_workspace_path "${repo_path}" 'repo path')"
 
   mkdir -p "$(dirname "${repo_dir}")"
 
+  git_network_args "${repo_url}"
+
   if [ ! -d "${repo_dir}/.git" ]; then
-    git clone "$(auth_repo_url "${repo_url}")" "${repo_dir}"
+    git "${GIT_NETWORK_ARGS[@]}" clone "${repo_url}" "${repo_dir}"
   fi
 
-  git -C "${repo_dir}" remote set-url origin "$(auth_repo_url "${repo_url}")"
-  git -C "${repo_dir}" fetch --all --prune || true
+  git -C "${repo_dir}" remote set-url origin "${repo_url}"
+  git "${GIT_NETWORK_ARGS[@]}" -C "${repo_dir}" fetch --all --prune || true
   git -C "${repo_dir}" checkout "${repo_ref}" || true
-  git -C "${repo_dir}" pull --ff-only origin "${repo_ref}" || true
+  git "${GIT_NETWORK_ARGS[@]}" -C "${repo_dir}" pull --ff-only origin "${repo_ref}" || true
 
   if [ "${install_deps}" = "true" ]; then
     install_repo_dependencies "${repo_dir}" "${package_manager}"
@@ -130,10 +208,17 @@ while IFS= read -r repo; do
   fi
 
   if [ -n "${post_bootstrap}" ]; then
-    (cd "${repo_dir}" && bash -lc "${post_bootstrap}") || true
+    if post_bootstrap_allowed; then
+      (cd "${repo_dir}" && bash -lc "${post_bootstrap}") || true
+    else
+      printf 'warn: skipping post_bootstrap for %s; set OPENCODE_ALLOW_POST_BOOTSTRAP=1 to allow config-defined commands\n' "${slug}"
+    fi
   fi
 
   if [ "${auto_start_docker}" = "true" ]; then
+    if [ -n "${docker_file}" ]; then
+      docker_file="$(resolve_repo_relative_path "${repo_dir}" "${docker_file}" 'docker_file')"
+    fi
     compose_file="$(compose_file_for_repo "${repo_dir}" "${docker_file}")"
     if [ -n "${compose_file}" ]; then
       docker compose -f "${compose_file}" up -d || true
