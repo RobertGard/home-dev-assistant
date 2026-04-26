@@ -84,11 +84,11 @@ else
   check_url "opencode-worker-1" "http://127.0.0.1:${OPENCODE_WORKER_1_PORT:-4096}/global/health" "opencode" "${OPENCODE_WORKER_1_PASSWORD}"
 fi
 
-printf '\nПроверяю starter workflow в n8n...\n'
-bash "${ROOT_DIR}/scripts/bootstrap-n8n-workflow.sh"
-
 if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
   printf '\nПроверяю Telegram интеграцию...\n'
+  if [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+    printf 'warn: TELEGRAM_CHAT_ID не задан, Telegram поток считается некорректно настроенным\n' >&2
+  fi
   if ! bash "${ROOT_DIR}/scripts/bootstrap-telegram-integration.sh"; then
     printf 'warn: Telegram bootstrap не завершился успешно\n' >&2
   fi

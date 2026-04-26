@@ -12,6 +12,12 @@ CONFIG_DIR="$3"
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT_DIR="${ROOT_DIR}/compose.overrides"
 OUT_FILE="${OUT_DIR}/opencode-${NAME}.yml"
+WORKER_INDEX="$(printf '%s' "$NAME" | sed -n 's/^worker-\([0-9][0-9]*\)$/\1/p')"
+
+if [ -z "$WORKER_INDEX" ]; then
+  printf 'name must match worker-N, for example worker-2\n' >&2
+  exit 1
+fi
 
 mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
 
@@ -25,7 +31,7 @@ fi
 
 cat > "${OUT_FILE}" <<EOF
 services:
-  opencode-${NAME}:
+  opencode-worker-${WORKER_INDEX}:
     build:
       context: ./opencode
     restart: unless-stopped
@@ -55,16 +61,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./opencode/shared:/opt/opencode-shared
       - ./${CONFIG_DIR}:/workspace-config
-      - opencode_${NAME}_config:/home/agent/.config/opencode
-      - opencode_${NAME}_local:/home/agent/.local/share/opencode
-      - opencode_${NAME}_workspace:/workspace
+      - opencode_worker_${WORKER_INDEX}_config:/home/agent/.config/opencode
+      - opencode_worker_${WORKER_INDEX}_local:/home/agent/.local/share/opencode
+      - opencode_worker_${WORKER_INDEX}_workspace:/workspace
     networks:
       - control
 
 volumes:
-  opencode_${NAME}_config:
-  opencode_${NAME}_local:
-  opencode_${NAME}_workspace:
+  opencode_worker_${WORKER_INDEX}_config:
+  opencode_worker_${WORKER_INDEX}_local:
+  opencode_worker_${WORKER_INDEX}_workspace:
 EOF
 
 printf 'wrote %s\n' "${OUT_FILE}"

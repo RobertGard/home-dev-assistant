@@ -24,6 +24,13 @@ if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
   exit 0
 fi
 
+if [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+  printf 'TELEGRAM_CHAT_ID не задан. Telegram интеграция должна быть привязана к одному чату.\n' >&2
+  printf 'Добавь TELEGRAM_CHAT_ID в .env и запусти:\n' >&2
+  printf 'bash ./scripts/bootstrap-telegram-integration.sh\n' >&2
+  exit 1
+fi
+
 if [ -z "${N8N_API_KEY:-}" ]; then
   printf 'N8N_API_KEY не задан. По официальной документации REST API n8n требует API key.\n' >&2
   printf 'Создай ключ в Settings -> n8n API и добавь его в .env, затем запусти:\n' >&2
@@ -81,7 +88,7 @@ if [ -z "$tasks_table_id" ]; then
     -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    -d '{"name":"agent_tasks","columns":[{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"user_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"mode","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
+    -d '{"name":"agent_tasks","columns":[{"name":"task_key","type":"string"},{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"user_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"mode","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"queued_at","type":"date"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
     "${N8N_URL}/api/v1/data-tables" | jq -r '.id // .data.id')"
 fi
 

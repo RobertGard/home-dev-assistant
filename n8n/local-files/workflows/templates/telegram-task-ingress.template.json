@@ -23,13 +23,42 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json\nconst msg = input.message || {}\nconst text = String(msg.text || '').trim()\nconst chatId = String(msg.chat?.id || '')\nconst userId = String(msg.from?.id || '')\nconst username = String(msg.from?.username || msg.from?.first_name || '')\nconst allowed = String(process.env.TELEGRAM_ALLOWED_CHAT_IDS || '').split(',').map(v => v.trim()).filter(Boolean)\n\nif (allowed.length > 0 && !allowed.includes(chatId)) return [{ skip: true, chatId, replyText: 'Доступ запрещен для этого чата.' }]\nif (!text) return [{ skip: true, chatId, replyText: 'Пустое сообщение не поставлено в очередь.' }]\n\nfunction parseFlags(inputText) {\n  const flags = {}\n  const regex = /--([a-zA-Z0-9_-]+)=\"([^\"]*)\"|--([a-zA-Z0-9_-]+)='([^']*)'/g\n  let match\n  while ((match = regex.exec(inputText)) !== null) {\n    const key = match[1] || match[3]\n    const value = match[2] ?? match[4] ?? ''\n    flags[key] = value\n  }\n  return flags\n}\n\nlet workerAlias = 'primary'\nlet mode = 'prompt'\nlet commandName = ''\nlet prompt = ''\n\nif (text.startsWith('/task')) {\n  const rest = text.replace(/^\/task\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  prompt = flags.prompt || ''\n  if (!prompt) {\n    return [{ skip: true, chatId, replyText: 'Для /task укажи задачу. Пример: /task --worker=\"primary\" --prompt=\"Почини CI\"' }]\n  }\n} else if (text.startsWith('/command')) {\n  mode = 'command'\n  const rest = text.replace(/^\/command\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  commandName = flags.name || flags.command || 'verify'\n} else if (text.startsWith('/help')) {\n  return [{ skip: true, chatId, replyText: 'Команды:\n/task --worker=\"primary\" --prompt=\"текст задачи\"\n/command --worker=\"primary\" --name=\"verify\"\nИспользуй значения в кавычках.' }]\n} else {\n  prompt = text\n}\n\nconst taskKey = `${Date.now()}-${chatId}-${Math.random().toString(36).slice(2, 8)}`\nreturn [{ skip: false, taskKey, chatId, userId, username, workerAlias, mode, commandName, prompt, contextJson: JSON.stringify([]), queuedAt: new Date().toISOString(), replyText: `Задача поставлена в очередь для worker: ${workerAlias}` }]"
+        "jsCode": "const input = $json\nconst msg = input.message || {}\nconst text = String(msg.text || '').trim()\nconst chatId = String(msg.chat?.id || '')\nconst userId = String(msg.from?.id || '')\nconst username = String(msg.from?.username || msg.from?.first_name || '')\nconst allowedChatId = String(process.env.TELEGRAM_CHAT_ID || '').trim()\nconst chatAllowed = !allowedChatId || chatId === allowedChatId\n\nif (!text) return [{ chatAllowed, skip: true, chatId, replyText: 'Пустое сообщение не поставлено в очередь.' }]\n\nfunction parseFlags(inputText) {\n  const flags = {}\n  const regex = /--([a-zA-Z0-9_-]+)=\"([^\"]*)\"|--([a-zA-Z0-9_-]+)='([^']*)'/g\n  let match\n  while ((match = regex.exec(inputText)) !== null) {\n    const key = match[1] || match[3]\n    const value = match[2] ?? match[4] ?? ''\n    flags[key] = value\n  }\n  return flags\n}\n\nlet workerAlias = 'primary'\nlet mode = 'prompt'\nlet commandName = ''\nlet prompt = ''\n\nif (text.startsWith('/task')) {\n  const rest = text.replace(/^\/task\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  prompt = flags.prompt || ''\n  if (!prompt) {\n    return [{ chatAllowed, skip: true, chatId, replyText: 'Для /task укажи задачу. Пример: /task --worker=\"primary\" --prompt=\"Почини CI\"' }]\n  }\n} else if (text.startsWith('/command')) {\n  mode = 'command'\n  const rest = text.replace(/^\/command\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  commandName = flags.name || flags.command || 'verify'\n} else if (text.startsWith('/help')) {\n  return [{ chatAllowed, skip: true, chatId, replyText: 'Команды:\n/task --worker=\"primary\" --prompt=\"текст задачи\"\n/command --worker=\"primary\" --name=\"verify\"\nИспользуй значения в кавычках.' }]\n} else {\n  prompt = text\n}\n\nconst taskKey = `${Date.now()}-${chatId}-${Math.random().toString(36).slice(2, 8)}`\nreturn [{ chatAllowed, skip: false, taskKey, chatId, userId, username, workerAlias, mode, commandName, prompt, contextJson: JSON.stringify([]), queuedAt: new Date().toISOString(), replyText: `Задача поставлена в очередь для worker: ${workerAlias}` }]"
       },
       "id": "parse-command",
       "name": "Parse Telegram Command",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.chatAllowed}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-chat-allowed",
+      "name": "Chat Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [760, 180]
     },
     {
       "parameters": {
@@ -58,7 +87,7 @@
       "name": "Skip?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [760, 300]
+      "position": [1020, 300]
     },
     {
       "parameters": {
@@ -97,7 +126,7 @@
       "name": "Queue Task",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [1020, 400]
+      "position": [1280, 400]
     },
     {
       "parameters": {
@@ -108,16 +137,51 @@
         }
       },
       "id": "telegram-reply",
-      "name": "Telegram Reply",
+      "name": "Telegram Reply Skip",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1260, 300],
+      "position": [1280, 300],
       "credentials": {
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chatId}}",
+        "text": "={{$json.replyText}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "telegram-reply-queued",
+      "name": "Telegram Reply Queued",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1540, 420],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "source": "localFile",
+        "workflowPath": "/files/workflows/telegram-task-dispatcher.json",
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "mode": "once"
+      },
+      "id": "dispatch-task",
+      "name": "Dispatch Task",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1800, 420]
     }
   ],
   "connections": {
@@ -125,17 +189,22 @@
       "main": [[{ "node": "Parse Telegram Command", "type": "main", "index": 0 }]]
     },
     "Parse Telegram Command": {
-      "main": [[{ "node": "Skip?", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Chat Allowed?", "type": "main", "index": 0 }]]
+    },
+    "Chat Allowed?": {
+      "main": [
+        [{ "node": "Skip?", "type": "main", "index": 0 }],
+        []
+      ]
     },
     "Skip?": {
       "main": [
-        [{ "node": "Telegram Reply", "type": "main", "index": 0 }],
+        [{ "node": "Telegram Reply Skip", "type": "main", "index": 0 }],
         [{ "node": "Queue Task", "type": "main", "index": 0 }]
       ]
     },
-    "Queue Task": {
-      "main": [[{ "node": "Telegram Reply", "type": "main", "index": 0 }]]
-    }
+    "Queue Task": { "main": [[{ "node": "Telegram Reply Queued", "type": "main", "index": 0 }]] },
+    "Telegram Reply Queued": { "main": [[{ "node": "Dispatch Task", "type": "main", "index": 0 }]] }
   },
   "settings": {
     "executionOrder": "v1"

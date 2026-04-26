@@ -68,6 +68,8 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: unless-stopped
+    env_file:
+      - ./.env
     ports:
       - "127.0.0.1:${N8N_PORT:-5678}:5678"
     environment:
@@ -118,6 +120,8 @@ services:
   n8n-worker:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: unless-stopped
+    env_file:
+      - ./.env
     command: worker --concurrency=${N8N_WORKER_CONCURRENCY:-2}
     environment:
       DB_TYPE: postgresdb
@@ -208,7 +212,6 @@ services:
       - n8n
     networks:
       - edge
-      - control
     stop_grace_period: 10m
 
 volumes:

@@ -338,7 +338,7 @@ OPENROUTER_API_KEY=""
 CONTEXT7_API_KEY=""
 N8N_API_KEY=""
 TELEGRAM_BOT_TOKEN=""
-TELEGRAM_ALLOWED_CHAT_IDS=""
+TELEGRAM_CHAT_ID=""
 GITHUB_TOKEN=""
 NPM_TOKEN=""
 PNPM_HOME=""
@@ -348,13 +348,13 @@ if ask_yes_no "Хочешь сразу указать API ключи?" y; then
   OPENROUTER_API_KEY="$(ask "OPENROUTER_API_KEY (можно пусто)" "")"
   CONTEXT7_API_KEY="$(ask "CONTEXT7_API_KEY (можно пусто)" "")"
   TELEGRAM_BOT_TOKEN="$(ask "TELEGRAM_BOT_TOKEN (можно пусто)" "")"
-  TELEGRAM_ALLOWED_CHAT_IDS="$(ask "Разрешенные Telegram chat id через запятую (можно пусто)" "")"
   GITHUB_TOKEN="$(ask "GITHUB_TOKEN для приватных репозиториев (можно пусто)" "")"
   NPM_TOKEN="$(ask "NPM_TOKEN (можно пусто)" "")"
 fi
 
 if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-  N8N_API_KEY="$(ask "N8N_API_KEY для автоматического создания Telegram credentials в n8n (можно пусто и настроить позже)" "")"
+  TELEGRAM_CHAT_ID="$(ask_required "Telegram chat id. Только этот чат сможет писать боту и получать ответы" "")"
+  N8N_API_KEY="$(ask "N8N_API_KEY, если он у тебя уже есть. Иначе оставь пустым и добавишь после первого запуска n8n" "")"
 fi
 
 OPENCODE_AGENT="build"
@@ -510,7 +510,7 @@ OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
 CONTEXT7_API_KEY=${CONTEXT7_API_KEY}
 N8N_API_KEY=${N8N_API_KEY}
 TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-TELEGRAM_ALLOWED_CHAT_IDS=${TELEGRAM_ALLOWED_CHAT_IDS}
+TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
 ENABLE_CADDY_PROXY=${ENABLE_CADDY_PROXY}
 PUBLIC_N8N_DOMAIN=${PUBLIC_N8N_DOMAIN}
 ACME_EMAIL=${ACME_EMAIL}
@@ -556,10 +556,72 @@ done
   printf '  },\n'
   printf '  "endpoints": {\n'
   printf '    "health": "/global/health",\n'
+  printf '    "globalEvent": "/global/event",\n'
+  printf '    "projectList": "/project",\n'
+  printf '    "projectCurrent": "/project/current",\n'
+  printf '    "pathCurrent": "/path",\n'
+  printf '    "vcsInfo": "/vcs",\n'
+  printf '    "instanceDispose": "/instance/dispose",\n'
+  printf '    "configGet": "/config",\n'
+  printf '    "configPatch": "/config",\n'
+  printf '    "configProviders": "/config/providers",\n'
+  printf '    "providerList": "/provider",\n'
+  printf '    "providerAuthMethods": "/provider/auth",\n'
+  printf '    "providerOauthAuthorize": "/provider/{id}/oauth/authorize",\n'
+  printf '    "providerOauthCallback": "/provider/{id}/oauth/callback",\n'
+  printf '    "sessionList": "/session",\n'
   printf '    "openapi": "/doc",\n'
   printf '    "sessionCreate": "/session",\n'
+  printf '    "sessionStatus": "/session/status",\n'
+  printf '    "sessionGet": "/session/:id",\n'
+  printf '    "sessionDelete": "/session/:id",\n'
+  printf '    "sessionPatch": "/session/:id",\n'
+  printf '    "sessionChildren": "/session/:id/children",\n'
+  printf '    "sessionTodo": "/session/:id/todo",\n'
+  printf '    "sessionInit": "/session/:id/init",\n'
+  printf '    "sessionFork": "/session/:id/fork",\n'
+  printf '    "sessionAbort": "/session/:id/abort",\n'
+  printf '    "sessionShare": "/session/:id/share",\n'
+  printf '    "sessionUnshare": "/session/:id/share",\n'
+  printf '    "sessionDiff": "/session/:id/diff",\n'
+  printf '    "sessionSummarize": "/session/:id/summarize",\n'
+  printf '    "sessionRevert": "/session/:id/revert",\n'
+  printf '    "sessionUnrevert": "/session/:id/unrevert",\n'
+  printf '    "sessionPermissionReply": "/session/:id/permissions/:permissionID",\n'
+  printf '    "messageList": "/session/:id/message",\n'
   printf '    "sessionMessage": "/session/:id/message",\n'
-  printf '    "sessionCommand": "/session/:id/command"\n'
+  printf '    "messageGet": "/session/:id/message/:messageID",\n'
+  printf '    "promptAsync": "/session/:id/prompt_async",\n'
+  printf '    "sessionCommand": "/session/:id/command",\n'
+  printf '    "sessionShell": "/session/:id/shell",\n'
+  printf '    "commandList": "/command",\n'
+  printf '    "findText": "/find?pattern={pattern}",\n'
+  printf '    "findFile": "/find/file?query={query}",\n'
+  printf '    "findSymbol": "/find/symbol?query={query}",\n'
+  printf '    "fileList": "/file?path={path}",\n'
+  printf '    "fileContent": "/file/content?path={path}",\n'
+  printf '    "fileStatus": "/file/status",\n'
+  printf '    "experimentalToolIds": "/experimental/tool/ids",\n'
+  printf '    "experimentalToolList": "/experimental/tool?provider={provider}&model={model}",\n'
+  printf '    "lspStatus": "/lsp",\n'
+  printf '    "formatterStatus": "/formatter",\n'
+  printf '    "mcpStatus": "/mcp",\n'
+  printf '    "mcpAdd": "/mcp",\n'
+  printf '    "agentList": "/agent",\n'
+  printf '    "logWrite": "/log",\n'
+  printf '    "tuiAppendPrompt": "/tui/append-prompt",\n'
+  printf '    "tuiOpenHelp": "/tui/open-help",\n'
+  printf '    "tuiOpenSessions": "/tui/open-sessions",\n'
+  printf '    "tuiOpenThemes": "/tui/open-themes",\n'
+  printf '    "tuiOpenModels": "/tui/open-models",\n'
+  printf '    "tuiSubmitPrompt": "/tui/submit-prompt",\n'
+  printf '    "tuiClearPrompt": "/tui/clear-prompt",\n'
+  printf '    "tuiExecuteCommand": "/tui/execute-command",\n'
+  printf '    "tuiShowToast": "/tui/show-toast",\n'
+  printf '    "tuiControlNext": "/tui/control/next",\n'
+  printf '    "tuiControlResponse": "/tui/control/response",\n'
+  printf '    "authSet": "/auth/:id",\n'
+  printf '    "eventStream": "/event"\n'
   printf '  }\n'
   printf '}\n'
 } >"$ROUTING_JSON"
@@ -601,7 +663,20 @@ if ask_yes_no "Сразу запустить контейнеры?" y; then
     compose_cmd+=(up -d --build)
   fi
   "${compose_cmd[@]}"
-  bash "${ROOT_DIR}/scripts/bootstrap-n8n-workflow.sh"
+
+  if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -z "$N8N_API_KEY" ]; then
+    printf '\nTelegram включен, но N8N_API_KEY пока не задан.\n'
+    printf 'Сейчас контейнеры уже подняты. Открой n8n и создай API key:\n'
+    printf '1. Открой интерфейс n8n\n'
+    printf '2. Перейди в Settings -> n8n API\n'
+    printf '3. Создай API key\n'
+    printf '4. Вставь его ниже, чтобы завершить Telegram bootstrap\n\n'
+    N8N_API_KEY="$(ask "N8N_API_KEY из интерфейса n8n (можно оставить пустым и сделать позже вручную)" "")"
+    if [ -n "$N8N_API_KEY" ]; then
+      perl -0pi -e 's/^N8N_API_KEY=.*$/N8N_API_KEY='"$N8N_API_KEY"'/m' "$ENV_FILE"
+    fi
+  fi
+
   bash "${ROOT_DIR}/scripts/bootstrap-telegram-integration.sh" || true
   bash "${ROOT_DIR}/scripts/verify-stack.sh"
   printf '\nКонтейнеры запущены.\n'

@@ -4,16 +4,20 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            { "field": "seconds", "secondsInterval": 10 }
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "reason",
+              "type": "string"
+            }
           ]
         }
       },
-      "id": "schedule-trigger",
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
+      "id": "execute-workflow-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
       "position": [240, 320]
     },
     {
@@ -43,7 +47,7 @@
       "name": "Get Queued Rows",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [500, 240]
+      "position": [520, 240]
     },
     {
       "parameters": {
@@ -74,7 +78,7 @@
       "name": "Get Blocking Rows",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [500, 400]
+      "position": [520, 400]
     },
     {
       "parameters": {
@@ -88,7 +92,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const fs = require('fs')\nconst routing = JSON.parse(fs.readFileSync('/files/opencode-routing.json', 'utf8'))\nconst queued = $('Get Queued Rows').all().map((item) => item.json)\nconst blocking = $('Get Blocking Rows').all().map((item) => item.json)\nconst blockedWorkers = new Set(blocking.map((row) => row.worker_alias))\nconst task = queued.find((row) => !blockedWorkers.has(row.worker_alias))\nif (!task) return []\nconst workerAlias = task.worker_alias || routing.defaultWorker || Object.keys(routing.workers)[0]\nconst worker = routing.workers[workerAlias]\nif (!worker) throw new Error(`Неизвестный worker alias: ${workerAlias}`)\nconst password = process.env[worker.passwordEnv || '']\nif (!password) throw new Error(`Не найден пароль для worker alias: ${workerAlias}`)\nconst authHeader = 'Basic ' + Buffer.from(`${worker.username}:${password}`, 'utf8').toString('base64')\nconst context = JSON.parse(task.context_json || '[]')\nreturn [{ task, workerAlias, worker, authHeader, context, opencodeAgent: routing.defaultAgent || 'build', endpoints: { health: `${worker.baseUrl}${routing.endpoints.health}`, openapi: `${worker.baseUrl}${routing.endpoints.openapi}`, sessionCreate: `${worker.baseUrl}${routing.endpoints.sessionCreate}`, sessionMessage: `${worker.baseUrl}${routing.endpoints.sessionMessage}`, sessionCommand: `${worker.baseUrl}${routing.endpoints.sessionCommand}` } }]"
+        "jsCode": "const fs = require('fs')\nconst routing = JSON.parse(fs.readFileSync('/files/opencode-routing.json', 'utf8'))\nconst queued = $('Get Queued Rows').all().map((item) => item.json)\nconst blocking = $('Get Blocking Rows').all().map((item) => item.json)\nconst blockedWorkers = new Set(blocking.map((row) => row.worker_alias))\nconst task = queued.find((row) => !blockedWorkers.has(row.worker_alias))\nif (!task) return []\nconst workerAlias = task.worker_alias || routing.defaultWorker || Object.keys(routing.workers)[0]\nconst worker = routing.workers[workerAlias]\nif (!worker) throw new Error(`Неизвестный worker alias: ${workerAlias}`)\nconst password = process.env[worker.passwordEnv || '']\nif (!password) throw new Error(`Не найден пароль для worker alias: ${workerAlias}`)\nconst authHeader = 'Basic ' + Buffer.from(`${worker.username}:${password}`, 'utf8').toString('base64')\nconst context = JSON.parse(task.context_json || '[]')\nreturn [{ task, workerAlias, worker, authHeader, context, opencodeAgent: routing.defaultAgent || 'build', endpoints: { sessionCreate: `${worker.baseUrl}${routing.endpoints.sessionCreate}`, sessionMessage: `${worker.baseUrl}${routing.endpoints.sessionMessage}`, sessionCommand: `${worker.baseUrl}${routing.endpoints.sessionCommand}` } }]"
       },
       "id": "pick-task",
       "name": "Pick Task",
@@ -171,7 +175,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const route = $('Pick Task').first().json\nconst sessionResponse = $json\nif (sessionResponse.error) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: String(sessionResponse.error.message || sessionResponse.error || 'session create failed') }] }\nconst sessionId = sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId\nif (!sessionId) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: 'Не удалось получить sessionId' }] }\nconst structuredInstruction = 'Если задача завершена, верни JSON со status done и summary. Если нужен ответ пользователя, верни JSON со status needs_input, полем question и массивом options.'\nconst promptText = [ structuredInstruction, ...(route.context || []).map((item) => String(item)), String(route.task.prompt || '') ].filter(Boolean).join('\\n\\n')\nreturn [{ ...route, sessionId, promptText, messageUrl: route.endpoints.sessionMessage.replace(':id', sessionId), commandUrl: route.endpoints.sessionCommand.replace(':id', sessionId), transportError: '' }]"
+        "jsCode": "const route = $('Pick Task').first().json\nconst sessionResponse = $json\nif (sessionResponse.error) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: String(sessionResponse.error.message || sessionResponse.error || 'session create failed') }] }\nconst sessionId = sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId\nif (!sessionId) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: 'Не удалось получить sessionId' }] }\nconst promptText = [ ...(route.context || []).map((item) => String(item)), String(route.task.prompt || '') ].filter(Boolean).join('\\n\\n')\nreturn [{ ...route, sessionId, promptText, messageUrl: route.endpoints.sessionMessage.replace(':id', sessionId), commandUrl: route.endpoints.sessionCommand.replace(':id', sessionId), transportError: '' }]"
       },
       "id": "prepare-dispatch",
       "name": "Prepare Dispatch",
@@ -238,7 +242,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const route = $('Prepare Dispatch').first().json\nconst task = route.task\nconst response = $json\nif (route.transportError) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка запуска задачи: ${route.transportError}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nif (response.error) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка OpenCode: ${String(response.error.message || response.error)}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nconst textParts = Array.isArray(response.parts) ? response.parts.filter((p) => p.type === 'text').map((p) => p.content || p.text || '') : []\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst cleaned = rawText.replace(/^```json\\s*/, '').replace(/```$/, '').trim()\nlet parsed = null\ntry { parsed = JSON.parse(cleaned) } catch {}\nlet status = 'done'\nlet question = ''\nlet options = []\nlet replyText = cleaned\nif (parsed && typeof parsed === 'object') { status = parsed.status || 'done'; question = parsed.question || ''; options = Array.isArray(parsed.options) ? parsed.options : []; replyText = parsed.summary || question || cleaned } else if (cleaned.includes('?')) { status = 'needs_input'; question = cleaned; replyText = cleaned }\nif (!['done','needs_input','failed'].includes(status)) status = 'done'\nconst optionsText = options.length ? '\\n\\nВарианты:\\n' + options.map((o, i) => `${i + 1}. ${o.label || o.value || o}`).join('\\n') : ''\nreturn [{ task, response, sessionId: route.sessionId, status, question, optionsJson: JSON.stringify(options), replyText, askMessage: `${question || replyText}${optionsText}`.trim(), continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }]"
+        "jsCode": "const route = $('Prepare Dispatch').first().json\nconst task = route.task\nconst response = $json\nif (route.transportError) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка запуска задачи: ${route.transportError}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nif (response.error) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка OpenCode: ${String(response.error.message || response.error)}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nconst textParts = Array.isArray(response.parts) ? response.parts.filter((p) => p.type === 'text').map((p) => p.content || p.text || '') : []\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst lines = rawText.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean)\nconst optionRegex = /^(?:\\d+[\\.\\)]|[-*•])\\s+(.+)$/\nconst optionLines = lines.map((line) => { const m = line.match(optionRegex); return m ? m[1].trim() : null }).filter(Boolean)\nconst options = optionLines.map((value) => ({ label: value, value }))\nconst status = options.length > 0 ? 'needs_input' : 'done'\nconst optionsText = options.length ? '\\n\\nВарианты ответа:\\n' + options.map((o, i) => `${i + 1}. ${o.label}`).join('\\n') : ''\nreturn [{ task, response, sessionId: route.sessionId, status, question: options.length ? rawText : '', optionsJson: JSON.stringify(options), replyText: rawText, askMessage: `${rawText}${optionsText}`.trim(), continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }]"
       },
       "id": "classify-result",
       "name": "Classify Result",
@@ -488,10 +492,25 @@
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
         }
       }
+    },
+    {
+      "parameters": {
+        "source": "localFile",
+        "workflowPath": "/files/workflows/telegram-task-dispatcher.json",
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "mode": "once"
+      },
+      "id": "dispatch-next",
+      "name": "Dispatch Next Task",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [4420, 520]
     }
   ],
   "connections": {
-    "Schedule Trigger": { "main": [[{ "node": "Get Queued Rows", "type": "main", "index": 0 }, { "node": "Get Blocking Rows", "type": "main", "index": 0 }]] },
+    "When Executed by Another Workflow": { "main": [[{ "node": "Get Queued Rows", "type": "main", "index": 0 }, { "node": "Get Blocking Rows", "type": "main", "index": 0 }]] },
     "Get Queued Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 0 }]] },
     "Get Blocking Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 1 }]] },
     "Merge Rows": { "main": [[{ "node": "Pick Task", "type": "main", "index": 0 }]] },
@@ -513,7 +532,8 @@
     "Failed?": { "main": [[{ "node": "Prepare Failed", "type": "main", "index": 0 }], [{ "node": "Prepare Success", "type": "main", "index": 0 }]] },
     "Prepare Failed": { "main": [[{ "node": "Mark Final State", "type": "main", "index": 0 }]] },
     "Prepare Success": { "main": [[{ "node": "Mark Final State", "type": "main", "index": 0 }]] },
-    "Mark Final State": { "main": [[{ "node": "Telegram Send Result", "type": "main", "index": 0 }]] }
+    "Mark Final State": { "main": [[{ "node": "Telegram Send Result", "type": "main", "index": 0 }]] },
+    "Telegram Send Result": { "main": [[{ "node": "Dispatch Next Task", "type": "main", "index": 0 }]] }
   },
   "settings": {
     "executionOrder": "v1"

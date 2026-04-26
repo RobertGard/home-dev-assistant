@@ -1,8 +1,8 @@
 .env
 .env.*
+example.json
 !.env.example
 .DS_Store
-n8n/local-files/opencode-routing.json
 n8n/local-files/workflows/telegram-task-ingress.json
 n8n/local-files/workflows/telegram-task-dispatcher.json
 workers/*/repos.json
