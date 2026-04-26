@@ -682,22 +682,22 @@ step_start 'Генерирую routing-конфиг для n8n'
 log_ok "Routing-конфиг сохранен: ${ROUTING_JSON}"
 
 printf '\nГотово. Созданы файлы:\n'
-printf '- %s\n' "$ENV_FILE"
+printf -- '- %s\n' "$ENV_FILE"
 for ((i = 0; i < WORKER_COUNT; i++)); do
-  printf '- %s/repos.json\n' "${ROOT_DIR}/${WORKER_CONFIG_DIRS[$i]}"
+  printf -- '- %s/repos.json\n' "${ROOT_DIR}/${WORKER_CONFIG_DIRS[$i]}"
 done
-printf '- %s\n' "$ROUTING_JSON"
+printf -- '- %s\n' "$ROUTING_JSON"
 
 if [ "${#WORKER_OVERRIDE_FILES[@]}" -gt 0 ]; then
   printf '\nСгенерированы дополнительные override-файлы:\n'
   for file in "${WORKER_OVERRIDE_FILES[@]}"; do
-    printf '- %s\n' "$file"
+    printf -- '- %s\n' "$file"
   done
 fi
 
 printf '\nСводка по worker-ам:\n'
 for ((i = 0; i < WORKER_COUNT; i++)); do
-  printf '- worker %s: alias=%s, service=%s, host-port=%s\n' \
+  printf -- '- worker %s: alias=%s, service=%s, host-port=%s\n' \
     "$((i + 1))" \
     "${WORKER_ALIASES[$i]}" \
     "${WORKER_SERVICES[$i]}" \

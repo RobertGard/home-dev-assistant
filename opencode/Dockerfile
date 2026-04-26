@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
   build-essential \
   ca-certificates \
   curl \
-  docker-compose-plugin \
+  docker-compose \
   docker.io \
   fd-find \
   git \
@@ -30,6 +30,9 @@ RUN apt-get update && apt-get install -y \
   vim-tiny \
   yamllint \
   && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /usr/local/lib/docker/cli-plugins \
+  && ln -sf /usr/bin/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN npm install -g \
