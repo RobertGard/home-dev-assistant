@@ -108,7 +108,7 @@ if [ -z "$credential_id" ]; then
     -H 'Content-Type: application/json' \
     -X POST \
     -d "{\"name\":\"${TELEGRAM_CREDENTIAL_NAME}\",\"type\":\"telegramApi\",\"nodesAccess\":[{\"nodeType\":\"n8n-nodes-base.telegram\"},{\"nodeType\":\"n8n-nodes-base.telegramTrigger\"}],\"data\":{\"accessToken\":\"${TELEGRAM_BOT_TOKEN}\"}}" \
-    "${N8N_URL}/rest/credentials" | jq -r '.data.id // .id')"
+    "${N8N_URL}/api/v1/credentials" | jq -r '.data.id // .id')"
 fi
 
 if [ -z "$credential_id" ] || [ "$credential_id" = "null" ]; then

@@ -347,12 +347,13 @@ if ask_yes_no "Хочешь сразу указать API ключи?" y; then
   ANTHROPIC_API_KEY="$(ask "ANTHROPIC_API_KEY (можно пусто)" "")"
   OPENROUTER_API_KEY="$(ask "OPENROUTER_API_KEY (можно пусто)" "")"
   CONTEXT7_API_KEY="$(ask "CONTEXT7_API_KEY (можно пусто)" "")"
-  TELEGRAM_BOT_TOKEN="$(ask "TELEGRAM_BOT_TOKEN (можно пусто)" "")"
   GITHUB_TOKEN="$(ask "GITHUB_TOKEN для приватных репозиториев (можно пусто)" "")"
   NPM_TOKEN="$(ask "NPM_TOKEN (можно пусто)" "")"
 fi
 
-if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+printf '\n--- Telegram ---\n'
+if ask_yes_no "Включить Telegram интеграцию?" y; then
+  TELEGRAM_BOT_TOKEN="$(ask_required "TELEGRAM_BOT_TOKEN" "")"
   TELEGRAM_CHAT_ID="$(ask_required "Telegram chat id. Только этот чат сможет писать боту и получать ответы" "")"
   N8N_API_KEY="$(ask "N8N_API_KEY, если он у тебя уже есть. Иначе оставь пустым и добавишь после первого запуска n8n" "")"
 fi

@@ -164,8 +164,13 @@ Agent-расширения:
 
 У каждого worker-а есть свой файл:
 
-- `workers/worker-1/repos.json`
-- `workers/<worker-name>/repos.json`
+- `workers/worker-1/repos.json` создается установщиком
+- `workers/<worker-name>/repos.json` создается установщиком для дополнительных worker-ов
+
+Шаблоны лежат здесь:
+
+- `workers/worker-1/repos.json.example`
+- `workers/worker-2/repos.json.example`
 
 Пример:
 
@@ -284,6 +289,7 @@ bash ./scripts/verify-stack.sh
 2. отвечает ли `n8n`
 3. отвечают ли OpenCode worker-ы из routing-файла
 4. валиден ли `opencode-routing.json`
+5. если включен Telegram, корректно ли созданы Telegram credential и Telegram workflow
 
 ## Если Telegram не донастроился на первом запуске
 
@@ -301,7 +307,6 @@ bash ./scripts/verify-stack.sh
 ```bash
 bash ./scripts/bootstrap-telegram-integration.sh
 ```
-5. если включен Telegram, корректно ли созданы Telegram credential и Telegram workflow
 
 ## Основные файлы
 
