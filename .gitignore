@@ -8,3 +8,4 @@ n8n/local-files/workflows/telegram-task-dispatcher.json
 workers/*/repos.json
 compose.overrides/*.yml
 *.log
+.n8n-bootstrap-state.json

@@ -8,6 +8,7 @@ DISPATCH_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task
 INGRESS_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-ingress.json"
 DISPATCH_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-dispatcher.json"
 TASKS_TABLE_NAME="agent_tasks"
+STATE_FILE="${ROOT_DIR}/.n8n-bootstrap-state.json"
 
 if [ ! -f "$ENV_FILE" ]; then
   printf '.env не найден: %s\n' "$ENV_FILE" >&2
@@ -89,17 +90,26 @@ if [ -z "$tasks_table_id" ] || [ "$tasks_table_id" = "null" ]; then
   exit 1
 fi
 
-credential_id="$(curl -fsS \
-  -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
-  -H 'Content-Type: application/json' \
-  -X POST \
-  -d "{\"name\":\"${TELEGRAM_CREDENTIAL_NAME}\",\"type\":\"telegramApi\",\"nodesAccess\":[{\"nodeType\":\"n8n-nodes-base.telegram\"},{\"nodeType\":\"n8n-nodes-base.telegramTrigger\"}],\"data\":{\"accessToken\":\"${TELEGRAM_BOT_TOKEN}\"}}" \
-  "${N8N_URL}/rest/credentials" | jq -r '.data.id // .id')"
+credential_id=""
+if [ -f "$STATE_FILE" ]; then
+  credential_id="$(jq -r '.telegramCredentialId // empty' "$STATE_FILE" 2>/dev/null || true)"
+fi
+
+if [ -z "$credential_id" ]; then
+  credential_id="$(curl -fsS \
+    -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+    -H 'Content-Type: application/json' \
+    -X POST \
+    -d "{\"name\":\"${TELEGRAM_CREDENTIAL_NAME}\",\"type\":\"telegramApi\",\"nodesAccess\":[{\"nodeType\":\"n8n-nodes-base.telegram\"},{\"nodeType\":\"n8n-nodes-base.telegramTrigger\"}],\"data\":{\"accessToken\":\"${TELEGRAM_BOT_TOKEN}\"}}" \
+    "${N8N_URL}/rest/credentials" | jq -r '.data.id // .id')"
+fi
 
 if [ -z "$credential_id" ] || [ "$credential_id" = "null" ]; then
   printf 'Не удалось создать Telegram credential в n8n\n' >&2
   exit 1
 fi
+
+printf '{"telegramCredentialId":"%s","tasksTableId":"%s"}\n' "$credential_id" "$tasks_table_id" > "$STATE_FILE"
 
 render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id"
 render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id"

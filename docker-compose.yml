@@ -84,6 +84,7 @@ services:
       N8N_PROTOCOL: ${N8N_PROTOCOL}
       N8N_PORT: 5678
       WEBHOOK_URL: ${WEBHOOK_URL}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-}
       N8N_PROXY_HOPS: ${N8N_PROXY_HOPS}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
       TZ: ${GENERIC_TIMEZONE}
@@ -100,7 +101,6 @@ services:
       OPENCODE_WORKER_1_BASE_URL: ${OPENCODE_WORKER_1_BASE_URL:-http://opencode-worker-1:4096}
       OPENCODE_WORKER_1_HEALTH_URL: ${OPENCODE_WORKER_1_HEALTH_URL:-http://opencode-worker-1:4096/global/health}
       OPENCODE_WORKER_1_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
-      OPENCODE_GATEWAY_BASE_URL: http://opencode-gateway:9080
     depends_on:
       postgres:
         condition: service_healthy
@@ -140,7 +140,6 @@ services:
       OPENCODE_WORKER_1_BASE_URL: ${OPENCODE_WORKER_1_BASE_URL:-http://opencode-worker-1:4096}
       OPENCODE_WORKER_1_HEALTH_URL: ${OPENCODE_WORKER_1_HEALTH_URL:-http://opencode-worker-1:4096/global/health}
       OPENCODE_WORKER_1_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
-      OPENCODE_GATEWAY_BASE_URL: http://opencode-gateway:9080
     depends_on:
       postgres:
         condition: service_healthy
@@ -191,23 +190,22 @@ services:
       retries: 10
       start_period: 60s
 
-  opencode-gateway:
-    profiles: ["gateway"]
-    build:
-      context: ./gateway
+  caddy:
+    image: caddy:2
+    profiles: ["proxy"]
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${OPENCODE_GATEWAY_PORT:-9080}:9080"
+      - "80:80"
+      - "443:443"
     environment:
-      PORT: 9080
-      OPENCODE_BASE_URL: http://opencode-worker-1:4096
-      OPENCODE_PASSWORD: ${OPENCODE_WORKER_1_PASSWORD}
-      DEFAULT_AGENT: ${OPENCODE_AGENT:-build}
-      REQUEST_TIMEOUT_MS: 1800000
-      KEEP_ALIVE_TIMEOUT_MS: 1800000
-      HEADERS_TIMEOUT_MS: 1805000
+      PUBLIC_N8N_DOMAIN: ${PUBLIC_N8N_DOMAIN:-}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
-      - opencode-worker-1
+      - n8n
     networks:
       - edge
       - control
@@ -217,6 +215,8 @@ volumes:
   postgres_data:
   redis_data:
   n8n_data:
+  caddy_data:
+  caddy_config:
   opencode_worker_1_config:
   opencode_worker_1_local:
   opencode_worker_1_workspace:

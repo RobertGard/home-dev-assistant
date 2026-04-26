@@ -290,6 +290,10 @@ N8N_HOST="flow.localhost"
 N8N_PROTOCOL="http"
 N8N_PORT="5678"
 N8N_PROXY_HOPS="1"
+N8N_EDITOR_BASE_URL=""
+ENABLE_CADDY_PROXY="false"
+PUBLIC_N8N_DOMAIN=""
+ACME_EMAIL=""
 N8N_CONCURRENCY_PRODUCTION_LIMIT="4"
 N8N_WORKER_CONCURRENCY="2"
 N8N_EXECUTIONS_TIMEOUT="604800"
@@ -305,6 +309,22 @@ fi
 
 WEBHOOK_URL="${N8N_PROTOCOL}://${N8N_HOST}:${N8N_PORT}/"
 GENERIC_TIMEZONE="$TZ_VALUE"
+
+printf '\n--- Внешний доступ к n8n ---\n'
+if ask_yes_no "Планируешь открывать n8n наружу по домену и HTTPS?" y; then
+  ENABLE_CADDY_PROXY="true"
+  PUBLIC_N8N_DOMAIN="$(ask_required "Публичный домен для n8n" "n8n.example.com")"
+  ACME_EMAIL="$(ask_required "Email для Let's Encrypt" "admin@example.com")"
+  N8N_HOST="$PUBLIC_N8N_DOMAIN"
+  N8N_PROTOCOL="https"
+  WEBHOOK_URL="https://${PUBLIC_N8N_DOMAIN}/"
+  N8N_EDITOR_BASE_URL="https://${PUBLIC_N8N_DOMAIN}/"
+  printf 'Будет включен Caddy reverse proxy с автоматическими TLS сертификатами.\n'
+else
+  N8N_EDITOR_BASE_URL="${WEBHOOK_URL}"
+  printf 'Внешний reverse proxy не включен. n8n останется доступен локально.\n'
+  printf 'Важно: для Telegram webhooks в production нужен публичный HTTPS URL.\n'
+fi
 
 printf '\n--- Обязательные секреты ---\n'
 POSTGRES_PASSWORD="$(ask_secret "Пароль Postgres" 24)"
@@ -460,6 +480,7 @@ TZ=${TZ_VALUE}
 N8N_HOST=${N8N_HOST}
 N8N_PROTOCOL=${N8N_PROTOCOL}
 WEBHOOK_URL=${WEBHOOK_URL}
+N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
 N8N_PROXY_HOPS=${N8N_PROXY_HOPS}
 GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
 N8N_PORT=${N8N_PORT}
@@ -479,7 +500,6 @@ N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
 
 OPENCODE_AGENT=${OPENCODE_AGENT}
 
-OPENCODE_GATEWAY_PORT=9080
 OPENCODE_PROVIDER_TIMEOUT_MS=${OPENCODE_PROVIDER_TIMEOUT_MS}
 OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS=${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS}
 OPENCODE_MCP_TIMEOUT_MS=${OPENCODE_MCP_TIMEOUT_MS}
@@ -491,6 +511,9 @@ CONTEXT7_API_KEY=${CONTEXT7_API_KEY}
 N8N_API_KEY=${N8N_API_KEY}
 TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 TELEGRAM_ALLOWED_CHAT_IDS=${TELEGRAM_ALLOWED_CHAT_IDS}
+ENABLE_CADDY_PROXY=${ENABLE_CADDY_PROXY}
+PUBLIC_N8N_DOMAIN=${PUBLIC_N8N_DOMAIN}
+ACME_EMAIL=${ACME_EMAIL}
 
 GITHUB_TOKEN=${GITHUB_TOKEN}
 NPM_TOKEN=${NPM_TOKEN}
@@ -517,7 +540,6 @@ done
   for ((i = 0; i < WORKER_COUNT; i++)); do
     alias="${WORKER_ALIASES[$i]}"
     service="${WORKER_SERVICES[$i]}"
-    password="${WORKER_PASSWORDS[$i]}"
     printf '    "%s": {\n' "$(json_escape "$alias")"
     printf '      "service": "%s",\n' "$(json_escape "$service")"
     printf '      "alias": "%s",\n' "$(json_escape "$alias")"
@@ -538,10 +560,6 @@ done
   printf '    "sessionCreate": "/session",\n'
   printf '    "sessionMessage": "/session/:id/message",\n'
   printf '    "sessionCommand": "/session/:id/command"\n'
-  printf '  },\n'
-  printf '  "gateway": {\n'
-  printf '    "baseUrl": "http://opencode-gateway:9080",\n'
-  printf '    "runEndpoint": "/run"\n'
   printf '  }\n'
   printf '}\n'
 } >"$ROUTING_JSON"
@@ -577,7 +595,11 @@ if [ "$WORKER_COUNT" -ge 2 ]; then
 fi
 
 if ask_yes_no "Сразу запустить контейнеры?" y; then
-  compose_cmd+=(up -d --build)
+  if [ "$ENABLE_CADDY_PROXY" = "true" ]; then
+    compose_cmd+=(--profile proxy up -d --build)
+  else
+    compose_cmd+=(up -d --build)
+  fi
   "${compose_cmd[@]}"
   bash "${ROOT_DIR}/scripts/bootstrap-n8n-workflow.sh"
   bash "${ROOT_DIR}/scripts/bootstrap-telegram-integration.sh" || true
@@ -586,6 +608,10 @@ if ask_yes_no "Сразу запустить контейнеры?" y; then
 else
   printf '\nДля ручного запуска используй:\n'
   printf '%q ' "${compose_cmd[@]}"
-  printf '%q ' up -d --build
+  if [ "$ENABLE_CADDY_PROXY" = "true" ]; then
+    printf '%q ' --profile proxy up -d --build
+  else
+    printf '%q ' up -d --build
+  fi
   printf '\n'
 fi
