@@ -5,11 +5,11 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
 WORKERS_DIR="${ROOT_DIR}/workers"
 OVERRIDES_DIR="${ROOT_DIR}/compose.overrides"
-ROUTING_JSON="${ROOT_DIR}/n8n/local-files/opencode-routing.json"
+ROUTING_JSON="${ROOT_DIR}/n8n/bootstrap/opencode-routing.json"
 
 declare -a WORKER_NAMES WORKER_ALIASES WORKER_PORTS WORKER_PASSWORDS WORKER_SERVICES WORKER_CONFIG_DIRS WORKER_OVERRIDE_FILES
 
-mkdir -p "$WORKERS_DIR" "$OVERRIDES_DIR" "${ROOT_DIR}/n8n/local-files"
+mkdir -p "$WORKERS_DIR" "$OVERRIDES_DIR" "${ROOT_DIR}/n8n/bootstrap/workflows/templates"
 
 log_info() {
   printf '[INFO] %s\n' "$1"

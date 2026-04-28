@@ -4,15 +4,15 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
 ENV_LIB_FILE="${ROOT_DIR}/scripts/lib/load-env.sh"
-INGRESS_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-ingress.template.json"
-DISPATCH_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-dispatcher.template.json"
-INGRESS_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-ingress.json"
-DISPATCH_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-dispatcher.json"
-ROUTING_FILE="${ROOT_DIR}/n8n/local-files/opencode-routing.json"
+INGRESS_TEMPLATE="${ROOT_DIR}/n8n/bootstrap/workflows/templates/telegram-task-ingress.template.json"
+DISPATCH_TEMPLATE="${ROOT_DIR}/n8n/bootstrap/workflows/templates/telegram-task-dispatcher.template.json"
+ROUTING_FILE="${ROOT_DIR}/n8n/bootstrap/opencode-routing.json"
 TASKS_TABLE_NAME="agent_tasks"
 STATE_FILE="${ROOT_DIR}/.n8n-bootstrap-state.json"
 INGRESS_WORKFLOW_NAME="Постановка задач через Telegram"
 DISPATCH_WORKFLOW_NAME="Диспетчер задач Telegram"
+INGRESS_WORKFLOW_TEMP=""
+DISPATCH_WORKFLOW_TEMP=""
 
 log_info() {
   printf '[INFO] %s\n' "$1"
@@ -34,6 +34,13 @@ die() {
   log_error "$1"
   exit 1
 }
+
+cleanup_temp_files() {
+  [ -n "$INGRESS_WORKFLOW_TEMP" ] && rm -f "$INGRESS_WORKFLOW_TEMP"
+  [ -n "$DISPATCH_WORKFLOW_TEMP" ] && rm -f "$DISPATCH_WORKFLOW_TEMP"
+}
+
+trap cleanup_temp_files EXIT
 
 STEP_COUNTER=0
 TOTAL_STEPS=6
@@ -162,6 +169,19 @@ workflow_id_by_name() {
     "${N8N_URL}/api/v1/workflows" | jq -r --arg name "$workflow_name" '.data // . // [] | map(select(.name == $name)) | first | .id // empty'
 }
 
+import_workflow_from_host_file() {
+  local host_file="$1"
+  local temp_file_name="$2"
+
+  if [ ! -f "$host_file" ]; then
+    die "Не найден workflow-файл для импорта: ${host_file}"
+  fi
+
+  if ! "${BASE_COMPOSE[@]}" exec -T n8n sh -lc "cat > /tmp/${temp_file_name} && n8n import:workflow --input=/tmp/${temp_file_name} >/dev/null && rm -f /tmp/${temp_file_name}" < "$host_file"; then
+    die "Не удалось импортировать workflow: ${host_file}"
+  fi
+}
+
 step_start 'Ожидаю готовность n8n'
 if ! wait_for_n8n; then
   die 'n8n не поднялся вовремя.'
@@ -181,7 +201,7 @@ if [ -z "$tasks_table_id" ]; then
     -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    -d '{"name":"agent_tasks","columns":[{"name":"task_key","type":"string"},{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"user_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"mode","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"parent_task_key","type":"string"},{"name":"parent_match_text","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"queued_at","type":"date"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
+    -d '{"name":"agent_tasks","columns":[{"name":"task_key","type":"string"},{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"parent_task_key","type":"string"},{"name":"parent_match_text","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"queued_at","type":"date"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
     "${N8N_URL}/api/v1/data-tables" | jq -r '.id // .data.id')"; then
     die 'Не удалось создать Data Table agent_tasks.'
   fi
@@ -223,22 +243,20 @@ step_start 'Сохраняю bootstrap state и рендерю workflow'
 
 opencode_routing_json="$(render_opencode_routing_json)"
 opencode_routing_json_escaped="$(escape_json_string_content "$opencode_routing_json")"
+INGRESS_WORKFLOW_TEMP="$(mktemp)"
+DISPATCH_WORKFLOW_TEMP="$(mktemp)"
 
 printf '{"telegramCredentialId":"%s","tasksTableId":"%s"}\n' "$credential_id" "$tasks_table_id" > "$STATE_FILE"
 
-render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
-render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
+render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
+render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
 
-log_ok 'Локальные workflow-файлы подготовлены.'
+log_ok 'Временные workflow-файлы подготовлены.'
 
 step_start 'Импортирую workflow в n8n'
 
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n import:workflow --input=/files/workflows/telegram-task-ingress.json >/dev/null; then
-  die 'Не удалось импортировать workflow telegram-task-ingress.json.'
-fi
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n import:workflow --input=/files/workflows/telegram-task-dispatcher.json >/dev/null; then
-  die 'Не удалось импортировать workflow telegram-task-dispatcher.json.'
-fi
+import_workflow_from_host_file "$INGRESS_WORKFLOW_TEMP" 'telegram-task-ingress.json'
+import_workflow_from_host_file "$DISPATCH_WORKFLOW_TEMP" 'telegram-task-dispatcher.json'
 
 ingress_workflow_id="$(workflow_id_by_name "$INGRESS_WORKFLOW_NAME")"
 dispatch_workflow_id="$(workflow_id_by_name "$DISPATCH_WORKFLOW_NAME")"

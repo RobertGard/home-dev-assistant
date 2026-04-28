@@ -236,7 +236,7 @@ Agent-расширения:
 
 Базовый адрес worker-а хранится в:
 
-- `n8n/local-files/opencode-routing.json`
+- `n8n/bootstrap/opencode-routing.json`
 
 Основные реально используемые endpoint-ы:
 
@@ -331,9 +331,9 @@ OpenCode:
 
 n8n:
 
-- `n8n/local-files/opencode-routing.json`
-- `n8n/local-files/workflows/templates/telegram-task-ingress.template.json`
-- `n8n/local-files/workflows/templates/telegram-task-dispatcher.template.json`
+- `n8n/bootstrap/opencode-routing.json`
+- `n8n/bootstrap/workflows/templates/telegram-task-ingress.template.json`
+- `n8n/bootstrap/workflows/templates/telegram-task-dispatcher.template.json`
 
 ## Коротко
 

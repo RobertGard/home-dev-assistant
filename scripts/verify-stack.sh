@@ -43,7 +43,7 @@ if ! load_env_file "$ENV_FILE"; then
   die 'Не удалось безопасно загрузить .env'
 fi
 
-if [ -f "${ROOT_DIR}/n8n/local-files/opencode-routing.json" ]; then
+if [ -f "${ROOT_DIR}/n8n/bootstrap/opencode-routing.json" ]; then
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
 fi
 
@@ -98,7 +98,7 @@ retry_with_remediation() {
 }
 
 check_worker_urls() {
-  local routing_file="${ROOT_DIR}/n8n/local-files/opencode-routing.json"
+  local routing_file="${ROOT_DIR}/n8n/bootstrap/opencode-routing.json"
   if [ ! -f "$routing_file" ]; then
     return
   fi
@@ -123,9 +123,9 @@ log_ok 'docker compose services доступны.'
 step_start 'Проверяю n8n'
 retry_with_remediation "n8n" "n8n" "http://127.0.0.1:${N8N_PORT:-5678}" "${N8N_BASIC_AUTH_USER:-admin}" "${N8N_BASIC_AUTH_PASSWORD}"
 
-if [ -f "${ROOT_DIR}/n8n/local-files/opencode-routing.json" ]; then
+if [ -f "${ROOT_DIR}/n8n/bootstrap/opencode-routing.json" ]; then
   step_start 'Проверяю routing-файл и worker-ы'
-  if ! jq . "${ROOT_DIR}/n8n/local-files/opencode-routing.json" >/dev/null; then
+  if ! jq . "${ROOT_DIR}/n8n/bootstrap/opencode-routing.json" >/dev/null; then
     die 'Routing JSON невалиден.'
   fi
   log_ok 'routing json'
