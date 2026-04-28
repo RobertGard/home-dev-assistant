@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
   jq \
   make \
   openssh-client \
+  passwd \
   procps \
   python3 \
   python3-pip \

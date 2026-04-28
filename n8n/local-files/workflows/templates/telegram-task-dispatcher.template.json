@@ -1,24 +1,34 @@
 {
-  "id": "900011",
-  "name": "Telegram Task Dispatcher",
+  "name": "Диспетчер задач Telegram",
   "nodes": [
     {
       "parameters": {
-        "inputSource": "workflowInputs",
-        "workflowInputs": {
-          "values": [
+        "rule": {
+          "interval": [
             {
-              "name": "reason",
-              "type": "string"
+              "field": "minutes",
+              "minutesInterval": 1
             }
           ]
         }
       },
-      "id": "execute-workflow-trigger",
-      "name": "When Executed by Another Workflow",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [240, 320]
+      "id": "schedule-trigger",
+      "name": "Триггер по расписанию",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 320]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "__OPENCODE_ROUTING_JSON__",
+        "options": {}
+      },
+      "id": "set-routing",
+      "name": "Задаём конфигурацию OpenCode",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 320]
     },
     {
       "parameters": {
@@ -27,27 +37,132 @@
         "dataTableId": {
           "mode": "id",
           "value": "__TASKS_TABLE_ID__"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "status",
-              "condition": "eq",
-              "keyValue": "queued"
-            }
-          ]
         },
         "returnAll": true,
         "orderBy": true,
         "orderByColumn": "queued_at",
         "orderByDirection": "ASC"
       },
-      "id": "get-queued-rows",
-      "name": "Get Queued Rows",
+      "id": "get-all-tasks",
+      "name": "Получаем все задачи",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [520, 240]
+      "position": [700, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Читаем итоговую конфигурацию worker-ов, уже подготовленную на этапе bootstrap.\nconst routing = $('Задаём конфигурацию OpenCode').first().json\n\n// Забираем все задачи из таблицы один раз и далее группируем их по worker-ам.\nconst allTasks = $('Получаем все задачи').all().map((item) => item.json)\n\nfunction sortByQueuedAt(left, right) {\n  return String(left.queued_at || '').localeCompare(String(right.queued_at || ''))\n}\n\n// Возвращаем по одному item на каждый worker.\n// Сразу считаем число queued и active задач, чтобы дальше использовать штатные numeric-условия в If-нодах.\nreturn Object.entries(routing.workers || {}).map(([workerAlias, workerConfig]) => {\n  const workerTasks = allTasks.filter((task) => String(task.worker_alias || '').trim() === workerAlias)\n  const queuedTasks = workerTasks\n    .filter((task) => String(task.status || '').trim() === 'queued')\n    .sort(sortByQueuedAt)\n  const activeTasks = workerTasks.filter((task) => ['running', 'needs_input'].includes(String(task.status || '').trim()))\n\n  return {\n    json: {\n      workerAlias,\n      workerBaseUrl: String(workerConfig.baseUrl || '').trim(),\n      authorizationHeader: String(workerConfig.authorizationHeader || '').trim(),\n      sessionCreatePath: String(routing.endpoints?.sessionCreate || '').trim(),\n      sessionMessagePath: String(routing.endpoints?.sessionMessage || '').trim(),\n      opencodeAgent: String(routing.defaultAgent || 'build').trim(),\n      queuedTasks,\n      queuedTasksCount: queuedTasks.length,\n      activeTasks,\n      activeTasksCount: activeTasks.length,\n    },\n  }\n})"
+      },
+      "id": "prepare-workers",
+      "name": "Готовим пакеты worker-ов",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Готовим пакеты worker-ов').item.json.queuedTasksCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "leftValue": "={{ $('Готовим пакеты worker-ов').item.json.activeTasksCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-worker-ready",
+      "name": "Есть задача и воркер свободен?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1300, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Берём пакет данных текущего worker-а, который уже содержит только queued задачи\n// и количество активных задач этого worker-а.\nconst workerPackage = $('Готовим пакеты worker-ов').item.json\nconst queuedTasks = Array.isArray(workerPackage.queuedTasks) ? workerPackage.queuedTasks : []\n\n// Приоритет всегда у зависимых задач.\n// Если зависимых задач нет, берём самую раннюю обычную queued-задачу.\nconst dependentTasks = queuedTasks.filter((task) => String(task.parent_task_key || '').trim())\nconst regularTasks = queuedTasks.filter((task) => !String(task.parent_task_key || '').trim())\nconst selectedTask = dependentTasks[0] || regularTasks[0] || null\n\nreturn {\n  json: {\n    task: selectedTask,\n    parentTaskKey: String(selectedTask?.parent_task_key || '').trim(),\n    parentMatchText: String(selectedTask?.parent_match_text || '').trim(),\n    promptText: String(selectedTask?.prompt || '').trim(),\n  },\n}"
+      },
+      "id": "pick-task",
+      "name": "Выбираем кандидатную задачу",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Выбираем кандидатную задачу').item.json.parentTaskKey }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-parent",
+      "name": "Есть родительская задача?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1900, 320]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "rowExists",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.parentTaskKey }}"
+            }
+          ]
+        }
+      },
+      "id": "parent-exists",
+      "name": "Проверяем: родитель найден",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [2140, 320]
     },
     {
       "parameters": {
@@ -57,69 +172,53 @@
           "mode": "id",
           "value": "__TASKS_TABLE_ID__"
         },
-        "matchType": "anyCondition",
+        "matchType": "allConditions",
         "filters": {
           "conditions": [
             {
-              "keyName": "status",
+              "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "running"
-            },
-            {
-              "keyName": "status",
-              "condition": "eq",
-              "keyValue": "needs_input"
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.parentTaskKey }}"
             }
           ]
         },
-        "returnAll": true
+        "returnAll": false,
+        "limit": 1
       },
-      "id": "get-blocking-rows",
-      "name": "Get Blocking Rows",
+      "id": "get-parent-task",
+      "name": "Получаем родительскую задачу",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [520, 400]
-    },
-    {
-      "parameters": {
-        "mode": "combine"
-      },
-      "id": "merge-rows",
-      "name": "Merge Rows",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [780, 320]
-    },
-    {
-      "parameters": {
-        "jsCode": "const fs = require('fs')\nconst routing = JSON.parse(fs.readFileSync('/files/opencode-routing.json', 'utf8'))\nconst queued = $('Get Queued Rows').all().map((item) => item.json)\nconst blocking = $('Get Blocking Rows').all().map((item) => item.json)\nconst blockedWorkers = new Set(blocking.map((row) => row.worker_alias))\nconst task = queued.find((row) => !blockedWorkers.has(row.worker_alias))\nif (!task) return []\nconst workerAlias = task.worker_alias || routing.defaultWorker || Object.keys(routing.workers)[0]\nconst worker = routing.workers[workerAlias]\nif (!worker) throw new Error(`Неизвестный worker alias: ${workerAlias}`)\nconst password = process.env[worker.passwordEnv || '']\nif (!password) throw new Error(`Не найден пароль для worker alias: ${workerAlias}`)\nconst authHeader = 'Basic ' + Buffer.from(`${worker.username}:${password}`, 'utf8').toString('base64')\nconst context = JSON.parse(task.context_json || '[]')\nreturn [{ task, workerAlias, worker, authHeader, context, opencodeAgent: routing.defaultAgent || 'build', endpoints: { sessionCreate: `${worker.baseUrl}${routing.endpoints.sessionCreate}`, sessionMessage: `${worker.baseUrl}${routing.endpoints.sessionMessage}`, sessionCommand: `${worker.baseUrl}${routing.endpoints.sessionCommand}` } }]"
-      },
-      "id": "pick-task",
-      "name": "Pick Task",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1040, 320]
+      "position": [2140, 320]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
           "conditions": [
             {
-              "leftValue": "={{$json.task.task_key}}",
-              "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty" }
+              "leftValue": "={{ $('Получаем родительскую задачу').item.json.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "and"
         },
         "options": {}
       },
-      "id": "if-task-found",
-      "name": "Task Found?",
+      "id": "if-parent-done",
+      "name": "Родитель выполнен успешно?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1300, 320]
+      "position": [2380, 320]
     },
     {
       "parameters": {
@@ -135,220 +234,42 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{$json.task.task_key}}"
-            },
-            {
-              "keyName": "status",
-              "condition": "eq",
-              "keyValue": "queued"
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "status": "running"
+            "status": "cancelled",
+            "pending_question": "",
+            "pending_options_json": "[]",
+            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: родительская задача ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}"
           }
         },
         "options": {
           "dryRun": false
         }
       },
-      "id": "mark-running",
-      "name": "Mark Running",
+      "id": "cancel-parent-unsuccessful",
+      "name": "Отменяем: родитель неуспешен",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [1560, 320]
+      "position": [2860, 520]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{$json.endpoints.sessionCreate}}",
-        "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { title: 'telegram-task-' + ($json.task.task_key || 'unknown') } }}",
-        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
-      },
-      "id": "create-session",
-      "name": "Create Session",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1820, 320],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const route = $('Pick Task').first().json\nconst sessionResponse = $json\nif (sessionResponse.error) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: String(sessionResponse.error.message || sessionResponse.error || 'session create failed') }] }\nconst sessionId = sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId\nif (!sessionId) { return [{ ...route, sessionId: '', promptText: '', messageUrl: '', commandUrl: '', transportError: 'Не удалось получить sessionId' }] }\nconst promptText = [ ...(route.context || []).map((item) => String(item)), String(route.task.prompt || '') ].filter(Boolean).join('\\n\\n')\nreturn [{ ...route, sessionId, promptText, messageUrl: route.endpoints.sessionMessage.replace(':id', sessionId), commandUrl: route.endpoints.sessionCommand.replace(':id', sessionId), transportError: '' }]"
-      },
-      "id": "prepare-dispatch",
-      "name": "Prepare Dispatch",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2080, 320]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            {
-              "leftValue": "={{$json.task.command_name}}",
-              "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-command",
-      "name": "Command?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [2340, 320]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{$json.commandUrl}}",
-        "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { command: $json.task.command_name, arguments: {} } }}",
-        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
-      },
-      "id": "run-command",
-      "name": "Run Command",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [2600, 220],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{$json.messageUrl}}",
-        "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { agent: $json.opencodeAgent, parts: [{ type: 'text', content: $json.promptText }] } }}",
-        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
-      },
-      "id": "send-prompt",
-      "name": "Send Prompt",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [2600, 420],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const route = $('Prepare Dispatch').first().json\nconst task = route.task\nconst response = $json\nif (route.transportError) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка запуска задачи: ${route.transportError}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nif (response.error) { return [{ task, response, sessionId: route.sessionId, status: 'failed', question: '', optionsJson: '[]', replyText: `Ошибка OpenCode: ${String(response.error.message || response.error)}`, askMessage: '', continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }] }\nconst textParts = Array.isArray(response.parts) ? response.parts.filter((p) => p.type === 'text').map((p) => p.content || p.text || '') : []\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst lines = rawText.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean)\nconst optionRegex = /^(?:\\d+[\\.\\)]|[-*•])\\s+(.+)$/\nconst optionLines = lines.map((line) => { const m = line.match(optionRegex); return m ? m[1].trim() : null }).filter(Boolean)\nconst options = optionLines.map((value) => ({ label: value, value }))\nconst status = options.length > 0 ? 'needs_input' : 'done'\nconst optionsText = options.length ? '\\n\\nВарианты ответа:\\n' + options.map((o, i) => `${i + 1}. ${o.label}`).join('\\n') : ''\nreturn [{ task, response, sessionId: route.sessionId, status, question: options.length ? rawText : '', optionsJson: JSON.stringify(options), replyText: rawText, askMessage: `${rawText}${optionsText}`.trim(), continueUrl: route.messageUrl, authHeader: route.authHeader, opencodeAgent: route.opencodeAgent }]"
-      },
-      "id": "classify-result",
-      "name": "Classify Result",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2860, 320]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            {
-              "leftValue": "={{$json.status}}",
-              "rightValue": "needs_input",
-              "operator": { "type": "string", "operation": "equals" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-needs-input",
-      "name": "Needs Input?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [3120, 320]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            {
-              "leftValue": "={{$json.status}}",
-              "rightValue": "failed",
-              "operator": { "type": "string", "operation": "equals" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-failed",
-      "name": "Failed?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [3380, 420]
-    },
-    {
-      "parameters": {
-        "resource": "row",
-        "operation": "update",
-        "dataTableId": {
-          "mode": "id",
-          "value": "__TASKS_TABLE_ID__"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "task_key",
-              "condition": "eq",
-              "keyValue": "={{$json.task.task_key}}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "status": "needs_input",
-            "session_id": "={{$json.sessionId}}",
-            "pending_question": "={{$json.question || $json.replyText}}",
-            "pending_options_json": "={{$json.optionsJson}}"
-          }
-        },
-        "options": {
-          "dryRun": false
-        }
-      },
-      "id": "mark-needs-input",
-      "name": "Mark Needs Input",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [3380, 220]
-    },
-    {
-      "parameters": {
-        "operation": "sendAndWait",
-        "chatId": "={{$('Pick Task').first().json.task.chat_id}}",
-        "message": "={{$json.askMessage}}",
-        "responseType": "freeText",
-        "options": {
+        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: родительская задача ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}",
+        "additionalFields": {
           "appendAttribution": false
         }
       },
-      "id": "telegram-ask-clarification",
-      "name": "Telegram Ask Clarification",
+      "id": "notify-parent-unsuccessful",
+      "name": "Сообщаем: родитель неуспешен",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [3640, 220],
+      "position": [3100, 520],
       "credentials": {
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
@@ -358,13 +279,40 @@
     },
     {
       "parameters": {
-        "jsCode": "const classify = $('Classify Result').first().json\nconst answerData = $json\nconst answer = String(answerData.text || answerData.message || answerData.data?.text || JSON.stringify(answerData)).trim()\nconst continuationText = `Ответ пользователя: ${answer}`\nreturn [{ ...classify, continuationText }]"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Выбираем кандидатную задачу').item.json.parentMatchText }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "leftValue": "={{ $('Получаем родительскую задачу').item.json.result_text }}",
+              "rightValue": "={{ $('Выбираем кандидатную задачу').item.json.parentMatchText }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
-      "id": "prepare-continuation",
-      "name": "Prepare Continuation",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3900, 220]
+      "id": "if-parent-match-ok",
+      "name": "Условие вхождения выполнено?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2860, 320]
     },
     {
       "parameters": {
@@ -380,7 +328,427 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{$json.task.task_key}}"
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "cancelled",
+            "pending_question": "",
+            "pending_options_json": "[]",
+            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: в результате ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "cancel-parent-match-missing",
+      "name": "Отменяем: вхождение не найдено",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [3100, 200]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: в результате ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "notify-parent-match-missing",
+      "name": "Сообщаем: вхождение не найдено",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3340, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionCreatePath }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { title: 'telegram-task-' + $('Выбираем кандидатную задачу').item.json.task.task_key } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "create-session",
+      "name": "Создаём сессию OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3340, 420],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Нормализуем ответ от OpenCode после создания сессии.\n// Здесь оставляем только данные, которые нужны для проверки запуска.\nconst sessionResponse = $('Создаём сессию OpenCode').item.json\n\nconst sessionId = String(sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId || '').trim()\nconst launchError = sessionResponse.error\n  ? String(sessionResponse.error.message || sessionResponse.error)\n  : sessionId\n    ? ''\n    : 'OpenCode не вернул session id.'\n\nreturn {\n  json: {\n    sessionId,\n    launchError,\n    messageUrl: sessionId\n      ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionMessagePath.replace(':id', sessionId)\n      : '',\n  },\n}"
+      },
+      "id": "prepare-run",
+      "name": "Готовим запуск задачи",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3580, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-session-created",
+      "name": "Сессию удалось создать?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3820, 420]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "failed",
+            "session_id": "",
+            "pending_question": "",
+            "pending_options_json": "[]",
+            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не запущена: ${$('Готовим запуск задачи').item.json.launchError}` }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-launch-error",
+      "name": "Сохраняем ошибку запуска",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [4060, 520]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не запущена: ${$('Готовим запуск задачи').item.json.launchError}` }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "notify-launch-error",
+      "name": "Сообщаем: ошибка запуска",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [4300, 520],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "queued"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "running",
+            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "pending_question": "",
+            "pending_options_json": "[]"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "mark-running",
+      "name": "Помечаем задачу выполняющейся",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [4060, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Готовим запуск задачи').item.json.messageUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { agent: $('Готовим пакеты worker-ов').item.json.opencodeAgent, parts: [{ type: 'text', content: $('Выбираем кандидатную задачу').item.json.promptText }] } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "send-prompt",
+      "name": "Отправляем задачу в OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4300, 320],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Готовим запуск задачи').item.json.messageUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { agent: $('Готовим пакеты worker-ов').item.json.opencodeAgent, parts: [{ type: 'text', content: $('Готовим ответ пользователю').item.json.answerText }] } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "send-answer",
+      "name": "Отправляем ответ в OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [5260, 520],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Приводим к единому виду как первый ответ OpenCode, так и ответы после уточнений.\n// Если на входе есть error, фиксируем failed. Иначе извлекаем текстовые части и варианты ответа.\nconst task = $('Выбираем кандидатную задачу').item.json.task\nlet response\n\ntry {\n  response = $('Отправляем ответ в OpenCode').item.json\n} catch {\n  response = $('Отправляем задачу в OpenCode').item.json\n}\n\nif (response.error) {\n  return {\n    json: {\n      resultStatus: 'failed',\n      optionsCount: 0,\n      questionText: '',\n      optionsJson: '[]',\n      replyText: `Задача ${task.task_key} завершилась ошибкой OpenCode: ${String(response.error.message || response.error)}`,\n    },\n  }\n}\n\nconst textParts = Array.isArray(response.parts)\n  ? response.parts\n      .filter((part) => String(part.type || '') === 'text')\n      .map((part) => String(part.content || part.text || '').trim())\n      .filter(Boolean)\n  : []\n\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst lines = rawText.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean)\nconst optionRegex = /^(?:\\d+[\\.\\)]|[-*•])\\s+(.+)$/\nconst options = lines\n  .map((line) => {\n    const match = line.match(optionRegex)\n    return match ? match[1].trim() : null\n  })\n  .filter(Boolean)\n  .map((value) => ({ label: value, value }))\n\nif (options.length > 0) {\n  const optionsText = options.map((option, index) => `${index + 1}. ${option.label}`).join('\\n')\n  return {\n    json: {\n      resultStatus: 'needs_input',\n      optionsCount: options.length,\n      questionText: `${rawText}\\n\\nВарианты ответа:\\n${optionsText}`.trim(),\n      optionsJson: JSON.stringify(options),\n      replyText: rawText,\n    },\n  }\n}\n\nreturn {\n  json: {\n    resultStatus: 'done',\n    optionsCount: 0,\n    questionText: '',\n    optionsJson: '[]',\n    replyText: `Задача ${task.task_key} завершена.\\n\\n${rawText}`,\n  },\n}"
+      },
+      "id": "normalize-response",
+      "name": "Разбираем ответ OpenCode",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4540, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Разбираем ответ OpenCode').item.json.resultStatus }}",
+              "rightValue": "needs_input",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-needs-input",
+      "name": "Нужен ответ пользователя?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [4780, 420]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "needs_input",
+            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "pending_question": "={{ $('Разбираем ответ OpenCode').item.json.questionText }}",
+            "pending_options_json": "={{ $('Разбираем ответ OpenCode').item.json.optionsJson }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-needs-input",
+      "name": "Сохраняем ожидание ответа",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [5020, 320]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "subject": "={{ `Вопрос по задаче ${$('Выбираем кандидатную задачу').item.json.task.task_key}` }}",
+        "message": "={{ $('Разбираем ответ OpenCode').item.json.questionText }}",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ask-in-telegram",
+      "name": "Запрашиваем ответ в Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [5260, 320],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Преобразуем ответ пользователя к тексту, который ожидает OpenCode.\n// Если пользователь отправил номер варианта, подставляем реальное значение из сохранённых options.\nconst options = JSON.parse(String($('Разбираем ответ OpenCode').item.json.optionsJson || '[]'))\nconst answerRaw = String($('Запрашиваем ответ в Telegram').item.json.data?.text || '').trim()\nlet answerText = answerRaw\n\nif (/^\\d+$/.test(answerRaw)) {\n  const selected = options[Number(answerRaw) - 1]\n  if (selected) answerText = String(selected.value || selected.label || answerRaw)\n}\n\nreturn {\n  json: {\n    answerText,\n  },\n}"
+      },
+      "id": "prepare-user-answer",
+      "name": "Готовим ответ пользователю",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4780, 520]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -397,48 +765,10 @@
         }
       },
       "id": "resume-running",
-      "name": "Resume Running",
+      "name": "Возобновляем выполнение",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [4160, 220]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{$json.continueUrl}}",
-        "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "={{$json.authHeader}}" }, { "name": "Content-Type", "value": "application/json" }] },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { agent: $json.opencodeAgent, parts: [{ type: 'text', content: $json.continuationText }] } }}",
-        "options": { "response": { "response": { "responseFormat": "json" } }, "timeout": 1800000 }
-      },
-      "id": "send-continuation",
-      "name": "Send Continuation",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [4420, 220],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const task = $('Pick Task').first().json.task\nconst result = $('Classify Result').first().json\nreturn [{ task, result, replyText: result.replyText || `Задача ${task.task_key} выполнена.` }]"
-      },
-      "id": "prepare-success",
-      "name": "Prepare Success",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3640, 520]
-    },
-    {
-      "parameters": {
-        "jsCode": "const task = $('Pick Task').first().json.task\nconst result = $('Classify Result').first().json\nreturn [{ task, result, replyText: result.replyText || `Задача ${task.task_key} завершилась с ошибкой.` }]"
-      },
-      "id": "prepare-failed",
-      "name": "Prepare Failed",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3640, 420]
+      "position": [5020, 520]
     },
     {
       "parameters": {
@@ -454,91 +784,161 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{$json.task.task_key}}"
+               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "status": "={{$json.result.status || 'done'}}",
-            "session_id": "={{$json.result.sessionId || $json.result.session_id || ''}}",
+            "status": "={{ $('Разбираем ответ OpenCode').item.json.resultStatus }}",
+            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]",
-            "result_text": "={{$json.replyText}}"
+            "result_text": "={{ $('Разбираем ответ OpenCode').item.json.replyText }}"
           }
         },
         "options": {
           "dryRun": false
         }
       },
-      "id": "mark-done",
-      "name": "Mark Final State",
+      "id": "save-final-result",
+      "name": "Сохраняем результат задачи",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [3900, 520]
+      "position": [5020, 440]
     },
     {
       "parameters": {
-        "chatId": "={{$('Pick Task').first().json.task.chat_id}}",
-        "text": "={{$json.replyText}}",
+        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "text": "={{ $('Разбираем ответ OpenCode').item.json.replyText }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
-      "id": "telegram-send-result",
-      "name": "Telegram Send Result",
+      "id": "send-final-result",
+      "name": "Отправляем результат в Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [4160, 520],
+      "position": [5260, 440],
       "credentials": {
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
         }
       }
-    },
-    {
-      "parameters": {
-        "source": "localFile",
-        "workflowPath": "/files/workflows/telegram-task-dispatcher.json",
-        "options": {
-          "waitForSubWorkflow": false
-        },
-        "mode": "once"
-      },
-      "id": "dispatch-next",
-      "name": "Dispatch Next Task",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
-      "position": [4420, 520]
     }
   ],
   "connections": {
-    "When Executed by Another Workflow": { "main": [[{ "node": "Get Queued Rows", "type": "main", "index": 0 }, { "node": "Get Blocking Rows", "type": "main", "index": 0 }]] },
-    "Get Queued Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 0 }]] },
-    "Get Blocking Rows": { "main": [[{ "node": "Merge Rows", "type": "main", "index": 1 }]] },
-    "Merge Rows": { "main": [[{ "node": "Pick Task", "type": "main", "index": 0 }]] },
-    "Pick Task": { "main": [[{ "node": "Task Found?", "type": "main", "index": 0 }]] },
-    "Task Found?": { "main": [[{ "node": "Mark Running", "type": "main", "index": 0 }], []] },
-    "Mark Running": { "main": [[{ "node": "Create Session", "type": "main", "index": 0 }]] },
-    "Create Session": { "main": [[{ "node": "Prepare Dispatch", "type": "main", "index": 0 }]] },
-    "Prepare Dispatch": { "main": [[{ "node": "Command?", "type": "main", "index": 0 }]] },
-    "Command?": { "main": [[{ "node": "Run Command", "type": "main", "index": 0 }], [{ "node": "Send Prompt", "type": "main", "index": 0 }]] },
-    "Run Command": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
-    "Send Prompt": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
-    "Classify Result": { "main": [[{ "node": "Needs Input?", "type": "main", "index": 0 }]] },
-    "Needs Input?": { "main": [[{ "node": "Mark Needs Input", "type": "main", "index": 0 }], [{ "node": "Failed?", "type": "main", "index": 0 }]] },
-    "Mark Needs Input": { "main": [[{ "node": "Telegram Ask Clarification", "type": "main", "index": 0 }]] },
-    "Telegram Ask Clarification": { "main": [[{ "node": "Prepare Continuation", "type": "main", "index": 0 }]] },
-    "Prepare Continuation": { "main": [[{ "node": "Resume Running", "type": "main", "index": 0 }]] },
-    "Resume Running": { "main": [[{ "node": "Send Continuation", "type": "main", "index": 0 }]] },
-    "Send Continuation": { "main": [[{ "node": "Classify Result", "type": "main", "index": 0 }]] },
-    "Failed?": { "main": [[{ "node": "Prepare Failed", "type": "main", "index": 0 }], [{ "node": "Prepare Success", "type": "main", "index": 0 }]] },
-    "Prepare Failed": { "main": [[{ "node": "Mark Final State", "type": "main", "index": 0 }]] },
-    "Prepare Success": { "main": [[{ "node": "Mark Final State", "type": "main", "index": 0 }]] },
-    "Mark Final State": { "main": [[{ "node": "Telegram Send Result", "type": "main", "index": 0 }]] },
-    "Telegram Send Result": { "main": [[{ "node": "Dispatch Next Task", "type": "main", "index": 0 }]] }
+    "Триггер по расписанию": {
+      "main": [[{ "node": "Задаём конфигурацию OpenCode", "type": "main", "index": 0 }]]
+    },
+    "Задаём конфигурацию OpenCode": {
+      "main": [[{ "node": "Получаем все задачи", "type": "main", "index": 0 }]]
+    },
+    "Получаем все задачи": {
+      "main": [[{ "node": "Готовим пакеты worker-ов", "type": "main", "index": 0 }]]
+    },
+    "Готовим пакеты worker-ов": {
+      "main": [[{ "node": "Есть задача и воркер свободен?", "type": "main", "index": 0 }]]
+    },
+    "Есть задача и воркер свободен?": {
+      "main": [
+        [{ "node": "Выбираем кандидатную задачу", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Выбираем кандидатную задачу": {
+      "main": [[{ "node": "Есть родительская задача?", "type": "main", "index": 0 }]]
+    },
+    "Есть родительская задача?": {
+      "main": [
+        [
+          { "node": "Проверяем: родитель найден", "type": "main", "index": 0 }
+        ],
+        [{ "node": "Создаём сессию OpenCode", "type": "main", "index": 0 }]
+      ]
+    },
+    "Проверяем: родитель найден": {
+      "main": [[{ "node": "Получаем родительскую задачу", "type": "main", "index": 0 }]]
+    },
+    "Получаем родительскую задачу": {
+      "main": [[{ "node": "Родитель выполнен успешно?", "type": "main", "index": 0 }]]
+    },
+    "Родитель выполнен успешно?": {
+      "main": [
+        [{ "node": "Условие вхождения выполнено?", "type": "main", "index": 0 }],
+        [{ "node": "Отменяем: родитель неуспешен", "type": "main", "index": 0 }]
+      ]
+    },
+    "Отменяем: родитель неуспешен": {
+      "main": [[{ "node": "Сообщаем: родитель неуспешен", "type": "main", "index": 0 }]]
+    },
+    "Условие вхождения выполнено?": {
+      "main": [
+        [{ "node": "Создаём сессию OpenCode", "type": "main", "index": 0 }],
+        [{ "node": "Отменяем: вхождение не найдено", "type": "main", "index": 0 }]
+      ]
+    },
+    "Отменяем: вхождение не найдено": {
+      "main": [[{ "node": "Сообщаем: вхождение не найдено", "type": "main", "index": 0 }]]
+    },
+    "Создаём сессию OpenCode": {
+      "main": [[{ "node": "Готовим запуск задачи", "type": "main", "index": 0 }]]
+    },
+    "Готовим запуск задачи": {
+      "main": [[{ "node": "Сессию удалось создать?", "type": "main", "index": 0 }]]
+    },
+    "Сессию удалось создать?": {
+      "main": [
+        [
+          { "node": "Помечаем задачу выполняющейся", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Сохраняем ошибку запуска", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Сохраняем ошибку запуска": {
+      "main": [[{ "node": "Сообщаем: ошибка запуска", "type": "main", "index": 0 }]]
+    },
+    "Помечаем задачу выполняющейся": {
+      "main": [[{ "node": "Отправляем задачу в OpenCode", "type": "main", "index": 0 }]]
+    },
+    "Отправляем задачу в OpenCode": {
+      "main": [[{ "node": "Разбираем ответ OpenCode", "type": "main", "index": 0 }]]
+    },
+    "Отправляем ответ в OpenCode": {
+      "main": [[{ "node": "Разбираем ответ OpenCode", "type": "main", "index": 0 }]]
+    },
+    "Разбираем ответ OpenCode": {
+      "main": [[{ "node": "Нужен ответ пользователя?", "type": "main", "index": 0 }]]
+    },
+    "Нужен ответ пользователя?": {
+      "main": [
+        [
+          { "node": "Сохраняем ожидание ответа", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Сохраняем результат задачи", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Сохраняем ожидание ответа": {
+      "main": [[{ "node": "Запрашиваем ответ в Telegram", "type": "main", "index": 0 }]]
+    },
+    "Запрашиваем ответ в Telegram": {
+      "main": [[{ "node": "Готовим ответ пользователю", "type": "main", "index": 0 }]]
+    },
+    "Готовим ответ пользователю": {
+      "main": [[{ "node": "Возобновляем выполнение", "type": "main", "index": 0 }]]
+    },
+    "Возобновляем выполнение": {
+      "main": [[{ "node": "Отправляем ответ в OpenCode", "type": "main", "index": 0 }]]
+    },
+    "Сохраняем результат задачи": {
+      "main": [[{ "node": "Отправляем результат в Telegram", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"

@@ -8,10 +8,11 @@ INGRESS_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-
 DISPATCH_TEMPLATE="${ROOT_DIR}/n8n/local-files/workflows/templates/telegram-task-dispatcher.template.json"
 INGRESS_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-ingress.json"
 DISPATCH_WORKFLOW="${ROOT_DIR}/n8n/local-files/workflows/telegram-task-dispatcher.json"
+ROUTING_FILE="${ROOT_DIR}/n8n/local-files/opencode-routing.json"
 TASKS_TABLE_NAME="agent_tasks"
 STATE_FILE="${ROOT_DIR}/.n8n-bootstrap-state.json"
-INGRESS_WORKFLOW_NAME="Telegram Task Ingress"
-DISPATCH_WORKFLOW_NAME="Telegram Task Dispatcher"
+INGRESS_WORKFLOW_NAME="Постановка задач через Telegram"
+DISPATCH_WORKFLOW_NAME="Диспетчер задач Telegram"
 
 log_info() {
   printf '[INFO] %s\n' "$1"
@@ -108,11 +109,50 @@ render_template() {
   local cred_id="$3"
   local cred_name="$4"
   local table_id="$5"
+  local opencode_routing_json_escaped="$6"
+  local cred_id_escaped="${cred_id//|/\\|}"
+  local cred_name_escaped="${cred_name//|/\\|}"
+  local table_id_escaped="${table_id//|/\\|}"
+  local telegram_chat_id_escaped="${TELEGRAM_CHAT_ID//|/\\|}"
+  local opencode_routing_json_sed_escaped="${opencode_routing_json_escaped//\\/\\\\}"
+  opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//&/\\&}"
+  opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//|/\\|}"
   sed \
-    -e "s/__TELEGRAM_CREDENTIAL_ID__/${cred_id}/g" \
-    -e "s/__TELEGRAM_CREDENTIAL_NAME__/${cred_name}/g" \
-    -e "s/__TASKS_TABLE_ID__/${table_id}/g" \
+    -e "s|__TELEGRAM_CREDENTIAL_ID__|${cred_id_escaped}|g" \
+    -e "s|__TELEGRAM_CREDENTIAL_NAME__|${cred_name_escaped}|g" \
+    -e "s|__TASKS_TABLE_ID__|${table_id_escaped}|g" \
+    -e "s|__TELEGRAM_CHAT_ID__|${telegram_chat_id_escaped}|g" \
+    -e "s|__OPENCODE_ROUTING_JSON__|${opencode_routing_json_sed_escaped}|g" \
     "$input" > "$output"
+}
+
+render_opencode_routing_json() {
+  local password_env_name
+  local missing_password_envs=()
+
+  if [ ! -f "$ROUTING_FILE" ]; then
+    die "Не найден routing файл OpenCode: ${ROUTING_FILE}"
+  fi
+
+  while IFS= read -r password_env_name; do
+    [ -z "$password_env_name" ] && continue
+    if [ -z "${!password_env_name:-}" ]; then
+      missing_password_envs+=("$password_env_name")
+    fi
+  done < <(jq -r '.workers | to_entries[] | .value.passwordEnv // empty' "$ROUTING_FILE")
+
+  if [ "${#missing_password_envs[@]}" -gt 0 ]; then
+    die "Не заданы env с паролями OpenCode worker: ${missing_password_envs[*]}"
+  fi
+
+  jq -c --argjson requestTimeoutMs "${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}" '. + {requestTimeoutMs: $requestTimeoutMs} | .workers |= with_entries(.value |= (. + {authorizationHeader: ("Basic " + ((.username + ":" + (env[.passwordEnv] // "")) | @base64))} | del(.passwordEnv)))' "$ROUTING_FILE"
+}
+
+escape_json_string_content() {
+  local raw="$1"
+  local escaped
+  escaped="$(printf '%s' "$raw" | jq -Rsa .)"
+  printf '%s' "${escaped:1:${#escaped}-2}"
 }
 
 workflow_id_by_name() {
@@ -141,7 +181,7 @@ if [ -z "$tasks_table_id" ]; then
     -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    -d '{"name":"agent_tasks","columns":[{"name":"task_key","type":"string"},{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"user_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"mode","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"queued_at","type":"date"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
+    -d '{"name":"agent_tasks","columns":[{"name":"task_key","type":"string"},{"name":"source","type":"string"},{"name":"chat_id","type":"string"},{"name":"user_id","type":"string"},{"name":"username","type":"string"},{"name":"worker_alias","type":"string"},{"name":"mode","type":"string"},{"name":"command_name","type":"string"},{"name":"prompt","type":"string"},{"name":"parent_task_key","type":"string"},{"name":"parent_match_text","type":"string"},{"name":"context_json","type":"string"},{"name":"status","type":"string"},{"name":"queued_at","type":"date"},{"name":"session_id","type":"string"},{"name":"pending_question","type":"string"},{"name":"pending_options_json","type":"string"},{"name":"result_text","type":"string"}]}' \
     "${N8N_URL}/api/v1/data-tables" | jq -r '.id // .data.id')"; then
     die 'Не удалось создать Data Table agent_tasks.'
   fi
@@ -181,10 +221,13 @@ log_ok "Telegram credential готов: ${credential_id}"
 
 step_start 'Сохраняю bootstrap state и рендерю workflow'
 
+opencode_routing_json="$(render_opencode_routing_json)"
+opencode_routing_json_escaped="$(escape_json_string_content "$opencode_routing_json")"
+
 printf '{"telegramCredentialId":"%s","tasksTableId":"%s"}\n' "$credential_id" "$tasks_table_id" > "$STATE_FILE"
 
-render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id"
-render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id"
+render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
+render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
 
 log_ok 'Локальные workflow-файлы подготовлены.'
 

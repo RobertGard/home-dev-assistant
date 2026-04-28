@@ -80,8 +80,8 @@ bash ./scripts/setup-stack.sh
 Если включен Telegram:
 
 1. пользователь пишет боту
-2. `Telegram Trigger` получает сообщение
-3. `Telegram Task Ingress` кладет задачу в `n8n Data Table` `agent_tasks`
+2. `Telegram Trigger` подписан на все апдейты (`*`) и принимает входящее сообщение
+3. `Постановка задач через Telegram` кладет задачу в `n8n Data Table` `agent_tasks`
 4. ingress сразу запускает `Telegram Task Dispatcher`
 5. dispatcher берет следующую задачу и отправляет ее в нужный OpenCode worker
 6. если OpenCode просит уточнение, `n8n` использует `Telegram sendAndWait`

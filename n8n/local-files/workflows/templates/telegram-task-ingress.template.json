@@ -1,19 +1,21 @@
 {
-  "id": "900010",
-  "name": "Telegram Task Ingress",
+  "name": "Постановка задач через Telegram",
   "nodes": [
     {
       "parameters": {
         "updates": [
-          "message"
+          "*"
         ],
         "additionalFields": {}
       },
       "id": "telegram-trigger",
-      "name": "Telegram Trigger",
+      "name": "Триггер Telegram",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
-      "position": [260, 300],
+      "position": [
+        112,
+        336
+      ],
       "credentials": {
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
@@ -23,76 +25,180 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json\nconst msg = input.message || {}\nconst text = String(msg.text || '').trim()\nconst chatId = String(msg.chat?.id || '')\nconst userId = String(msg.from?.id || '')\nconst username = String(msg.from?.username || msg.from?.first_name || '')\nconst allowedChatId = String(process.env.TELEGRAM_CHAT_ID || '').trim()\nconst chatAllowed = Boolean(allowedChatId) && chatId === allowedChatId\n\nif (!text) return [{ chatAllowed, skip: true, chatId, replyText: 'Пустое сообщение не поставлено в очередь.' }]\n\nfunction parseFlags(inputText) {\n  const flags = {}\n  const regex = /--([a-zA-Z0-9_-]+)=\"([^\"]*)\"|--([a-zA-Z0-9_-]+)='([^']*)'/g\n  let match\n  while ((match = regex.exec(inputText)) !== null) {\n    const key = match[1] || match[3]\n    const value = match[2] ?? match[4] ?? ''\n    flags[key] = value\n  }\n  return flags\n}\n\nlet workerAlias = 'primary'\nlet mode = 'prompt'\nlet commandName = ''\nlet prompt = ''\n\nif (text.startsWith('/task')) {\n  const rest = text.replace(/^\/task\\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  prompt = flags.prompt || ''\n  if (!prompt) {\n    return [{ chatAllowed, skip: true, chatId, replyText: 'Для /task укажи задачу. Пример: /task --worker=\"primary\" --prompt=\"Почини CI\"' }]\n  }\n} else if (text.startsWith('/command')) {\n  mode = 'command'\n  const rest = text.replace(/^\/command\\s*/, '')\n  const flags = parseFlags(rest)\n  workerAlias = flags.worker || 'primary'\n  commandName = flags.name || flags.command || 'verify'\n} else if (text.startsWith('/help')) {\n  return [{ chatAllowed, skip: true, chatId, replyText: 'Команды:\n/task --worker=\"primary\" --prompt=\"текст задачи\"\n/command --worker=\"primary\" --name=\"verify\"\nИспользуй значения в кавычках.' }]\n} else {\n  prompt = text\n}\n\nconst taskKey = `${Date.now()}-${chatId}-${Math.random().toString(36).slice(2, 8)}`\nreturn [{ chatAllowed, skip: false, taskKey, chatId, userId, username, workerAlias, mode, commandName, prompt, contextJson: JSON.stringify([]), queuedAt: new Date().toISOString(), replyText: `Задача поставлена в очередь для worker: ${workerAlias}` }]"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "command-starts-with-slash",
+              "leftValue": "={{ $('Триггер Telegram').first().json.message.text }}",
+              "rightValue": "/",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        320
+      ],
+      "id": "if-command",
+      "name": "Это команда?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "chat-id-allowed",
+              "leftValue": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
+              "rightValue": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        336
+      ],
+      "id": "if-chat-allowed",
+      "name": "Чат разрешён?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telegram-chat-id",
+              "name": "telegram_chat_id",
+              "value": "__TELEGRAM_CHAT_ID__",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        336
+      ],
+      "id": "set-vars",
+      "name": "Задаём переменные"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "text": "=Команда распарсена с ошибкой",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-parse-error",
+      "name": "Отправляем: Команда распарсена с ошибкой",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        528
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "text": "=Недопустимый чат",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-invalid-chat",
+      "name": "Отправляем: Недопустимый чат",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        528
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $('Триггер Telegram').first().json\nconst msg = input.message || {}\n\nconst rawText = String(msg.text || '').trim()\n\nfunction parseCommand(text) {\n  const match = text.match(/^\\/([a-zA-Z0-9_]+)(?:@\\w+)?(?:\\s+|$)/)\n\n  if (!match) {\n    return {\n      type: null,\n      textAfterCommand: text\n    }\n  }\n\n  return {\n    type: match[1],\n    textAfterCommand: text.slice(match[0].length).trim()\n  }\n}\n\nfunction parseTokens(text) {\n  const flags = {}\n  const args = []\n\n  const regex = /\"([^\"]*)\"|'([^']*)'|--([a-zA-Z0-9_-]+)(?:=(?:\"([^\"]*)\"|'([^']*)'|([^\\s\"']+)))?|([^\\s]+)/g\n\n  let match\n\n  while ((match = regex.exec(text)) !== null) {\n    if (match[3]) {\n      const key = match[3]\n      const value = match[4] ?? match[5] ?? match[6] ?? true\n      flags[key] = value\n      continue\n    }\n\n    const value = match[1] ?? match[2] ?? match[7]\n\n    if (value !== undefined) {\n      args.push(value)\n    }\n  }\n\n  return { flags, args }\n}\n\nconst command = parseCommand(rawText)\nconst parsed = parseTokens(command.textAfterCommand)\nconst taskKey = `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\nconst parentTaskId = String(parsed.flags['parent-id'] || parsed.flags.parent || '').trim()\nconst parentMatchText = String(parsed.flags.match || parsed.flags.contains || '').trim()\nconst prompt = String(parsed.flags.prompt || '').trim()\nconst contextJson = JSON.stringify({\n  rawText,\n  commandType: command.type,\n  flags: parsed.flags,\n  args: parsed.args,\n  parentTaskId,\n  parentMatchText,\n  prompt\n})\n\nreturn [{\n  json: {\n    rawText,\n    commandType: command.type,\n    flags: parsed.flags,\n    args: parsed.args,\n    taskKey,\n    queuedAt: new Date().toISOString(),\n    parentTaskId,\n    parentMatchText,\n    prompt,\n    contextJson,\n    replyText: `Задача поставлена в очередь: ${taskKey}`\n  }\n}]"
       },
       "id": "parse-command",
-      "name": "Parse Telegram Command",
+      "name": "Разбираем команды Telegram",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [520, 300]
+      "position": [
+        1008,
+        304
+      ]
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{$json.chatAllowed}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
+        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "text": "={{ $('Разбираем команды Telegram').first().json.replyText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
-      "id": "if-chat-allowed",
-      "name": "Chat Allowed?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [760, 180]
+      "id": "send-queued-message",
+      "name": "Отправляем: Задача поставлена в работу",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        304
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{$json.skip}}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-skip",
-      "name": "Skip?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1020, 300]
-    },
-    {
-      "parameters": {
-        "resource": "row",
-        "operation": "insert",
         "dataTableId": {
           "mode": "id",
           "value": "__TASKS_TABLE_ID__"
@@ -100,113 +206,348 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "task_key": "={{$json.taskKey}}",
+            "task_key": "={{ $('Разбираем команды Telegram').first().json.taskKey }}",
             "source": "telegram",
-            "chat_id": "={{$json.chatId}}",
-            "user_id": "={{$json.userId}}",
-            "username": "={{$json.username}}",
-            "worker_alias": "={{$json.workerAlias}}",
-            "mode": "={{$json.mode}}",
-            "command_name": "={{$json.commandName || ''}}",
-            "prompt": "={{$json.prompt || ''}}",
-            "context_json": "={{$json.contextJson}}",
+            "chat_id": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+            "username": "={{ $('Триггер Telegram').first().json.message.chat.username }}",
+            "worker_alias": "={{ $('Разбираем команды Telegram').first().json.flags.worker || 'primary' }}",
+            "command_name": "={{ $('Разбираем команды Telegram').first().json.commandType || 'task' }}",
+            "prompt": "={{ $('Разбираем команды Telegram').first().json.prompt }}",
+            "parent_task_key": "={{ $('Разбираем команды Telegram').first().json.parentTaskId }}",
+            "parent_match_text": "={{ $('Разбираем команды Telegram').first().json.parentMatchText }}",
+            "context_json": "={{ $('Разбираем команды Telegram').first().json.contextJson }}",
             "status": "queued",
-            "queued_at": "={{$json.queuedAt}}",
-            "session_id": "",
-            "pending_question": "",
-            "pending_options_json": "[]",
-            "result_text": ""
-          }
+            "queued_at": "={{ $('Разбираем команды Telegram').first().json.queuedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "task_key",
+              "displayName": "task_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "worker_alias",
+              "displayName": "worker_alias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "command_name",
+              "displayName": "command_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parent_task_key",
+              "displayName": "parent_task_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parent_match_text",
+              "displayName": "parent_match_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "context_json",
+              "displayName": "context_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "queued_at",
+              "displayName": "queued_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "pending_question",
+              "displayName": "pending_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "pending_options_json",
+              "displayName": "pending_options_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "result_text",
+              "displayName": "result_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {
           "optimizeBulk": true
         }
       },
       "id": "queue-task",
-      "name": "Queue Task",
+      "name": "Вставляем задачу",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [1280, 400]
-    },
-    {
-      "parameters": {
-        "chatId": "={{$json.chatId}}",
-        "text": "={{$json.replyText}}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "id": "telegram-reply",
-      "name": "Telegram Reply Skip",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [1280, 300],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{$json.chatId}}",
-        "text": "={{$json.replyText}}",
-        "additionalFields": {
-          "appendAttribution": false
-        }
-      },
-      "id": "telegram-reply-queued",
-      "name": "Telegram Reply Queued",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [1540, 420],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "source": "localFile",
-        "workflowPath": "/files/workflows/telegram-task-dispatcher.json",
-        "options": {
-          "waitForSubWorkflow": false
-        },
-        "mode": "once"
-      },
-      "id": "dispatch-task",
-      "name": "Dispatch Task",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
-      "position": [1800, 420]
+      "position": [
+        1248,
+        304
+      ]
     }
   ],
+  "pinData": {
+    "Триггер Telegram": [
+      {
+        "json": {
+          "update_id": 737459491,
+          "message": {
+            "message_id": 1625,
+            "from": {
+              "id": 1781493994,
+              "is_bot": false,
+              "first_name": "Роберт Гард",
+              "username": "DE_GARD",
+              "language_code": "ru"
+            },
+            "chat": {
+              "id": 1781493994,
+              "first_name": "Роберт Гард",
+              "username": "DE_GARD",
+              "type": "private"
+            },
+            "date": 1777385542,
+            "text": "/task --worker=\"primary\" --prompt=\"Почини CI\" --parent-id=\"task-abc123\" --match=\"готово\"",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 5,
+                "type": "bot_command"
+              }
+            ]
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "connections": {
-    "Telegram Trigger": {
-      "main": [[{ "node": "Parse Telegram Command", "type": "main", "index": 0 }]]
-    },
-    "Parse Telegram Command": {
-      "main": [[{ "node": "Chat Allowed?", "type": "main", "index": 0 }]]
-    },
-    "Chat Allowed?": {
+    "Триггер Telegram": {
       "main": [
-        [{ "node": "Skip?", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Задаём переменные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Это команда?": {
+      "main": [
+        [
+          {
+            "node": "Разбираем команды Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Отправляем: Команда распарсена с ошибкой",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Чат разрешён?": {
+      "main": [
+        [
+          {
+            "node": "Это команда?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Отправляем: Недопустимый чат",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Задаём переменные": {
+      "main": [
+        [
+          {
+            "node": "Чат разрешён?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разбираем команды Telegram": {
+      "main": [
+        [
+          {
+            "node": "Вставляем задачу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправляем: Задача поставлена в работу": {
+      "main": [
         []
       ]
     },
-    "Skip?": {
+    "Вставляем задачу": {
       "main": [
-        [{ "node": "Telegram Reply Skip", "type": "main", "index": 0 }],
-        [{ "node": "Queue Task", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Отправляем: Задача поставлена в работу",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
-    },
-    "Queue Task": { "main": [[{ "node": "Telegram Reply Queued", "type": "main", "index": 0 }]] },
-    "Telegram Reply Queued": { "main": [[{ "node": "Dispatch Task", "type": "main", "index": 0 }]] }
+    }
   },
+  "active": false,
   "settings": {
-    "executionOrder": "v1"
-  }
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "id": "900010",
+  "tags": []
 }
