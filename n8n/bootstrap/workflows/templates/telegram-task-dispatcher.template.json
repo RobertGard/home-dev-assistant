@@ -829,6 +829,7 @@
       }
     }
   ],
+  "pinData": {},
   "connections": {
     "Триггер по расписанию": {
       "main": [[{ "node": "Задаём конфигурацию OpenCode", "type": "main", "index": 0 }]]
@@ -940,7 +941,11 @@
       "main": [[{ "node": "Отправляем результат в Telegram", "type": "main", "index": 0 }]]
     }
   },
+  "active": false,
   "settings": {
-    "executionOrder": "v1"
-  }
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "id": "900011",
+  "tags": []
 }
