@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${PATH:-}"
+
 AGENT_USER="agent"
 AGENT_HOME="/home/${AGENT_USER}"
 WORKSPACE_ROOT="${OPENCODE_WORKSPACE_ROOT:-/workspace}"
