@@ -441,11 +441,20 @@ ask_port() {
   done
 }
 
+ask_model_id() {
+  printf 'Примеры моделей для workflow:\n' >&2
+  printf '  - opencode/minimax-m2.5-free (бесплатная модель OpenCode Zen)\n' >&2
+  printf '  - openai/gpt-5.5\n' >&2
+  printf '  - opencode/gemini-3.1-pro\n' >&2
+  ask_matching "$1" "$2" '^[^[:space:]]+/[^[:space:]]+$' 'Укажи полную модель в формате provider/model, например opencode/minimax-m2.5-free, openai/gpt-5.5 или opencode/gemini-3.1-pro.'
+}
+
 write_routing_file() {
   local worker1_alias="${WORKER_ALIASES[0]}"
   {
     printf '{\n'
     printf '  "defaultAgent": "%s",\n' "$(json_escape "$OPENCODE_AGENT")"
+    printf '  "defaultModel": "%s",\n' "$(json_escape "$OPENCODE_MODEL")"
     printf '  "defaultWorker": "%s",\n' "$(json_escape "$worker1_alias")"
     printf '  "workers": {\n'
     for ((i = 0; i < ${#WORKER_NAMES[@]}; i++)); do
@@ -565,6 +574,10 @@ recover_existing_configuration() {
   ensure_env_default N8N_BASIC_AUTH_ACTIVE true
   ensure_env_default N8N_BASIC_AUTH_USER admin
   ensure_env_default OPENCODE_AGENT build
+  if [[ ! "${OPENCODE_MODEL:-}" =~ ^[^[:space:]]+/[^[:space:]]+$ ]]; then
+    upsert_env_value OPENCODE_MODEL "$(ask_model_id 'Дефолтная модель OpenCode для workflow' '')"
+    log_ok 'OPENCODE_MODEL добавлен в .env'
+  fi
   ensure_env_default OPENCODE_PROVIDER_TIMEOUT_MS 1800000
   ensure_env_default OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS 900000
   ensure_env_default OPENCODE_MCP_TIMEOUT_MS 120000
@@ -1083,9 +1096,11 @@ if ask_yes_no "Включить Telegram интеграцию?" y; then
 fi
 
 OPENCODE_AGENT="build"
+OPENCODE_MODEL=""
 OPENCODE_PROVIDER_TIMEOUT_MS="1800000"
 OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS="900000"
 OPENCODE_MCP_TIMEOUT_MS="120000"
+OPENCODE_MODEL="$(ask_model_id "Дефолтная модель OpenCode для workflow" "$OPENCODE_MODEL")"
 if [ "$ADVANCED_MODE" = "true" ]; then
   OPENCODE_AGENT="$(ask_required "Дефолтный агент OpenCode" "$OPENCODE_AGENT")"
   OPENCODE_PROVIDER_TIMEOUT_MS="$(ask_required "Timeout LLM-запросов OpenCode (мс)" "$OPENCODE_PROVIDER_TIMEOUT_MS")"
@@ -1237,6 +1252,7 @@ step_start 'Записываю .env'
   write_env_line N8N_BASIC_AUTH_PASSWORD "$N8N_BASIC_AUTH_PASSWORD"
   printf '\n'
   write_env_line OPENCODE_AGENT "$OPENCODE_AGENT"
+  write_env_line OPENCODE_MODEL "$OPENCODE_MODEL"
   printf '\n'
   write_env_line OPENCODE_PROVIDER_TIMEOUT_MS "$OPENCODE_PROVIDER_TIMEOUT_MS"
   write_env_line OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS "$OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS"
