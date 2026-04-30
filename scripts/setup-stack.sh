@@ -507,6 +507,8 @@ write_routing_file() {
     printf '    "sessionSummarize": "/session/:id/summarize",\n'
     printf '    "sessionRevert": "/session/:id/revert",\n'
     printf '    "sessionUnrevert": "/session/:id/unrevert",\n'
+    printf '    "permissionList": "/permission",\n'
+    printf '    "permissionReply": "/permission/:requestID/reply",\n'
     printf '    "questionList": "/question",\n'
     printf '    "questionReply": "/question/:requestID/reply",\n'
     printf '    "questionReject": "/question/:requestID/reject",\n'

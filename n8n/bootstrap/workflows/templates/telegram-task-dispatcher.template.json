@@ -742,7 +742,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionRejectPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionReplyPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) }}",
+        "url": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + '/permission/' + $('Готовим ответ пользователю').item.json.requestId + '/reply' : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionRejectPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionReplyPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -758,7 +758,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
+        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
         "options": {
           "response": {
             "response": {
@@ -987,8 +987,8 @@
           "value": {
             "status": "needs_input",
             "session_id": "={{ $('Выбираем активную задачу').item.json.sessionId }}",
-            "pending_question": "={{ $('Ищем вопрос для сессии').item.json.pendingQuestionText }}",
-            "pending_options_json": "={{ $('Ищем вопрос для сессии').item.json.pendingOptionsJson }}"
+            "pending_question": "={{ $('Готовим pending интеракцию').item.json.pendingQuestionText }}",
+            "pending_options_json": "={{ $('Готовим pending интеракцию').item.json.pendingOptionsJson }}"
           }
         },
         "options": {
@@ -1004,7 +1004,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
-        "text": "={{ $('Ищем вопрос для сессии').item.json.pendingQuestionText }}",
+        "text": "={{ (() => { try { return $('Готовим pending интеракцию').item.json.pendingQuestionText } catch { return $('Выбираем активную задачу').item.json.task.pending_question } })() }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -1025,7 +1025,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "let pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String($('Ищем вопрос для сессии').item.json.pendingOptionsJson || '{}'))\n} catch {\n  pendingMeta = {}\n}\n\nreturn {\n  json: {\n    deliveredPendingOptionsJson: JSON.stringify({\n      ...pendingMeta,\n      deliveredAt: new Date().toISOString(),\n    }),\n  },\n}"
+        "jsCode": "let pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String($('Готовим pending интеракцию').item.json.pendingOptionsJson || ''))\n} catch {}\n\nif (!pendingMeta || Object.keys(pendingMeta).length === 0) {\n  try {\n    pendingMeta = JSON.parse(String($('Выбираем активную задачу').item.json.task.pending_options_json || '{}'))\n  } catch {\n    pendingMeta = {}\n  }\n}\n\nreturn {\n  json: {\n    deliveredPendingOptionsJson: JSON.stringify({\n      ...pendingMeta,\n      deliveredAt: new Date().toISOString(),\n    }),\n  },\n}"
       },
       "id": "prepare-question-delivery",
       "name": "Готовим pending вопрос к отправке",
@@ -1076,7 +1076,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nlet pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String(task.pending_options_json || '{}'))\n} catch {\n  pendingMeta = {}\n}\n\nconst answers = Array.isArray(pendingMeta.answers) ? pendingMeta.answers : []\nconst rejectRequested = pendingMeta.rejectRequested === true\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst deliveredAt = String(pendingMeta.deliveredAt || '').trim()\nconst hasAnswerPayload = Boolean(requestId) && (rejectRequested || answers.length > 0)\nconst shouldSendQuestion = Boolean(requestId) && !hasAnswerPayload && !deliveredAt && String(task.pending_question || '').trim()\nconst deliveredPendingMeta = {\n  ...pendingMeta,\n  deliveredAt: new Date().toISOString(),\n}\n\nreturn {\n  json: {\n    requestId,\n    requestAction: rejectRequested ? 'reject' : 'reply',\n    answers,\n    hasAnswerPayload,\n    shouldSendQuestion,\n    deliveredPendingOptionsJson: JSON.stringify(deliveredPendingMeta),\n  },\n}"
+        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nlet pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String(task.pending_options_json || '{}'))\n} catch {\n  pendingMeta = {}\n}\n\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst deliveredAt = String(pendingMeta.deliveredAt || '').trim()\nconst interactionType = Array.isArray(pendingMeta.questions) ? 'question' : String(pendingMeta.type || 'permission').trim()\nconst answers = Array.isArray(pendingMeta.answers) ? pendingMeta.answers : []\nconst rejectRequested = pendingMeta.rejectRequested === true\nconst permissionReply = String(pendingMeta.reply || '').trim()\nconst permissionMessage = String(pendingMeta.message || '').trim()\nconst hasAnswerPayload = interactionType === 'question'\n  ? Boolean(requestId) && (rejectRequested || answers.length > 0)\n  : Boolean(requestId) && Boolean(permissionReply)\nconst shouldSendQuestion = Boolean(requestId) && !hasAnswerPayload && !deliveredAt && String(task.pending_question || '').trim()\nconst deliveredPendingMeta = {\n  ...pendingMeta,\n  deliveredAt: new Date().toISOString(),\n}\n\nreturn {\n  json: {\n    interactionType,\n    requestId,\n    requestAction: rejectRequested ? 'reject' : 'reply',\n    answers,\n    permissionReply,\n    permissionMessage,\n    hasAnswerPayload,\n    shouldSendQuestion,\n    deliveredPendingOptionsJson: JSON.stringify(deliveredPendingMeta),\n  },\n}"
       },
       "id": "prepare-user-answer",
       "name": "Готовим ответ пользователю",
@@ -1383,6 +1383,89 @@
     {
       "parameters": {
         "method": "GET",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + '/permission' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "get-worker-permissions",
+      "name": "Получаем pending permissions OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1900, 600],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nconst rawItems = $('Получаем pending permissions OpenCode').all().map((item) => item.json)\nconst requests = rawItems\n  .flatMap((item) => Array.isArray(item) ? item : [item])\n  .filter((item) => item && !item.error)\n\nconst request = requests.find((item) => String(item.sessionID || '').trim() === String(task.session_id || '').trim())\n\nif (!request) {\n  return {\n    json: {\n      hasPermission: false,\n      pendingQuestionText: '',\n      pendingOptionsJson: '[]',\n    },\n  }\n}\n\nconst patterns = Array.isArray(request.patterns) ? request.patterns : []\nconst alwaysPatterns = Array.isArray(request.always) ? request.always : []\nconst metadata = request.metadata && typeof request.metadata === 'object' ? request.metadata : {}\nconst patternLines = patterns.length > 0 ? patterns.map((pattern) => `- ${String(pattern).trim()}`).join('\\n') : '- (паттерн не указан)'\nconst alwaysLines = alwaysPatterns.length > 0 ? alwaysPatterns.map((pattern) => `- ${String(pattern).trim()}`).join('\\n') : '- (нет рекомендуемых паттернов)'\nconst metadataText = Object.keys(metadata).length > 0 ? JSON.stringify(metadata, null, 2) : ''\n\nconst pendingQuestionText = [\n  `OpenCode запрашивает разрешение по задаче ${task.task_key}.`,\n  String(request.title || 'Требуется подтверждение действия.').trim(),\n  '',\n  `Тип permission: ${String(request.permission || 'unknown').trim()}`,\n  'Запрошенные паттерны:',\n  patternLines,\n  '',\n  'Если выбрать always, будут разрешены паттерны:',\n  alwaysLines,\n  metadataText ? `\\nДополнительные данные:\\n${metadataText}` : '',\n  '',\n  'Ответьте одним из вариантов:',\n  '1. once - разрешить один раз',\n  '2. always - разрешить всегда для предложенных паттернов',\n  '3. reject - отклонить',\n  '',\n  'Можно ответить номером, словом once/always/reject или добавить пояснение после reject.',\n  'Если одновременно ожидаются ответы по нескольким задачам, отвечайте в формате `task_key: ваш ответ`.',\n].filter(Boolean).join('\\n').trim()\n\nconst pendingMeta = {\n  type: 'permission',\n  requestId: String(request.id || '').trim(),\n  permission: String(request.permission || '').trim(),\n  title: String(request.title || '').trim(),\n  patterns,\n  always: alwaysPatterns,\n  metadata,\n  reply: '',\n  message: '',\n}\n\nreturn {\n  json: {\n    hasPermission: true,\n    pendingQuestionText,\n    pendingOptionsJson: JSON.stringify(pendingMeta),\n  },\n}"
+      },
+      "id": "find-session-permission",
+      "name": "Ищем permission для сессии",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2140, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Ищем permission для сессии').item.json.hasPermission }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-session-permission-found",
+      "name": "Есть permission OpenCode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2380, 600]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "let source = null\n\ntry {\n  const permission = $('Ищем permission для сессии').item.json\n  if (permission && permission.hasPermission) source = permission\n} catch {}\n\nif (!source) {\n  try {\n    const question = $('Ищем вопрос для сессии').item.json\n    if (question && question.hasQuestion) source = question\n  } catch {}\n}\n\nreturn {\n  json: {\n    pendingQuestionText: String(source?.pendingQuestionText || '').trim(),\n    pendingOptionsJson: String(source?.pendingOptionsJson || '[]'),\n  },\n}"
+      },
+      "id": "prepare-pending-interaction",
+      "name": "Готовим pending интеракцию",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2620, 680]
+    },
+    {
+      "parameters": {
+        "method": "GET",
         "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionStatusPath }}",
         "sendHeaders": true,
         "headerParameters": {
@@ -1486,7 +1569,7 @@
     "Задача уже ждёт ответ?": {
       "main": [
         [{ "node": "Готовим ответ пользователю", "type": "main", "index": 0 }],
-        [{ "node": "Получаем pending вопросы OpenCode", "type": "main", "index": 0 }]
+        [{ "node": "Получаем pending permissions OpenCode", "type": "main", "index": 0 }]
       ]
     },
     "Готовим ответ пользователю": {
@@ -1504,6 +1587,18 @@
         []
       ]
     },
+    "Получаем pending permissions OpenCode": {
+      "main": [[{ "node": "Ищем permission для сессии", "type": "main", "index": 0 }]]
+    },
+    "Ищем permission для сессии": {
+      "main": [[{ "node": "Есть permission OpenCode?", "type": "main", "index": 0 }]]
+    },
+    "Есть permission OpenCode?": {
+      "main": [
+        [{ "node": "Готовим pending интеракцию", "type": "main", "index": 0 }],
+        [{ "node": "Получаем pending вопросы OpenCode", "type": "main", "index": 0 }]
+      ]
+    },
     "Получаем pending вопросы OpenCode": {
       "main": [[{ "node": "Ищем вопрос для сессии", "type": "main", "index": 0 }]]
     },
@@ -1512,9 +1607,12 @@
     },
     "Есть вопрос OpenCode?": {
       "main": [
-        [{ "node": "Сохраняем pending вопрос", "type": "main", "index": 0 }],
+        [{ "node": "Готовим pending интеракцию", "type": "main", "index": 0 }],
         [{ "node": "Получаем статусы сессий OpenCode", "type": "main", "index": 0 }]
       ]
+    },
+    "Готовим pending интеракцию": {
+      "main": [[{ "node": "Сохраняем pending вопрос", "type": "main", "index": 0 }]]
     },
     "Отправляем вопрос в Telegram": {
       "main": [[{ "node": "Готовим pending вопрос к отправке", "type": "main", "index": 0 }]]

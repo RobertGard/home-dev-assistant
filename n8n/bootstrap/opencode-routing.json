@@ -44,6 +44,8 @@
     "sessionSummarize": "/session/:id/summarize",
     "sessionRevert": "/session/:id/revert",
     "sessionUnrevert": "/session/:id/unrevert",
+    "permissionList": "/permission",
+    "permissionReply": "/permission/:requestID/reply",
     "questionList": "/question",
     "questionReply": "/question/:requestID/reply",
     "questionReject": "/question/:requestID/reject",
