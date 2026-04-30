@@ -53,7 +53,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// Читаем итоговую конфигурацию worker-ов, уже подготовленную на этапе bootstrap.\nconst routing = $('Задаём конфигурацию OpenCode').first().json\n\n// Забираем все задачи из таблицы один раз и далее группируем их по worker-ам.\nconst allTasks = $('Получаем все задачи').all().map((item) => item.json)\n\nfunction sortByQueuedAt(left, right) {\n  return String(left.queued_at || '').localeCompare(String(right.queued_at || ''))\n}\n\nfunction parseModel(modelRef) {\n  const normalized = String(modelRef || '').trim()\n  const separatorIndex = normalized.indexOf('/')\n\n  if (!normalized || separatorIndex <= 0 || separatorIndex === normalized.length - 1) {\n    return null\n  }\n\n  return {\n    providerID: normalized.slice(0, separatorIndex),\n    modelID: normalized.slice(separatorIndex + 1),\n  }\n}\n\n// Возвращаем по одному item на каждый worker.\n// Сразу считаем число queued и active задач, чтобы дальше использовать штатные numeric-условия в If-нодах.\nreturn Object.entries(routing.workers || {}).map(([workerAlias, workerConfig]) => {\n  const workerTasks = allTasks.filter((task) => String(task.worker_alias || '').trim() === workerAlias)\n  const queuedTasks = workerTasks\n    .filter((task) => String(task.status || '').trim() === 'queued')\n    .sort(sortByQueuedAt)\n  const activeTasks = workerTasks.filter((task) => ['running', 'needs_input'].includes(String(task.status || '').trim()))\n\n  return {\n    json: {\n      workerAlias,\n      workerBaseUrl: String(workerConfig.baseUrl || '').trim(),\n      authorizationHeader: String(workerConfig.authorizationHeader || '').trim(),\n      sessionCreatePath: String(routing.endpoints?.sessionCreate || '').trim(),\n      sessionMessagePath: String(routing.endpoints?.sessionMessage || '').trim(),\n      opencodeAgent: String(routing.defaultAgent || 'build').trim(),\n      opencodeModel: parseModel(routing.defaultModel),\n      queuedTasks,\n      queuedTasksCount: queuedTasks.length,\n      activeTasks,\n      activeTasksCount: activeTasks.length,\n    },\n  }\n})"
+        "jsCode": "// Читаем итоговую конфигурацию worker-ов, уже подготовленную на этапе bootstrap.\nconst routing = $('Задаём конфигурацию OpenCode').first().json\n\n// Забираем все задачи из таблицы один раз и далее группируем их по worker-ам.\nconst allTasks = $('Получаем все задачи').all().map((item) => item.json)\n\nfunction sortByQueuedAt(left, right) {\n  return String(left.queued_at || '').localeCompare(String(right.queued_at || ''))\n}\n\nfunction parseModel(modelRef) {\n  const normalized = String(modelRef || '').trim()\n  const separatorIndex = normalized.indexOf('/')\n\n  if (!normalized || separatorIndex <= 0 || separatorIndex === normalized.length - 1) {\n    return null\n  }\n\n  return {\n    providerID: normalized.slice(0, separatorIndex),\n    modelID: normalized.slice(separatorIndex + 1),\n  }\n}\n\n// Возвращаем по одному item на каждый worker.\n// Сразу считаем число queued и active задач, чтобы дальше использовать штатные numeric-условия в If-нодах.\nreturn Object.entries(routing.workers || {}).map(([workerAlias, workerConfig]) => {\n  const workerTasks = allTasks\n    .filter((task) => String(task.worker_alias || '').trim() === workerAlias)\n    .sort(sortByQueuedAt)\n  const queuedTasks = workerTasks.filter((task) => String(task.status || '').trim() === 'queued')\n  const activeTasks = workerTasks.filter((task) => ['running', 'needs_input'].includes(String(task.status || '').trim()))\n\n  return {\n    json: {\n      workerAlias,\n      workerBaseUrl: String(workerConfig.baseUrl || '').trim(),\n      authorizationHeader: String(workerConfig.authorizationHeader || '').trim(),\n      sessionCreatePath: String(routing.endpoints?.sessionCreate || '').trim(),\n      sessionMessagePath: String(routing.endpoints?.sessionMessage || '').trim(),\n      messageListPath: String(routing.endpoints?.messageList || '').trim(),\n      questionListPath: String(routing.endpoints?.questionList || '').trim(),\n      questionReplyPath: String(routing.endpoints?.questionReply || '').trim(),\n      questionRejectPath: String(routing.endpoints?.questionReject || '').trim(),\n      sessionStatusPath: String(routing.endpoints?.sessionStatus || '').trim(),\n      promptAsyncPath: String(routing.endpoints?.promptAsync || '').trim(),\n      opencodeAgent: String(routing.defaultAgent || 'build').trim(),\n      opencodeModel: parseModel(routing.defaultModel),\n      workerTasks,\n      queuedTasks,\n      queuedTasksCount: queuedTasks.length,\n      activeTasks,\n      activeTasksCount: activeTasks.length,\n    },\n  }\n})"
       },
       "id": "prepare-workers",
       "name": "Готовим пакеты worker-ов",
@@ -102,7 +102,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "// Берём пакет данных текущего worker-а, который уже содержит только queued задачи\n// и количество активных задач этого worker-а.\nconst workerPackage = $('Готовим пакеты worker-ов').item.json\nconst queuedTasks = Array.isArray(workerPackage.queuedTasks) ? workerPackage.queuedTasks : []\n\n// Приоритет всегда у зависимых задач.\n// Если зависимых задач нет, берём самую раннюю обычную queued-задачу.\nconst dependentTasks = queuedTasks.filter((task) => String(task.parent_task_key || '').trim())\nconst regularTasks = queuedTasks.filter((task) => !String(task.parent_task_key || '').trim())\nconst selectedTask = dependentTasks[0] || regularTasks[0] || null\n\nreturn {\n  json: {\n    task: selectedTask,\n    parentTaskKey: String(selectedTask?.parent_task_key || '').trim(),\n    parentMatchText: String(selectedTask?.parent_match_text || '').trim(),\n    promptText: String(selectedTask?.prompt || '').trim(),\n  },\n}"
+        "jsCode": "// Берём пакет данных текущего worker-а, который уже содержит только queued задачи\n// и количество активных задач этого worker-а.\nconst workerPackage = $('Готовим пакеты worker-ов').item.json\nconst queuedTasks = Array.isArray(workerPackage.queuedTasks) ? workerPackage.queuedTasks : []\nconst workerTasks = Array.isArray(workerPackage.workerTasks) ? workerPackage.workerTasks : []\n\n// Приоритет всегда у зависимых задач.\n// Если зависимых задач нет, берём самую раннюю обычную queued-задачу.\nconst dependentTasks = queuedTasks.filter((task) => String(task.parent_task_key || '').trim())\nconst regularTasks = queuedTasks.filter((task) => !String(task.parent_task_key || '').trim())\nconst selectedTask = dependentTasks[0] || regularTasks[0] || null\n\nlet context = {}\ntry {\n  context = JSON.parse(String(selectedTask?.context_json || '{}'))\n} catch {\n  context = {}\n}\n\nconst chatId = String(selectedTask?.chat_id || '').trim()\nconst sessionHistory = workerTasks\n  .filter((task) => String(task.chat_id || '').trim() === chatId)\n  .filter((task) => String(task.session_id || '').trim())\n\nconst latestSessionTask = sessionHistory[sessionHistory.length - 1] || null\nconst latestSessionId = String(latestSessionTask?.session_id || '').trim()\nconst newSessionRequested = Boolean(\n  context.newSessionRequested ||\n  context.flags?.['new-session'] ||\n  context.flags?.['new_session'] ||\n  context.flags?.['fresh-session'] ||\n  context.flags?.['fresh_session']\n)\nconst claimToken = `claim-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`\n\nreturn {\n  json: {\n    task: selectedTask,\n    parentTaskKey: String(selectedTask?.parent_task_key || '').trim(),\n    parentMatchText: String(selectedTask?.parent_match_text || '').trim(),\n    promptText: String(selectedTask?.prompt || '').trim(),\n    latestSessionId,\n    createNewSession: newSessionRequested || !latestSessionId,\n    claimToken,\n  },\n}"
       },
       "id": "pick-task",
       "name": "Выбираем кандидатную задачу",
@@ -234,7 +234,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+                "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -328,7 +328,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+                "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -373,6 +373,48 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Выбираем кандидатную задачу').item.json.createNewSession }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-create-session-needed",
+      "name": "Нужна новая сессия?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3100, 420]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return {\n  json: {\n    sessionId: String($('Выбираем кандидатную задачу').item.json.latestSessionId || '').trim(),\n    launchError: '',\n  },\n}"
+      },
+      "id": "reuse-session",
+      "name": "Переиспользуем текущую сессию OpenCode",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3340, 300]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionCreatePath }}",
         "sendHeaders": true,
@@ -411,7 +453,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "// Нормализуем ответ от OpenCode после создания сессии.\n// Здесь оставляем только данные, которые нужны для проверки запуска.\nconst sessionResponse = $('Создаём сессию OpenCode').item.json\n\nconst sessionId = String(sessionResponse.id || sessionResponse.data?.id || sessionResponse.sessionId || '').trim()\nconst launchError = sessionResponse.error\n  ? String(sessionResponse.error.message || sessionResponse.error)\n  : sessionId\n    ? ''\n    : 'OpenCode не вернул session id.'\n\nreturn {\n  json: {\n    sessionId,\n    launchError,\n    messageUrl: sessionId\n      ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionMessagePath.replace(':id', sessionId)\n      : '',\n  },\n}"
+        "jsCode": "// Нормализуем данные сессии после создания или переиспользования.\nconst sessionResponse = $json\nconst worker = $('Готовим пакеты worker-ов').item.json\n\nconst sessionId = String(sessionResponse.sessionId || sessionResponse.id || sessionResponse.data?.id || '').trim()\nconst launchError = sessionResponse.error\n  ? String(sessionResponse.error.message || sessionResponse.error)\n  : sessionId\n    ? ''\n    : 'OpenCode не вернул session id.'\n\nfunction withSession(pathTemplate) {\n  return sessionId && pathTemplate\n    ? worker.workerBaseUrl + String(pathTemplate).replace(':id', sessionId)\n    : ''\n}\n\nreturn {\n  json: {\n    sessionId,\n    launchError,\n    promptAsyncUrl: withSession(worker.promptAsyncPath),\n    messageListUrl: withSession(worker.messageListPath),\n    sessionMessageUrl: withSession(worker.sessionMessagePath),\n    sessionStatusUrl: worker.workerBaseUrl + worker.sessionStatusPath,\n    questionListUrl: worker.workerBaseUrl + worker.questionListPath,\n  },\n}"
       },
       "id": "prepare-run",
       "name": "Готовим запуск задачи",
@@ -462,7 +504,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+                "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -533,7 +575,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "running",
-            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "session_id": "={{ $('Выбираем кандидатную задачу').item.json.claimToken }}",
             "pending_question": "",
             "pending_options_json": "[]"
           }
@@ -543,15 +585,97 @@
         }
       },
       "id": "mark-running",
-      "name": "Помечаем задачу выполняющейся",
+      "name": "Захватываем queued задачу",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [4060, 320]
     },
     {
       "parameters": {
+        "resource": "row",
+        "operation": "rowExists",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "running"
+            },
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.claimToken }}"
+            }
+          ]
+        }
+      },
+      "id": "verify-task-claimed",
+      "name": "Проверяем: queued задача захвачена",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [4300, 320]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "running"
+            },
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.claimToken }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "running",
+            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "pending_question": "",
+            "pending_options_json": "[]"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-session-id",
+      "name": "Сохраняем session_id задачи",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [5020, 320]
+    },
+    {
+      "parameters": {
         "method": "POST",
-        "url": "={{ $('Готовим запуск задачи').item.json.messageUrl }}",
+        "url": "={{ $('Готовим запуск задачи').item.json.promptAsyncUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -571,14 +695,14 @@
         "options": {
           "response": {
             "response": {
-              "responseFormat": "json"
+              "responseFormat": "text"
             }
           },
           "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
         }
       },
       "id": "send-prompt",
-      "name": "Отправляем задачу в OpenCode",
+      "name": "Запускаем задачу в OpenCode",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [4300, 320],
@@ -596,10 +720,10 @@
           "conditions": [
             {
               "id": "if-prompt-error-exists",
-              "leftValue": "={{ $('Отправляем задачу в OpenCode').item.json.error?.message }}",
+              "leftValue": "={{ $('Запускаем задачу в OpenCode').item.json.error }}",
               "rightValue": "",
               "operator": {
-                "type": "string",
+                "type": "object",
                 "operation": "exists",
                 "singleValue": true
               }
@@ -610,7 +734,7 @@
         "options": {}
       },
       "id": "if-prompt-sent",
-      "name": "Есть ошибка выполнения задачи?",
+      "name": "Есть ошибка async-запуска?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [4540, 320]
@@ -618,7 +742,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Готовим запуск задачи').item.json.messageUrl }}",
+        "url": "={{ $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionRejectPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionReplyPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -634,7 +758,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { agent: $('Готовим пакеты worker-ов').item.json.opencodeAgent, ...( $('Готовим пакеты worker-ов').item.json.opencodeModel ? { model: $('Готовим пакеты worker-ов').item.json.opencodeModel } : {} ), parts: [{ type: 'text', text: $('Готовим ответ пользователю').item.json.answerText }] } }}",
+        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
         "options": {
           "response": {
             "response": {
@@ -645,7 +769,7 @@
         }
       },
       "id": "send-answer",
-      "name": "Отправляем ответ в OpenCode",
+      "name": "Отвечаем на вопрос OpenCode",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [5260, 520],
@@ -663,10 +787,10 @@
           "conditions": [
             {
               "id": "if-answer-error-exists",
-              "leftValue": "={{ $('Отправляем ответ в OpenCode').item.json.error?.message }}",
+              "leftValue": "={{ $('Отвечаем на вопрос OpenCode').item.json.error }}",
               "rightValue": "",
               "operator": {
-                "type": "string",
+                "type": "object",
                 "operation": "exists",
                 "singleValue": true
               }
@@ -677,7 +801,7 @@
         "options": {}
       },
       "id": "if-answer-sent",
-      "name": "Есть ошибка отправки ответа?",
+      "name": "Есть ошибка ответа на вопрос?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [5500, 520]
@@ -707,7 +831,7 @@
             "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]",
-            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не выполнена: ${String($('Отправляем задачу в OpenCode').item.json.error?.message || $('Отправляем задачу в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}"
+            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не запущена: ${String($('Запускаем задачу в OpenCode').item.json.error?.message || $('Запускаем задачу в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}"
           }
         },
         "options": {
@@ -715,7 +839,7 @@
         }
       },
       "id": "save-prompt-error",
-      "name": "Сохраняем ошибку выполнения задачи",
+      "name": "Сохраняем ошибку async-запуска",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [4780, 560]
@@ -723,13 +847,13 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не выполнена: ${String($('Отправляем задачу в OpenCode').item.json.error?.message || $('Отправляем задачу в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
+        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} не запущена: ${String($('Запускаем задачу в OpenCode').item.json.error?.message || $('Запускаем задачу в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
       "id": "notify-prompt-error",
-      "name": "Сообщаем: ошибка выполнения задачи",
+      "name": "Сообщаем: ошибка async-запуска",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [5020, 560],
@@ -754,7 +878,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+              "keyValue": "={{ $('Выбираем активную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -762,10 +886,10 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "failed",
-            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "session_id": "={{ $('Выбираем активную задачу').item.json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]",
-            "result_text": "={{ `Ответ для задачи ${$('Выбираем кандидатную задачу').item.json.task.task_key} не отправлен: ${String($('Отправляем ответ в OpenCode').item.json.error?.message || $('Отправляем ответ в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}"
+            "result_text": "={{ `Ответ на вопрос по задаче ${$('Выбираем активную задачу').item.json.task.task_key} не отправлен: ${String($('Отвечаем на вопрос OpenCode').item.json.error?.message || $('Отвечаем на вопрос OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}"
           }
         },
         "options": {
@@ -773,21 +897,21 @@
         }
       },
       "id": "save-answer-error",
-      "name": "Сохраняем ошибку отправления ответа",
+      "name": "Сохраняем ошибку ответа на вопрос",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [5740, 640]
     },
     {
       "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Ответ для задачи ${$('Выбираем кандидатную задачу').item.json.task.task_key} не отправлен: ${String($('Отправляем ответ в OpenCode').item.json.error?.message || $('Отправляем ответ в OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
+        "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
+        "text": "={{ `Ответ на вопрос по задаче ${$('Выбираем активную задачу').item.json.task.task_key} не отправлен: ${String($('Отвечаем на вопрос OpenCode').item.json.error?.message || $('Отвечаем на вопрос OpenCode').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
       "id": "notify-answer-error",
-      "name": "Сообщаем: ошибка отправления ответа",
+      "name": "Сообщаем: ошибка ответа на вопрос",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [5980, 640],
@@ -802,7 +926,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "// Приводим к единому виду как первый ответ OpenCode, так и ответы после уточнений.\n// Если на входе есть error, фиксируем failed. Иначе извлекаем текстовые части и варианты ответа.\nconst task = $('Выбираем кандидатную задачу').item.json.task\nlet response\n\ntry {\n  response = $('Отправляем ответ в OpenCode').item.json\n} catch {\n  response = $('Отправляем задачу в OpenCode').item.json\n}\n\nif (response.error) {\n  return {\n    json: {\n      resultStatus: 'failed',\n      optionsCount: 0,\n      questionText: '',\n      optionsJson: '[]',\n      replyText: `Задача ${task.task_key} завершилась ошибкой OpenCode: ${String(response.error.message || response.error)}`,\n    },\n  }\n}\n\nconst textParts = Array.isArray(response.parts)\n  ? response.parts\n      .filter((part) => String(part.type || '') === 'text')\n      .map((part) => String(part.content || part.text || '').trim())\n      .filter(Boolean)\n  : []\n\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(response)\nconst lines = rawText.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean)\nconst optionRegex = /^(?:\\d+[\\.\\)]|[-*•])\\s+(.+)$/\nconst options = lines\n  .map((line) => {\n    const match = line.match(optionRegex)\n    return match ? match[1].trim() : null\n  })\n  .filter(Boolean)\n  .map((value) => ({ label: value, value }))\n\nif (options.length > 0) {\n  const optionsText = options.map((option, index) => `${index + 1}. ${option.label}`).join('\\n')\n  return {\n    json: {\n      resultStatus: 'needs_input',\n      optionsCount: options.length,\n      questionText: `${rawText}\\n\\nВарианты ответа:\\n${optionsText}`.trim(),\n      optionsJson: JSON.stringify(options),\n      replyText: rawText,\n    },\n  }\n}\n\nreturn {\n  json: {\n    resultStatus: 'done',\n    optionsCount: 0,\n    questionText: '',\n    optionsJson: '[]',\n    replyText: `Задача ${task.task_key} завершена.\\n\\n${rawText}`,\n  },\n}"
+        "jsCode": "// В async-сценарии задача получает итог отдельно: сначала polling /session/status,\n// затем чтение истории сообщений через GET /session/:id/message.\nconst task = $('Выбираем активную задачу').item.json.task\nconst rawItems = $('Получаем сообщения сессии OpenCode').all().map((item) => item.json)\nconst messages = rawItems\n  .flatMap((item) => Array.isArray(item) ? item : [item])\n  .filter(Boolean)\n\nconst assistantMessages = messages\n  .filter((message) => String(message.info?.role || '') === 'assistant')\n  .sort((left, right) => Number(left.info?.time?.created || 0) - Number(right.info?.time?.created || 0))\n\nconst latestAssistant = assistantMessages[assistantMessages.length - 1] || null\n\nif (!latestAssistant) {\n  return {\n    json: {\n      resultStatus: 'failed',\n      optionsCount: 0,\n      questionText: '',\n      optionsJson: '[]',\n      replyText: `Задача ${task.task_key} завершилась без итогового ответа OpenCode.`,\n    },\n  }\n}\n\nconst assistantError = latestAssistant.info?.error\nif (assistantError) {\n  const errorMessage = String(assistantError.data?.message || assistantError.message || assistantError.name || 'OpenCode завершился с ошибкой.')\n  return {\n    json: {\n      resultStatus: 'failed',\n      optionsCount: 0,\n      questionText: '',\n      optionsJson: '[]',\n      replyText: `Задача ${task.task_key} завершилась ошибкой OpenCode: ${errorMessage}`,\n    },\n  }\n}\n\nconst textParts = Array.isArray(latestAssistant.parts)\n  ? latestAssistant.parts\n      .filter((part) => String(part.type || '') === 'text')\n      .map((part) => String(part.text || part.content || '').trim())\n      .filter(Boolean)\n  : []\n\nconst rawText = textParts.join('\\n').trim() || JSON.stringify(latestAssistant)\n\nreturn {\n  json: {\n    resultStatus: 'done',\n    optionsCount: 0,\n    questionText: '',\n    optionsJson: '[]',\n    replyText: `Задача ${task.task_key} завершена.\\n\\n${rawText}`,\n  },\n}"
       },
       "id": "normalize-response",
       "name": "Разбираем ответ OpenCode",
@@ -821,11 +945,12 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $('Разбираем ответ OpenCode').item.json.resultStatus }}",
-              "rightValue": "needs_input",
+              "leftValue": "={{ $('Проверяем статус активной сессии').item.json.isIdle }}",
+              "rightValue": true,
               "operator": {
-                "type": "string",
-                "operation": "equals"
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
               }
             }
           ],
@@ -834,7 +959,7 @@
         "options": {}
       },
       "id": "if-needs-input",
-      "name": "Нужен ответ пользователя?",
+      "name": "Сессия завершена?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [4780, 420]
@@ -853,7 +978,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+                "keyValue": "={{ $('Выбираем активную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -861,9 +986,9 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "needs_input",
-            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
-            "pending_question": "={{ $('Разбираем ответ OpenCode').item.json.questionText }}",
-            "pending_options_json": "={{ $('Разбираем ответ OpenCode').item.json.optionsJson }}"
+            "session_id": "={{ $('Выбираем активную задачу').item.json.sessionId }}",
+            "pending_question": "={{ $('Ищем вопрос для сессии').item.json.pendingQuestionText }}",
+            "pending_options_json": "={{ $('Ищем вопрос для сессии').item.json.pendingOptionsJson }}"
           }
         },
         "options": {
@@ -871,24 +996,21 @@
         }
       },
       "id": "save-needs-input",
-      "name": "Сохраняем ожидание ответа",
+      "name": "Сохраняем pending вопрос",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [5020, 320]
     },
     {
       "parameters": {
-        "resource": "message",
-        "operation": "sendAndWait",
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "message": "={{ $('Разбираем ответ OpenCode').item.json.questionText }}",
-        "responseType": "freeText",
-        "options": {
+        "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
+        "text": "={{ $('Ищем вопрос для сессии').item.json.pendingQuestionText }}",
+        "additionalFields": {
           "appendAttribution": false
         }
       },
       "id": "ask-in-telegram",
-      "name": "Запрашиваем ответ в Telegram",
+      "name": "Отправляем вопрос в Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [5260, 320],
@@ -903,13 +1025,13 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "// Преобразуем ответ пользователя к тексту, который ожидает OpenCode.\n// Если пользователь отправил номер варианта, подставляем реальное значение из сохранённых options.\nconst options = JSON.parse(String($('Разбираем ответ OpenCode').item.json.optionsJson || '[]'))\nconst answerRaw = String($('Запрашиваем ответ в Telegram').item.json.data?.text || '').trim()\nlet answerText = answerRaw\n\nif (/^\\d+$/.test(answerRaw)) {\n  const selected = options[Number(answerRaw) - 1]\n  if (selected) answerText = String(selected.value || selected.label || answerRaw)\n}\n\nreturn {\n  json: {\n    answerText,\n  },\n}"
+        "jsCode": "let pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String($('Ищем вопрос для сессии').item.json.pendingOptionsJson || '{}'))\n} catch {\n  pendingMeta = {}\n}\n\nreturn {\n  json: {\n    deliveredPendingOptionsJson: JSON.stringify({\n      ...pendingMeta,\n      deliveredAt: new Date().toISOString(),\n    }),\n  },\n}"
       },
-      "id": "prepare-user-answer",
-      "name": "Готовим ответ пользователю",
+      "id": "prepare-question-delivery",
+      "name": "Готовим pending вопрос к отправке",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4780, 520]
+      "position": [5500, 320]
     },
     {
       "parameters": {
@@ -925,7 +1047,88 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+              "keyValue": "={{ $('Выбираем активную задачу').item.json.task.task_key }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_input"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_options_json": "={{ $('Готовим pending вопрос к отправке').item.json.deliveredPendingOptionsJson }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-question-delivered",
+      "name": "Помечаем pending вопрос доставленным",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [5740, 320]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nlet pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String(task.pending_options_json || '{}'))\n} catch {\n  pendingMeta = {}\n}\n\nconst answers = Array.isArray(pendingMeta.answers) ? pendingMeta.answers : []\nconst rejectRequested = pendingMeta.rejectRequested === true\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst deliveredAt = String(pendingMeta.deliveredAt || '').trim()\nconst hasAnswerPayload = Boolean(requestId) && (rejectRequested || answers.length > 0)\nconst shouldSendQuestion = Boolean(requestId) && !hasAnswerPayload && !deliveredAt && String(task.pending_question || '').trim()\nconst deliveredPendingMeta = {\n  ...pendingMeta,\n  deliveredAt: new Date().toISOString(),\n}\n\nreturn {\n  json: {\n    requestId,\n    requestAction: rejectRequested ? 'reject' : 'reply',\n    answers,\n    hasAnswerPayload,\n    shouldSendQuestion,\n    deliveredPendingOptionsJson: JSON.stringify(deliveredPendingMeta),\n  },\n}"
+      },
+      "id": "prepare-user-answer",
+      "name": "Готовим ответ пользователю",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4780, 520]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Готовим ответ пользователю').item.json.shouldSendQuestion }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-should-send-question",
+      "name": "Нужно отправить pending вопрос?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [5020, 600]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+                "keyValue": "={{ $('Выбираем активную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -933,6 +1136,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "running",
+            "session_id": "={{ $('Выбираем активную задачу').item.json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]"
           }
@@ -961,7 +1165,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
+                "keyValue": "={{ $('Выбираем активную задачу').item.json.task.task_key }}"
             }
           ]
         },
@@ -969,7 +1173,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "={{ $('Разбираем ответ OpenCode').item.json.resultStatus }}",
-            "session_id": "={{ $('Готовим запуск задачи').item.json.sessionId }}",
+            "session_id": "={{ $('Выбираем активную задачу').item.json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]",
             "result_text": "={{ $('Разбираем ответ OpenCode').item.json.replyText }}"
@@ -987,7 +1191,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
+        "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
         "text": "={{ $('Разбираем ответ OpenCode').item.json.replyText }}",
         "additionalFields": {
           "appendAttribution": false
@@ -1004,6 +1208,247 @@
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Готовим пакеты worker-ов').item.json.activeTasksCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-active-task",
+      "name": "Есть активная задача?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1180, 520]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const workerPackage = $('Готовим пакеты worker-ов').item.json\nconst activeTasks = Array.isArray(workerPackage.activeTasks) ? workerPackage.activeTasks : []\nconst selectedTask = activeTasks[0] || null\n\nreturn {\n  json: {\n    task: selectedTask,\n    taskStatus: String(selectedTask?.status || '').trim(),\n    sessionId: String(selectedTask?.session_id || '').trim(),\n    pendingQuestion: String(selectedTask?.pending_question || '').trim(),\n    pendingOptionsJson: String(selectedTask?.pending_options_json || '[]'),\n  },\n}"
+      },
+      "id": "pick-active-task",
+      "name": "Выбираем активную задачу",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 520]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Выбираем активную задачу').item.json.taskStatus }}",
+              "rightValue": "needs_input",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-active-needs-input",
+      "name": "Задача уже ждёт ответ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1660, 520]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Готовим ответ пользователю').item.json.hasAnswerPayload }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-pending-answer-ready",
+      "name": "Ответ пользователя уже сохранён?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [5020, 520]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionListPath }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "get-worker-questions",
+      "name": "Получаем pending вопросы OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1900, 680],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nconst rawItems = $('Получаем pending вопросы OpenCode').all().map((item) => item.json)\nconst requests = rawItems\n  .flatMap((item) => Array.isArray(item) ? item : [item])\n  .filter((item) => item && !item.error)\n\nconst request = requests.find((item) => String(item.sessionID || '').trim() === String(task.session_id || '').trim())\n\nif (!request) {\n  return {\n    json: {\n      hasQuestion: false,\n      pendingQuestionText: '',\n      pendingOptionsJson: '[]',\n    },\n  }\n}\n\nconst questions = Array.isArray(request.questions) ? request.questions : []\nconst blocks = questions.map((question, index) => {\n  const lines = []\n  const header = String(question.header || `Вопрос ${index + 1}`).trim()\n  const body = String(question.question || '').trim()\n  const options = Array.isArray(question.options) ? question.options : []\n\n  lines.push(`${index + 1}. ${header}`)\n  if (body) lines.push(body)\n\n  if (options.length > 0) {\n    lines.push('')\n    options.forEach((option, optionIndex) => {\n      const label = String(option.label || '').trim()\n      const description = String(option.description || '').trim()\n      lines.push(`${optionIndex + 1}. ${label}${description ? ` - ${description}` : ''}`)\n    })\n  }\n\n  lines.push('')\n  lines.push(question.multiple\n    ? 'Можно выбрать несколько вариантов: перечислите номера или названия через запятую.'\n    : 'Выберите один вариант: ответьте номером или точным названием.')\n\n  if (question.custom !== false) {\n    lines.push('Если подходящего варианта нет, можно ответить своим текстом.')\n  }\n\n  return lines.join('\\n').trim()\n})\n\nconst pendingQuestionText = [\n  `OpenCode ждёт уточнение по задаче ${task.task_key}.`,\n  questions.length > 1\n    ? 'В одном запросе несколько вопросов. Ответьте несколькими непустыми строками в том же порядке, что и вопросы ниже.'\n    : 'Ответьте номером варианта, точным названием или своим текстом, если это разрешено.',\n  'Если одновременно ожидаются ответы по нескольким задачам, отвечайте в формате `task_key: ваш ответ`.',\n  '',\n  blocks.join('\\n\\n'),\n  '',\n  'Для отклонения вопроса отправьте `/reject` или `task_key: /reject`.',\n].join('\\n').trim()\n\nconst pendingMeta = {\n  requestId: String(request.id || '').trim(),\n  questions: questions.map((question) => ({\n    question: String(question.question || '').trim(),\n    header: String(question.header || '').trim(),\n    multiple: Boolean(question.multiple),\n    custom: question.custom !== false,\n    options: (Array.isArray(question.options) ? question.options : []).map((option) => ({\n      label: String(option.label || '').trim(),\n      description: String(option.description || '').trim(),\n    })),\n  })),\n  answers: null,\n  rejectRequested: false,\n}\n\nreturn {\n  json: {\n    hasQuestion: true,\n    pendingQuestionText,\n    pendingOptionsJson: JSON.stringify(pendingMeta),\n  },\n}"
+      },
+      "id": "find-session-question",
+      "name": "Ищем вопрос для сессии",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2140, 680]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Ищем вопрос для сессии').item.json.hasQuestion }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-session-question-found",
+      "name": "Есть вопрос OpenCode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2380, 680]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.sessionStatusPath }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "get-session-status",
+      "name": "Получаем статусы сессий OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2620, 840],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const task = $('Выбираем активную задачу').item.json.task\nconst statusMap = $('Получаем статусы сессий OpenCode').first().json || {}\nconst sessionStatus = statusMap[String(task.session_id || '').trim()] || {}\nconst statusType = String(sessionStatus.type || '').trim()\n\nreturn {\n  json: {\n    statusType,\n    isIdle: statusType === 'idle',\n  },\n}"
+      },
+      "id": "read-session-status",
+      "name": "Проверяем статус активной сессии",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 840]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.messageListPath.replace(':id', $('Выбираем активную задачу').item.json.sessionId) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Готовим пакеты worker-ов').item.json.authorizationHeader }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Задаём конфигурацию OpenCode').first().json.requestTimeoutMs }}"
+        }
+      },
+      "id": "get-session-messages",
+      "name": "Получаем сообщения сессии OpenCode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [5020, 440],
+      "onError": "continueRegularOutput"
     }
   ],
   "pinData": {},
@@ -1018,7 +1463,13 @@
       "main": [[{ "node": "Готовим пакеты worker-ов", "type": "main", "index": 0 }]]
     },
     "Готовим пакеты worker-ов": {
-      "main": [[{ "node": "Есть задача и воркер свободен?", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Есть активная задача?", "type": "main", "index": 0 }]]
+    },
+    "Есть активная задача?": {
+      "main": [
+        [{ "node": "Выбираем активную задачу", "type": "main", "index": 0 }],
+        [{ "node": "Есть задача и воркер свободен?", "type": "main", "index": 0 }]
+      ]
     },
     "Есть задача и воркер свободен?": {
       "main": [
@@ -1029,12 +1480,66 @@
     "Выбираем кандидатную задачу": {
       "main": [[{ "node": "Есть родительская задача?", "type": "main", "index": 0 }]]
     },
+    "Выбираем активную задачу": {
+      "main": [[{ "node": "Задача уже ждёт ответ?", "type": "main", "index": 0 }]]
+    },
+    "Задача уже ждёт ответ?": {
+      "main": [
+        [{ "node": "Готовим ответ пользователю", "type": "main", "index": 0 }],
+        [{ "node": "Получаем pending вопросы OpenCode", "type": "main", "index": 0 }]
+      ]
+    },
+    "Готовим ответ пользователю": {
+      "main": [[{ "node": "Ответ пользователя уже сохранён?", "type": "main", "index": 0 }]]
+    },
+    "Ответ пользователя уже сохранён?": {
+      "main": [
+        [{ "node": "Отвечаем на вопрос OpenCode", "type": "main", "index": 0 }],
+        [{ "node": "Нужно отправить pending вопрос?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Нужно отправить pending вопрос?": {
+      "main": [
+        [{ "node": "Отправляем вопрос в Telegram", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Получаем pending вопросы OpenCode": {
+      "main": [[{ "node": "Ищем вопрос для сессии", "type": "main", "index": 0 }]]
+    },
+    "Ищем вопрос для сессии": {
+      "main": [[{ "node": "Есть вопрос OpenCode?", "type": "main", "index": 0 }]]
+    },
+    "Есть вопрос OpenCode?": {
+      "main": [
+        [{ "node": "Сохраняем pending вопрос", "type": "main", "index": 0 }],
+        [{ "node": "Получаем статусы сессий OpenCode", "type": "main", "index": 0 }]
+      ]
+    },
+    "Отправляем вопрос в Telegram": {
+      "main": [[{ "node": "Готовим pending вопрос к отправке", "type": "main", "index": 0 }]]
+    },
+    "Готовим pending вопрос к отправке": {
+      "main": [[{ "node": "Помечаем pending вопрос доставленным", "type": "main", "index": 0 }]]
+    },
+    "Сохраняем pending вопрос": {
+      "main": [[]]
+    },
+    "Помечаем pending вопрос доставленным": {
+      "main": [[]]
+    },
+    "Получаем статусы сессий OpenCode": {
+      "main": [[{ "node": "Проверяем статус активной сессии", "type": "main", "index": 0 }]]
+    },
+    "Проверяем статус активной сессии": {
+      "main": [[{ "node": "Сессия завершена?", "type": "main", "index": 0 }]]
+    },
     "Есть родительская задача?": {
       "main": [
         [
           { "node": "Проверяем: родитель найден", "type": "main", "index": 0 }
         ],
-        [{ "node": "Создаём сессию OpenCode", "type": "main", "index": 0 }]
+        [{ "node": "Захватываем queued задачу", "type": "main", "index": 0 }]
       ]
     },
     "Проверяем: родитель найден": {
@@ -1054,8 +1559,20 @@
     },
     "Условие вхождения выполнено?": {
       "main": [
-        [{ "node": "Создаём сессию OpenCode", "type": "main", "index": 0 }],
+        [{ "node": "Захватываем queued задачу", "type": "main", "index": 0 }],
         [{ "node": "Отменяем: вхождение не найдено", "type": "main", "index": 0 }]
+      ]
+    },
+    "Захватываем queued задачу": {
+      "main": [[{ "node": "Проверяем: queued задача захвачена", "type": "main", "index": 0 }]]
+    },
+    "Проверяем: queued задача захвачена": {
+      "main": [[{ "node": "Нужна новая сессия?", "type": "main", "index": 0 }]]
+    },
+    "Нужна новая сессия?": {
+      "main": [
+        [{ "node": "Создаём сессию OpenCode", "type": "main", "index": 0 }],
+        [{ "node": "Переиспользуем текущую сессию OpenCode", "type": "main", "index": 0 }]
       ]
     },
     "Отменяем: вхождение не найдено": {
@@ -1064,13 +1581,16 @@
     "Создаём сессию OpenCode": {
       "main": [[{ "node": "Готовим запуск задачи", "type": "main", "index": 0 }]]
     },
+    "Переиспользуем текущую сессию OpenCode": {
+      "main": [[{ "node": "Готовим запуск задачи", "type": "main", "index": 0 }]]
+    },
     "Готовим запуск задачи": {
       "main": [[{ "node": "Сессию удалось создать?", "type": "main", "index": 0 }]]
     },
     "Сессию удалось создать?": {
       "main": [
         [
-          { "node": "Помечаем задачу выполняющейся", "type": "main", "index": 0 }
+          { "node": "Запускаем задачу в OpenCode", "type": "main", "index": 0 }
         ],
         [
           { "node": "Сохраняем ошибку запуска", "type": "main", "index": 0 }
@@ -1080,57 +1600,47 @@
     "Сохраняем ошибку запуска": {
       "main": [[{ "node": "Сообщаем: ошибка запуска", "type": "main", "index": 0 }]]
     },
-    "Помечаем задачу выполняющейся": {
-      "main": [[{ "node": "Отправляем задачу в OpenCode", "type": "main", "index": 0 }]]
+    "Запускаем задачу в OpenCode": {
+      "main": [[{ "node": "Есть ошибка async-запуска?", "type": "main", "index": 0 }]]
     },
-    "Отправляем задачу в OpenCode": {
-      "main": [[{ "node": "Есть ошибка выполнения задачи?", "type": "main", "index": 0 }]]
+    "Отвечаем на вопрос OpenCode": {
+      "main": [[{ "node": "Есть ошибка ответа на вопрос?", "type": "main", "index": 0 }]]
     },
-    "Отправляем ответ в OpenCode": {
-      "main": [[{ "node": "Есть ошибка отправки ответа?", "type": "main", "index": 0 }]]
-    },
-    "Есть ошибка выполнения задачи?": {
+    "Есть ошибка async-запуска?": {
       "main": [
-        [{ "node": "Сохраняем ошибку выполнения задачи", "type": "main", "index": 0 }],
-        [{ "node": "Разбираем ответ OpenCode", "type": "main", "index": 0 }]
+        [{ "node": "Сохраняем ошибку async-запуска", "type": "main", "index": 0 }],
+        [{ "node": "Сохраняем session_id задачи", "type": "main", "index": 0 }]
       ]
     },
-    "Сохраняем ошибку выполнения задачи": {
-      "main": [[{ "node": "Сообщаем: ошибка выполнения задачи", "type": "main", "index": 0 }]]
+    "Сохраняем session_id задачи": {
+      "main": [[]]
     },
-    "Есть ошибка отправки ответа?": {
+    "Сохраняем ошибку async-запуска": {
+      "main": [[{ "node": "Сообщаем: ошибка async-запуска", "type": "main", "index": 0 }]]
+    },
+    "Есть ошибка ответа на вопрос?": {
       "main": [
-        [{ "node": "Сохраняем ошибку отправления ответа", "type": "main", "index": 0 }],
-        [{ "node": "Разбираем ответ OpenCode", "type": "main", "index": 0 }]
+        [{ "node": "Сохраняем ошибку ответа на вопрос", "type": "main", "index": 0 }],
+        [{ "node": "Возобновляем выполнение", "type": "main", "index": 0 }]
       ]
     },
-    "Сохраняем ошибку отправления ответа": {
-      "main": [[{ "node": "Сообщаем: ошибка отправления ответа", "type": "main", "index": 0 }]]
+    "Сохраняем ошибку ответа на вопрос": {
+      "main": [[{ "node": "Сообщаем: ошибка ответа на вопрос", "type": "main", "index": 0 }]]
     },
     "Разбираем ответ OpenCode": {
-      "main": [[{ "node": "Нужен ответ пользователя?", "type": "main", "index": 0 }]]
-    },
-    "Нужен ответ пользователя?": {
-      "main": [
-        [
-          { "node": "Сохраняем ожидание ответа", "type": "main", "index": 0 }
-        ],
-        [
-          { "node": "Сохраняем результат задачи", "type": "main", "index": 0 }
-        ]
-      ]
-    },
-    "Сохраняем ожидание ответа": {
-      "main": [[{ "node": "Запрашиваем ответ в Telegram", "type": "main", "index": 0 }]]
-    },
-    "Запрашиваем ответ в Telegram": {
-      "main": [[{ "node": "Готовим ответ пользователю", "type": "main", "index": 0 }]]
-    },
-    "Готовим ответ пользователю": {
-      "main": [[{ "node": "Возобновляем выполнение", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Сохраняем результат задачи", "type": "main", "index": 0 }]]
     },
     "Возобновляем выполнение": {
-      "main": [[{ "node": "Отправляем ответ в OpenCode", "type": "main", "index": 0 }]]
+      "main": [[]]
+    },
+    "Сессия завершена?": {
+      "main": [
+        [{ "node": "Получаем сообщения сессии OpenCode", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Получаем сообщения сессии OpenCode": {
+      "main": [[{ "node": "Разбираем ответ OpenCode", "type": "main", "index": 0 }]]
     },
     "Сохраняем результат задачи": {
       "main": [[{ "node": "Отправляем результат в Telegram", "type": "main", "index": 0 }]]

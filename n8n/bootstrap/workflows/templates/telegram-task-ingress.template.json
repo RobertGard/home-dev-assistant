@@ -34,12 +34,12 @@
           },
           "conditions": [
             {
-              "id": "command-starts-with-slash",
-              "leftValue": "={{ $('Триггер Telegram').first().json.message.text }}",
-              "rightValue": "/",
+              "id": "message-is-answer",
+              "leftValue": "={{ $('Анализируем сообщение Telegram').first().json.mode }}",
+              "rightValue": "answer",
               "operator": {
                 "type": "string",
-                "operation": "startsWith"
+                "operation": "equals"
               }
             }
           ],
@@ -54,7 +54,7 @@
         320
       ],
       "id": "if-command",
-      "name": "Это команда?"
+      "name": "Это ответ на вопрос?"
     },
     {
       "parameters": {
@@ -116,7 +116,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
-        "text": "Команда распарсена с ошибкой",
+        "text": "={{ $('Анализируем сообщение Telegram').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -163,10 +163,10 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const input = $('Триггер Telegram').first().json\nconst msg = input.message || {}\n\nconst rawText = String(msg.text || '').trim()\n\nfunction parseCommand(text) {\n  const match = text.match(/^\\/([a-zA-Z0-9_]+)(?:@\\w+)?(?:\\s+|$)/)\n\n  if (!match) {\n    return {\n      type: null,\n      textAfterCommand: text\n    }\n  }\n\n  return {\n    type: match[1],\n    textAfterCommand: text.slice(match[0].length).trim()\n  }\n}\n\nfunction parseTokens(text) {\n  const flags = {}\n  const args = []\n\n  const regex = /\"([^\"]*)\"|'([^']*)'|--([a-zA-Z0-9_-]+)(?:=(?:\"([^\"]*)\"|'([^']*)'|([^\\s\"']+)))?|([^\\s]+)/g\n\n  let match\n\n  while ((match = regex.exec(text)) !== null) {\n    if (match[3]) {\n      const key = match[3]\n      const value = match[4] ?? match[5] ?? match[6] ?? true\n      flags[key] = value\n      continue\n    }\n\n    const value = match[1] ?? match[2] ?? match[7]\n\n    if (value !== undefined) {\n      args.push(value)\n    }\n  }\n\n  return { flags, args }\n}\n\nconst command = parseCommand(rawText)\nconst parsed = parseTokens(command.textAfterCommand)\nconst taskKey = `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\nconst parentTaskId = String(parsed.flags['parent-id'] || parsed.flags.parent || '').trim()\nconst parentMatchText = String(parsed.flags.match || parsed.flags.contains || '').trim()\nconst prompt = String(parsed.flags.prompt || '').trim()\nconst contextJson = JSON.stringify({\n  rawText,\n  commandType: command.type,\n  flags: parsed.flags,\n  args: parsed.args,\n  parentTaskId,\n  parentMatchText,\n  prompt\n})\n\nreturn [{\n  json: {\n    rawText,\n    commandType: command.type,\n    flags: parsed.flags,\n    args: parsed.args,\n    taskKey,\n    queuedAt: new Date().toISOString(),\n    parentTaskId,\n    parentMatchText,\n    prompt,\n    contextJson,\n    replyText: `Задача поставлена в очередь: ${taskKey}`\n  }\n}]"
+        "jsCode": "const input = $('Триггер Telegram').first().json\nconst msg = input.message || {}\nconst rawText = String(msg.text || '').trim()\nconst pendingTasks = $('Получаем задачи с ожиданием ответа').all().map((item) => item.json)\n\nfunction parseCommand(text) {\n  const match = text.match(/^\\/([a-zA-Z0-9_]+)(?:@\\w+)?(?:\\s+|$)/)\n\n  if (!match) {\n    return {\n      type: null,\n      textAfterCommand: text,\n    }\n  }\n\n  return {\n    type: match[1],\n    textAfterCommand: text.slice(match[0].length).trim(),\n  }\n}\n\nfunction parseTokens(text) {\n  const flags = {}\n  const args = []\n  const regex = /\"([^\"]*)\"|'([^']*)'|--([a-zA-Z0-9_-]+)(?:=(?:\"([^\"]*)\"|'([^']*)'|([^\\s\"']+)))?|([^\\s]+)/g\n\n  let match\n\n  while ((match = regex.exec(text)) !== null) {\n    if (match[3]) {\n      const key = match[3]\n      const value = match[4] ?? match[5] ?? match[6] ?? true\n      flags[key] = value\n      continue\n    }\n\n    const value = match[1] ?? match[2] ?? match[7]\n    if (value !== undefined) args.push(value)\n  }\n\n  return { flags, args }\n}\n\nfunction parsePendingMeta(task) {\n  try {\n    return JSON.parse(String(task.pending_options_json || '{}'))\n  } catch {\n    return {}\n  }\n}\n\nfunction buildPendingTasksHint(tasks) {\n  const taskList = tasks.map((task) => `- ${task.task_key}`).join('\\n')\n  return [\n    'Сейчас OpenCode ждёт ответ по нескольким задачам.',\n    taskList,\n    '',\n    'Ответьте в формате `task_key: ваш ответ`.',\n    'Для отклонения вопроса используйте `task_key: /reject`.',\n  ].join('\\n')\n}\n\nfunction parseAnswerToken(token, question) {\n  const normalized = String(token || '').trim()\n  if (!normalized) return null\n\n  const options = Array.isArray(question.options) ? question.options : []\n  if (options.length === 0) return normalized\n\n  if (/^\\d+$/.test(normalized)) {\n    const option = options[Number(normalized) - 1]\n    return option ? String(option.label || '').trim() : null\n  }\n\n  const matched = options.find((option) => String(option.label || '').trim().toLowerCase() === normalized.toLowerCase())\n  if (matched) return String(matched.label || '').trim()\n\n  return question.custom !== false ? normalized : null\n}\n\nfunction parseQuestionAnswer(text, question) {\n  const normalized = String(text || '').trim()\n  if (!normalized) return { error: 'Ответ не должен быть пустым.' }\n\n  const options = Array.isArray(question.options) ? question.options : []\n  if (options.length === 0) {\n    return { answers: [normalized] }\n  }\n\n  const tokens = question.multiple ? normalized.split(/\\s*,\\s*/).filter(Boolean) : [normalized]\n  const answers = []\n\n  for (const token of tokens) {\n    const parsed = parseAnswerToken(token, question)\n    if (!parsed) {\n      return { error: `Не удалось распознать вариант ответа: ${token}` }\n    }\n    if (!answers.includes(parsed)) answers.push(parsed)\n  }\n\n  if (!question.multiple && answers.length !== 1) {\n    return { error: 'Нужно выбрать ровно один вариант ответа.' }\n  }\n\n  return { answers }\n}\n\nfunction parseAnswers(rawAnswer, questions) {\n  if (!Array.isArray(questions) || questions.length === 0) {\n    return { error: 'Для задачи не найдено описание pending вопроса.' }\n  }\n\n  if (questions.length === 1) {\n    return parseQuestionAnswer(rawAnswer, questions[0])\n  }\n\n  const lines = String(rawAnswer || '').split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean)\n  if (lines.length !== questions.length) {\n    return { error: `Нужно прислать ${questions.length} непустых строк ответа в том же порядке, что и вопросы.` }\n  }\n\n  const answers = []\n  for (let index = 0; index < questions.length; index += 1) {\n    const parsed = parseQuestionAnswer(lines[index], questions[index])\n    if (parsed.error) return parsed\n    answers.push(parsed.answers)\n  }\n\n  return { answers }\n}\n\nfunction parseAnswerTarget(text, tasks) {\n  const targetedMatch = text.match(/^#?(task-[a-z0-9-]+)\\s*:\\s*([\\s\\S]*)$/i)\n  if (targetedMatch) {\n    return {\n      taskKey: targetedMatch[1],\n      answerText: String(targetedMatch[2] || '').trim(),\n      explicit: true,\n    }\n  }\n\n  const rejectMatch = text.match(/^\\/?(reject|skip|cancel)\\b(?:\\s+(task-[a-z0-9-]+))?$/i)\n  if (rejectMatch) {\n    if (!rejectMatch[2] && tasks.length > 1) {\n      return { multiplePending: true }\n    }\n\n    return {\n      taskKey: String(rejectMatch[2] || '').trim(),\n      answerText: '/reject',\n      rejectRequested: true,\n      explicit: Boolean(rejectMatch[2]),\n    }\n  }\n\n  if (text.startsWith('/')) return null\n  if (tasks.length === 1) {\n    return {\n      taskKey: String(tasks[0].task_key || '').trim(),\n      answerText: text,\n      explicit: false,\n    }\n  }\n\n  if (tasks.length > 1) {\n    return { multiplePending: true }\n  }\n\n  return null\n}\n\nconst answerTarget = parseAnswerTarget(rawText, pendingTasks)\n\nif (answerTarget?.multiplePending) {\n  return [{\n    json: {\n      mode: 'parse_error',\n      replyText: buildPendingTasksHint(pendingTasks),\n    },\n  }]\n}\n\nif (answerTarget) {\n  const targetTaskKey = answerTarget.taskKey || (pendingTasks.length === 1 ? String(pendingTasks[0].task_key || '').trim() : '')\n  const task = pendingTasks.find((item) => String(item.task_key || '').trim() === targetTaskKey)\n\n  if (!task) {\n    return [{\n      json: {\n        mode: 'parse_error',\n        replyText: `Не удалось найти задачу ${targetTaskKey} среди ожидающих ответа.`,\n      },\n    }]\n  }\n\n  const pendingMeta = parsePendingMeta(task)\n  const questions = Array.isArray(pendingMeta.questions) ? pendingMeta.questions : []\n  const requestId = String(pendingMeta.requestId || '').trim()\n\n  if (!requestId || questions.length === 0) {\n    return [{\n      json: {\n        mode: 'parse_error',\n        replyText: `У задачи ${targetTaskKey} повреждены данные pending вопроса.`,\n      },\n    }]\n  }\n\n  if (answerTarget.rejectRequested) {\n    const updatedPendingMeta = {\n      ...pendingMeta,\n      answers: null,\n      rejectRequested: true,\n      answeredAt: new Date().toISOString(),\n      rawAnswer: rawText,\n    }\n\n    return [{\n      json: {\n        mode: 'answer',\n        targetTaskKey,\n        updatedPendingOptionsJson: JSON.stringify(updatedPendingMeta),\n        replyText: `Вопрос по задаче ${targetTaskKey} отклонён.`,\n      },\n    }]\n  }\n\n  const parsedAnswers = parseAnswers(answerTarget.answerText, questions)\n  if (parsedAnswers.error) {\n    return [{\n      json: {\n        mode: 'parse_error',\n        replyText: `Не удалось разобрать ответ для задачи ${targetTaskKey}: ${parsedAnswers.error}`,\n      },\n    }]\n  }\n\n  const updatedPendingMeta = {\n    ...pendingMeta,\n    answers: parsedAnswers.answers,\n    rejectRequested: false,\n    answeredAt: new Date().toISOString(),\n    rawAnswer: rawText,\n  }\n\n  return [{\n    json: {\n      mode: 'answer',\n      targetTaskKey,\n      updatedPendingOptionsJson: JSON.stringify(updatedPendingMeta),\n      replyText: `Ответ по задаче ${targetTaskKey} сохранён. Продолжаю выполнение.`,\n    },\n  }]\n}\n\nif (rawText.startsWith('/')) {\n  const command = parseCommand(rawText)\n  const parsed = parseTokens(command.textAfterCommand)\n  const taskKey = `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\n  const parentTaskId = String(parsed.flags['parent-id'] || parsed.flags.parent || '').trim()\n  const parentMatchText = String(parsed.flags.match || parsed.flags.contains || '').trim()\n  const prompt = String(parsed.flags.prompt || '').trim()\n  const contextJson = JSON.stringify({\n    rawText,\n    commandType: command.type,\n    flags: parsed.flags,\n    args: parsed.args,\n    parentTaskId,\n    parentMatchText,\n    prompt,\n  })\n\n  return [{\n    json: {\n      mode: 'command',\n      rawText,\n      commandType: command.type,\n      flags: parsed.flags,\n      args: parsed.args,\n      taskKey,\n      queuedAt: new Date().toISOString(),\n      parentTaskId,\n      parentMatchText,\n      prompt,\n      contextJson,\n      replyText: `Задача поставлена в очередь: ${taskKey}`,\n    },\n  }]\n}\n\nreturn [{\n  json: {\n    mode: 'parse_error',\n    replyText: pendingTasks.length > 0\n      ? 'Не удалось понять сообщение. Для ответа по задаче используйте `task_key: ваш ответ`, либо пришлите обычный текст, если ожидается только один вопрос.'\n      : 'Команда распарсена с ошибкой',\n  },\n}]"
       },
       "id": "parse-command",
-      "name": "Разбираем команды Telegram",
+      "name": "Анализируем сообщение Telegram",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -177,7 +177,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
-        "text": "={{ $('Разбираем команды Telegram').first().json.replyText }}",
+        "text": "={{ $('Анализируем сообщение Telegram').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -206,18 +206,18 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "task_key": "={{ $('Разбираем команды Telegram').first().json.taskKey }}",
+            "task_key": "={{ $('Анализируем сообщение Telegram').first().json.taskKey }}",
             "source": "telegram",
             "chat_id": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
             "username": "={{ $('Триггер Telegram').first().json.message.chat.username }}",
-            "worker_alias": "={{ $('Разбираем команды Telegram').first().json.flags.worker || 'primary' }}",
-            "command_name": "={{ $('Разбираем команды Telegram').first().json.commandType || 'task' }}",
-            "prompt": "={{ $('Разбираем команды Telegram').first().json.prompt }}",
-            "parent_task_key": "={{ $('Разбираем команды Telegram').first().json.parentTaskId }}",
-            "parent_match_text": "={{ $('Разбираем команды Telegram').first().json.parentMatchText }}",
-            "context_json": "={{ $('Разбираем команды Telegram').first().json.contextJson }}",
+            "worker_alias": "={{ $('Анализируем сообщение Telegram').first().json.flags.worker || 'primary' }}",
+            "command_name": "={{ $('Анализируем сообщение Telegram').first().json.commandType || 'task' }}",
+            "prompt": "={{ $('Анализируем сообщение Telegram').first().json.prompt }}",
+            "parent_task_key": "={{ $('Анализируем сообщение Telegram').first().json.parentTaskId }}",
+            "parent_match_text": "={{ $('Анализируем сообщение Telegram').first().json.parentMatchText }}",
+            "context_json": "={{ $('Анализируем сообщение Telegram').first().json.contextJson }}",
             "status": "queued",
-            "queued_at": "={{ $('Разбираем команды Telegram').first().json.queuedAt }}"
+            "queued_at": "={{ $('Анализируем сообщение Telegram').first().json.queuedAt }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -417,6 +417,163 @@
         1248,
         304
       ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Задаём переменные').first().json.telegram_chat_id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_input"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true,
+        "orderByColumn": "queued_at",
+        "orderByDirection": "ASC"
+      },
+      "id": "get-pending-input-tasks",
+      "name": "Получаем задачи с ожиданием ответа",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [768, 208]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Анализируем сообщение Telegram').first().json.mode }}",
+              "rightValue": "command",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-command-mode",
+      "name": "Это новая команда?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1488, 416]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Анализируем сообщение Telegram').first().json.targetTaskKey }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_input"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_options_json": "={{ $('Анализируем сообщение Telegram').first().json.updatedPendingOptionsJson }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-user-answer",
+      "name": "Сохраняем ответ пользователя",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1488, 208]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "rowExists",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Анализируем сообщение Telegram').first().json.targetTaskKey }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_input"
+            },
+            {
+              "keyName": "pending_options_json",
+              "condition": "eq",
+              "keyValue": "={{ $('Анализируем сообщение Telegram').first().json.updatedPendingOptionsJson }}"
+            }
+          ]
+        }
+      },
+      "id": "verify-user-answer-saved",
+      "name": "Проверяем: ответ сохранён",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1728, 208]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "text": "={{ $('Анализируем сообщение Telegram').first().json.replyText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-answer-accepted",
+      "name": "Отправляем: Ответ принят",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1968, 208],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -432,18 +589,18 @@
         ]
       ]
     },
-    "Это команда?": {
+    "Это ответ на вопрос?": {
       "main": [
         [
           {
-            "node": "Разбираем команды Telegram",
+            "node": "Сохраняем ответ пользователя",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Отправляем: Команда распарсена с ошибкой",
+            "node": "Это новая команда?",
             "type": "main",
             "index": 0
           }
@@ -454,7 +611,7 @@
       "main": [
         [
           {
-            "node": "Это команда?",
+            "node": "Получаем задачи с ожиданием ответа",
             "type": "main",
             "index": 0
           }
@@ -479,7 +636,51 @@
         ]
       ]
     },
-    "Разбираем команды Telegram": {
+    "Получаем задачи с ожиданием ответа": {
+      "main": [
+        [
+          {
+            "node": "Анализируем сообщение Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализируем сообщение Telegram": {
+      "main": [
+        [
+          {
+            "node": "Это ответ на вопрос?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохраняем ответ пользователя": {
+      "main": [
+        [
+          {
+            "node": "Проверяем: ответ сохранён",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверяем: ответ сохранён": {
+      "main": [
+        [
+          {
+            "node": "Отправляем: Ответ принят",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Это новая команда?": {
       "main": [
         [
           {
@@ -487,7 +688,19 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Отправляем: Команда распарсена с ошибкой",
+            "type": "main",
+            "index": 0
+          }
         ]
+      ]
+    },
+    "Отправляем: Ответ принят": {
+      "main": [
+        []
       ]
     },
     "Отправляем: Задача поставлена в работу": {
