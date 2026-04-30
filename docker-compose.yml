@@ -71,6 +71,9 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     ports:
       - "127.0.0.1:${N8N_PORT:-5678}:5678"
     environment:
@@ -122,6 +125,9 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     command: worker --concurrency=${N8N_WORKER_CONCURRENCY:-2}
     environment:
       DB_TYPE: postgresdb
