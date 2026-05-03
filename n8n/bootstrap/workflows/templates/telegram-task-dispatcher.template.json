@@ -742,7 +742,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + '/permission/' + $('Готовим ответ пользователю').item.json.requestId + '/reply' : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionRejectPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionReplyPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) }}",
+        "url": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Задаём конфигурацию OpenCode').first().json.endpoints.permissionReply.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionRejectPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) : $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Готовим пакеты worker-ов').item.json.questionReplyPath.replace(':requestID', $('Готовим ответ пользователю').item.json.requestId) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -996,7 +996,7 @@
         }
       },
       "id": "save-needs-input",
-      "name": "Сохраняем pending вопрос",
+      "name": "Сохраняем pending интеракцию",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [5020, 320]
@@ -1010,7 +1010,7 @@
         }
       },
       "id": "ask-in-telegram",
-      "name": "Отправляем вопрос в Telegram",
+      "name": "Отправляем pending интеракцию в Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [5260, 320],
@@ -1028,7 +1028,7 @@
         "jsCode": "let pendingMeta = {}\n\ntry {\n  pendingMeta = JSON.parse(String($('Готовим pending интеракцию').item.json.pendingOptionsJson || ''))\n} catch {}\n\nif (!pendingMeta || Object.keys(pendingMeta).length === 0) {\n  try {\n    pendingMeta = JSON.parse(String($('Выбираем активную задачу').item.json.task.pending_options_json || '{}'))\n  } catch {\n    pendingMeta = {}\n  }\n}\n\nreturn {\n  json: {\n    deliveredPendingOptionsJson: JSON.stringify({\n      ...pendingMeta,\n      deliveredAt: new Date().toISOString(),\n    }),\n  },\n}"
       },
       "id": "prepare-question-delivery",
-      "name": "Готовим pending вопрос к отправке",
+      "name": "Готовим pending интеракцию к отметке доставки",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [5500, 320]
@@ -1059,7 +1059,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pending_options_json": "={{ $('Готовим pending вопрос к отправке').item.json.deliveredPendingOptionsJson }}"
+            "pending_options_json": "={{ $('Готовим pending интеракцию к отметке доставки').item.json.deliveredPendingOptionsJson }}"
           }
         },
         "options": {
@@ -1067,7 +1067,7 @@
         }
       },
       "id": "save-question-delivered",
-      "name": "Помечаем pending вопрос доставленным",
+      "name": "Помечаем pending интеракцию доставленной",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [5740, 320]
@@ -1383,7 +1383,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + '/permission' }}",
+        "url": "={{ $('Готовим пакеты worker-ов').item.json.workerBaseUrl + $('Задаём конфигурацию OpenCode').first().json.endpoints.permissionList }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1583,7 +1583,7 @@
     },
     "Нужно отправить pending вопрос?": {
       "main": [
-        [{ "node": "Отправляем вопрос в Telegram", "type": "main", "index": 0 }],
+        [{ "node": "Отправляем pending интеракцию в Telegram", "type": "main", "index": 0 }],
         []
       ]
     },
@@ -1612,18 +1612,18 @@
       ]
     },
     "Готовим pending интеракцию": {
-      "main": [[{ "node": "Сохраняем pending вопрос", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Сохраняем pending интеракцию", "type": "main", "index": 0 }]]
     },
-    "Отправляем вопрос в Telegram": {
-      "main": [[{ "node": "Готовим pending вопрос к отправке", "type": "main", "index": 0 }]]
+    "Сохраняем pending интеракцию": {
+      "main": [[{ "node": "Отправляем pending интеракцию в Telegram", "type": "main", "index": 0 }]]
     },
-    "Готовим pending вопрос к отправке": {
-      "main": [[{ "node": "Помечаем pending вопрос доставленным", "type": "main", "index": 0 }]]
+    "Отправляем pending интеракцию в Telegram": {
+      "main": [[{ "node": "Готовим pending интеракцию к отметке доставки", "type": "main", "index": 0 }]]
     },
-    "Сохраняем pending вопрос": {
-      "main": [[]]
+    "Готовим pending интеракцию к отметке доставки": {
+      "main": [[{ "node": "Помечаем pending интеракцию доставленной", "type": "main", "index": 0 }]]
     },
-    "Помечаем pending вопрос доставленным": {
+    "Помечаем pending интеракцию доставленной": {
       "main": [[]]
     },
     "Получаем статусы сессий OpenCode": {
