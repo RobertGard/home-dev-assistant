@@ -6,7 +6,7 @@
       "id": "sub-trigger",
       "name": "Запуск по вызову из другого сценария",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         220,
         320

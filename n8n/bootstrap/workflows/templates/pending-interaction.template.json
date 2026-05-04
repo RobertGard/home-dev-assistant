@@ -6,7 +6,7 @@
       "id": "sub-trigger",
       "name": "Запуск по вызову из другого сценария",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         220,
         320
@@ -63,7 +63,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "const input = $('Разбираем входные данные').item.json\nlet pendingMeta = {}\ntry { pendingMeta = JSON.parse(String(input.pendingOptionsJson || '{}')) } catch {}\n\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst deliveredAt = String(pendingMeta.deliveredAt || '').trim()\nconst interactionType = Array.isArray(pendingMeta.questions) ? 'question' : String(pendingMeta.type || 'permission').trim()\nconst answers = Array.isArray(pendingMeta.answers) ? pendingMeta.answers : []\nconst rejectRequested = pendingMeta.rejectRequested === true\nconst permissionReply = String(pendingMeta.reply || '').trim()\nconst permissionMessage = String(pendingMeta.message || '').trim()\nconst hasAnswerPayload = interactionType === 'question' ? Boolean(requestId) && (rejectRequested || answers.length > 0) : Boolean(requestId) && Boolean(permissionReply)\nconst shouldSendQuestion = Boolean(requestId) && !hasAnswerPayload && !deliveredAt && String(input.pendingQuestion || '').trim()\n\nreturn {\n  json: {\n    hasAnswerPayload,\n    shouldSendQuestion,\n    interactionType,\n    requestId,\n    requestAction: rejectRequested ? 'reject' : 'reply',\n    answers,\n    permissionReply,\n    permissionMessage,\n  },\n}"
+        "jsCode": "const input = $('Разбираем входные данные').item.json\nlet pendingMeta = {}\ntry { pendingMeta = JSON.parse(String(input.pendingOptionsJson || '{}')) } catch {}\n\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst deliveredAt = String(pendingMeta.deliveredAt || '').trim()\nconst interactionType = Array.isArray(pendingMeta.questions) ? 'question' : String(pendingMeta.type || '').trim()\nconst answers = Array.isArray(pendingMeta.answers) ? pendingMeta.answers : []\nconst rejectRequested = pendingMeta.rejectRequested === true\nconst permissionReply = String(pendingMeta.reply || '').trim()\nconst permissionMessage = String(pendingMeta.message || '').trim()\nconst hasAnswerPayload = interactionType === 'question' ? Boolean(requestId) && (rejectRequested || answers.length > 0) : Boolean(requestId) && Boolean(permissionReply)\nconst shouldSendQuestion = Boolean(requestId) && !hasAnswerPayload && !deliveredAt && String(input.pendingQuestion || '').trim()\n\nreturn {\n  json: {\n    taskKey: input.taskKey,\n    sessionId: input.sessionId,\n    chatId: input.chatId,\n    hasAnswerPayload,\n    shouldSendQuestion,\n    interactionType,\n    requestId,\n    requestAction: rejectRequested ? 'reject' : 'reply',\n    answers,\n    permissionReply,\n    permissionMessage,\n  },\n}"
       },
       "id": "prepare-answer",
       "name": "Готовим ответ пользователю",
@@ -457,7 +457,7 @@
       "id": "mark-aborted",
       "name": "Помечаем задачу отмененной",
       "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
+      "typeVersion": 2,
       "position": [
         1420,
         900
@@ -467,7 +467,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "const permission = $input.item.json\nconst question = $input.item.json\nconst source = permission.hasInteraction ? permission : question\n\nreturn { json: { hasInteraction: Boolean(source.hasInteraction), pendingQuestionText: String(source.pendingQuestionText || '').trim(), pendingOptionsJson: String(source.pendingOptionsJson || '[]') } }"
+        "jsCode": "const permission = $input.item.json\nconst question = $input.item.json\nconst source = permission.hasInteraction ? permission : question\nconst context = $('Разбираем входные данные').item.json\n\nreturn {\n  json: {\n    hasInteraction: Boolean(source.hasInteraction),\n    interactionType: String(source.interactionType || '').trim(),\n    pendingQuestionText: String(source.pendingQuestionText || '').trim(),\n    pendingOptionsJson: String(source.pendingOptionsJson || '[]'),\n    taskKey: context.taskKey,\n    sessionId: context.sessionId,\n    chatId: context.chatId,\n  }\n};"
       },
       "id": "pick-source",
       "name": "Выбираем найденную интеракцию",
@@ -482,7 +482,7 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "language": "javaScript",
-        "jsCode": "const launched = $input.item.json\nerror = $input.item.json\n\nreturn {\n  json: {\n    hasAnswerPayload: launched.hasAnswerPayload || false,\n    hasInteraction: launched.hasInteraction || false,\n  },\n}"
+        "jsCode": "const data = $input.item.json;\n\nconst resultType = data.taskCancelled ? 'abort'\n  : data.questionSent ? 'pending_sent'\n  : data.hasAnswerPayload ? 'interaction_processed'\n  : data.hasInteraction ? 'interaction_found'\n  : 'no_action';\n\nreturn {\n  json: {\n    taskKey: data.taskKey || '',\n    sessionId: data.sessionId || '',\n    chatId: data.chatId || '',\n    resultType: resultType,\n    interactionType: data.interactionType || '',\n    hasInteraction: data.hasInteraction || false,\n    questionSent: data.questionSent || false,\n    taskCancelled: data.taskCancelled || false,\n    error: data.replyError || data.error || '',\n    pendingQuestionText: data.pendingQuestionText || '',\n    pendingOptionsJson: data.pendingOptionsJson || '',\n  }\n};"
       },
       "id": "merge-result",
       "name": "Собираем итог интеракции",
@@ -492,6 +492,51 @@
         2620,
         320
       ]
+    },
+    {
+      "id": "enrich-pending-sent",
+      "name": "Обогащаем: вопрос отправлен",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const context = $('Разбираем входные данные').item.json;\n\nreturn {\n  json: {\n    taskKey: context.taskKey,\n    sessionId: context.sessionId,\n    chatId: context.chatId,\n    resultType: 'pending_sent',\n    questionSent: true,\n  }\n};",
+        "language": "javaScript"
+      }
+    },
+    {
+      "id": "enrich-abort",
+      "name": "Обогащаем: задача отменена",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        600
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const context = $('Разбираем входные данные').item.json;\n\nreturn {\n  json: {\n    taskKey: context.taskKey,\n    sessionId: context.sessionId,\n    chatId: context.chatId,\n    resultType: 'abort',\n    taskCancelled: true,\n  }\n};",
+        "language": "javaScript"
+      }
+    },
+    {
+      "id": "enrich-answer-sent",
+      "name": "Обогащаем: ответ в OpenCode отправлен",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1660,
+        320
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const httpResult = $input.item.json;\nconst answer = $('Готовим ответ пользователю').item.json;\nconst context = $('Разбираем входные данные').item.json;\n\nreturn {\n  json: {\n    taskKey: answer.taskKey || context.taskKey,\n    sessionId: answer.sessionId || context.sessionId,\n    chatId: answer.chatId || context.chatId,\n    resultType: 'interaction_processed',\n    interactionType: answer.interactionType,\n    requestAction: answer.requestAction,\n    hasInteraction: true,\n    hasAnswerPayload: true,\n    replyError: httpResult.error || httpResult.message || '',\n  }\n};",
+        "language": "javaScript"
+      }
     }
   ],
   "connections": {
@@ -568,7 +613,7 @@
       "main": [
         [
           {
-            "node": "Собираем итог интеракции",
+            "node": "Обогащаем: ответ в OpenCode отправлен",
             "type": "main",
             "index": 0
           }
@@ -580,6 +625,13 @@
         [
           {
             "node": "Отправляем ожидающую интеракцию",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Собираем итог интеракции",
             "type": "main",
             "index": 0
           }
@@ -689,6 +741,72 @@
         [
           {
             "node": "Помечаем задачу отмененной",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Выбираем найденную интеракцию": {
+      "main": [
+        [
+          {
+            "node": "Собираем итог интеракции",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправляем ожидающую интеракцию": {
+      "main": [
+        [
+          {
+            "node": "Обогащаем: вопрос отправлен",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Помечаем задачу отмененной": {
+      "main": [
+        [
+          {
+            "node": "Обогащаем: задача отменена",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обогащаем: вопрос отправлен": {
+      "main": [
+        [
+          {
+            "node": "Собираем итог интеракции",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обогащаем: задача отменена": {
+      "main": [
+        [
+          {
+            "node": "Собираем итог интеракции",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Обогащаем: ответ в OpenCode отправлен": {
+      "main": [
+        [
+          {
+            "node": "Собираем итог интеракции",
             "type": "main",
             "index": 0
           }

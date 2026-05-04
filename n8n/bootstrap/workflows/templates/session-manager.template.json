@@ -6,7 +6,7 @@
       "id": "sub-trigger",
       "name": "Запуск по вызову из другого сценария",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         220,
         320
@@ -62,14 +62,28 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "return {\n  json: {\n    sessionId: String($('Разбираем входные данные').item.json.latestSessionId || '').trim(),\n    launchError: '',\n  },\n}"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "sessionId",
+              "value": "={{ $('Разбираем входные данные').item.json.latestSessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "launchError",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "reuse-session",
       "name": "Переиспользуем сессию",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
       "position": [
         940,
         200
