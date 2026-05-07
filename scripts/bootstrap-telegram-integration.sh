@@ -309,12 +309,41 @@ fi
 if [ -z "$dispatch_workflow_id" ]; then
   die "Не удалось найти workflow по имени: ${DISPATCH_WORKFLOW_NAME}"
 fi
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id="$ingress_workflow_id" --active=true >/dev/null; then
-  die "Не удалось активировать workflow ${INGRESS_WORKFLOW_NAME}."
-fi
-if ! "${BASE_COMPOSE[@]}" exec -T n8n n8n update:workflow --id="$dispatch_workflow_id" --active=true >/dev/null; then
-  die "Не удалось активировать workflow ${DISPATCH_WORKFLOW_NAME}."
-fi
+
+activate_workflow_by_id() {
+  local wf_id="$1"
+  local wf_label="$2"
+  if ! curl -fsS -X PATCH \
+    -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+    -H 'Content-Type: application/json' \
+    -d '{"active": true}' \
+    "${N8N_URL}/api/v1/workflows/${wf_id}" >/dev/null; then
+    log_warn "Не удалось активировать workflow ${wf_label} (id=${wf_id})"
+  fi
+}
+
+activate_and_verify() {
+  local wf_id="$1"
+  local wf_label="$2"
+  activate_workflow_by_id "$wf_id" "$wf_label"
+  if ! curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows/${wf_id}" | jq -e '.active == true' >/dev/null 2>&1; then
+    die "Не удалось активировать workflow ${wf_label}."
+  fi
+}
+
+activate_and_verify "$ingress_workflow_id" "$INGRESS_WORKFLOW_NAME"
+activate_and_verify "$dispatch_workflow_id" "$DISPATCH_WORKFLOW_NAME"
+
+log_info 'Активирую sub-workflow (требование n8n 2.x для executeWorkflow)'
+for wf_name in "$SESSION_MGR_WORKFLOW_NAME" "$TASK_LAUNCHER_WORKFLOW_NAME" \
+               "$PENDING_INTERACTION_WORKFLOW_NAME" "$TASK_FINALIZER_WORKFLOW_NAME"; do
+  sub_wf_id="$(workflow_id_by_name "$wf_name")"
+  if [ -z "$sub_wf_id" ]; then
+    die "Не удалось найти sub-workflow по имени: ${wf_name}"
+  fi
+  activate_and_verify "$sub_wf_id" "$wf_name"
+done
+log_ok 'Sub-workflow активированы.'
 
 log_ok 'Workflow импортированы и активированы.'
 
