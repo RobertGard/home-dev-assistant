@@ -604,7 +604,11 @@
     },
     {
       "parameters": {
-        "workflowId": "900012",
+        "workflowId": {
+          "__rl": true,
+          "value": "900012",
+          "mode": "id"
+        },
         "mode": "runOnceForEachItem",
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -630,7 +634,11 @@
     },
     {
       "parameters": {
-        "workflowId": "900013",
+        "workflowId": {
+          "__rl": true,
+          "value": "900013",
+          "mode": "id"
+        },
         "mode": "runOnceForEachItem",
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -662,7 +670,11 @@
     },
     {
       "parameters": {
-        "workflowId": "900014",
+        "workflowId": {
+          "__rl": true,
+          "value": "900014",
+          "mode": "id"
+        },
         "mode": "runOnceForEachItem",
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -697,7 +709,11 @@
     },
     {
       "parameters": {
-        "workflowId": "900015",
+        "workflowId": {
+          "__rl": true,
+          "value": "900015",
+          "mode": "id"
+        },
         "mode": "runOnceForEachItem",
         "workflowInputs": {
           "mappingMode": "defineBelow",
