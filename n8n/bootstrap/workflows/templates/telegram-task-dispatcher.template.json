@@ -534,7 +534,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Завершение задачи').item.json.chatId }}",
+        "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
         "text": "={{ $('Завершение задачи').item.json.replyText }}",
         "additionalFields": {
           "appendAttribution": false
@@ -745,7 +745,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Завершение задачи').item.json.chatId }}",
+        "chatId": "={{ $('Выбираем активную задачу').item.json.task.chat_id }}",
         "text": "={{ $('Завершение задачи').item.json.streamProgressText }}",
         "additionalFields": {
           "appendAttribution": false
