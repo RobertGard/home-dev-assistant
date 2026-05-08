@@ -93,6 +93,7 @@
         700,
         320
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -172,6 +173,7 @@
         1420,
         320
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -255,7 +257,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Получаем сообщения сессии",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },

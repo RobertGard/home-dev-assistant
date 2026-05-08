@@ -208,6 +208,7 @@
         1420,
         320
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -295,6 +296,7 @@
         940,
         700
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -374,6 +376,7 @@
         1660,
         700
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -486,6 +489,7 @@
         1180,
         900
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {

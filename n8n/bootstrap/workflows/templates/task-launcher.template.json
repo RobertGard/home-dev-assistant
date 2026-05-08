@@ -233,6 +233,7 @@
         1420,
         320
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {

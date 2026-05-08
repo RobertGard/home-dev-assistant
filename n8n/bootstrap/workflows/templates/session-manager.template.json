@@ -148,6 +148,7 @@
         940,
         400
       ],
+      "alwaysOutputData": true,
       "onError": "continueRegularOutput"
     },
     {
