@@ -113,8 +113,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "claim-task",
@@ -124,7 +123,8 @@
       "position": [
         700,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -153,9 +153,6 @@
               "keyValue": "={{ $('Разбираем входные данные').item.json.claimToken }}"
             }
           ]
-        },
-        "options": {
-          "alwaysOutputData": true
         }
       },
       "id": "verify-claim",
@@ -165,7 +162,8 @@
       "position": [
         940,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -272,8 +270,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "save-session-id",
@@ -283,7 +280,8 @@
       "position": [
         1660,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {

@@ -47,10 +47,7 @@
         "returnAll": true,
         "orderBy": true,
         "orderByColumn": "queued_at",
-        "orderByDirection": "ASC",
-        "options": {
-          "alwaysOutputData": true
-        }
+        "orderByDirection": "ASC"
       },
       "id": "get-all-tasks",
       "name": "Получаем все задачи",
@@ -59,7 +56,8 @@
       "position": [
         700,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -180,9 +178,6 @@
               "keyValue": "={{ $('Выбираем кандидатную задачу').item.json.parentTaskKey }}"
             }
           ]
-        },
-        "options": {
-          "alwaysOutputData": true
         }
       },
       "id": "parent-exists",
@@ -192,7 +187,8 @@
       "position": [
         2140,
         320
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -213,10 +209,7 @@
           ]
         },
         "returnAll": false,
-        "limit": 1,
-        "options": {
-          "alwaysOutputData": true
-        }
+        "limit": 1
       },
       "id": "get-parent-task",
       "name": "Получаем родительскую задачу",
@@ -225,7 +218,8 @@
       "position": [
         2140,
         520
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -287,8 +281,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "cancel-parent-unsuccessful",
@@ -298,7 +291,8 @@
       "position": [
         2860,
         520
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -391,8 +385,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "cancel-parent-match-missing",
@@ -402,7 +395,8 @@
       "position": [
         3100,
         200
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -525,8 +519,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "save-final-result",
@@ -536,7 +529,8 @@
       "position": [
         5020,
         440
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -777,8 +771,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "mark-stream-progress-sent",
@@ -788,7 +781,8 @@
       "position": [
         3120,
         540
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {

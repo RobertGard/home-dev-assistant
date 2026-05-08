@@ -421,8 +421,7 @@
           "convertFieldsToString": false
         },
         "options": {
-          "optimizeBulk": true,
-          "alwaysOutputData": true
+          "optimizeBulk": true
         }
       },
       "id": "queue-task",
@@ -432,7 +431,8 @@
       "position": [
         1248,
         304
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -460,10 +460,7 @@
         "returnAll": true,
         "orderBy": true,
         "orderByColumn": "queued_at",
-        "orderByDirection": "ASC",
-        "options": {
-          "alwaysOutputData": true
-        }
+        "orderByDirection": "ASC"
       },
       "id": "get-pending-input-tasks",
       "name": "Получаем задачи с ожиданием ответа",
@@ -472,7 +469,8 @@
       "position": [
         768,
         208
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -536,8 +534,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "save-user-answer",
@@ -547,7 +544,8 @@
       "position": [
         1488,
         208
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -576,9 +574,6 @@
               "keyValue": "={{ $('Ответ распознан?').first().json.updatedPendingOptionsJson }}"
             }
           ]
-        },
-        "options": {
-          "alwaysOutputData": true
         }
       },
       "id": "verify-user-answer-saved",
@@ -588,7 +583,8 @@
       "position": [
         1728,
         208
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -748,10 +744,7 @@
         "returnAll": true,
         "orderBy": true,
         "orderByColumn": "queued_at",
-        "orderByDirection": "ASC",
-        "options": {
-          "alwaysOutputData": true
-        }
+        "orderByDirection": "ASC"
       },
       "id": "get-active-running-tasks",
       "name": "Получаем работающие задачи",
@@ -760,7 +753,8 @@
       "position": [
         1488,
         528
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -807,8 +801,7 @@
           }
         },
         "options": {
-          "dryRun": false,
-          "alwaysOutputData": true
+          "dryRun": false
         }
       },
       "id": "save-abort-flag",
@@ -818,7 +811,8 @@
       "position": [
         1968,
         528
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
