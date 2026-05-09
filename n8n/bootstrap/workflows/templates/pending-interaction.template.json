@@ -249,7 +249,8 @@
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
         "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+            "parse_mode": "HTML"
         }
       },
       "id": "send-pending-question",
