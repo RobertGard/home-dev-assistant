@@ -916,7 +916,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "status": "={{ $json.questionText ? 'needs_input' : $json.resultStatus }}",
+            "status": "={{ $json.questionText ? 'needs_input' : undefined }}",
             "pending_question": "={{ $json.questionText || '' }}",
             "pending_options_json": "={{ $json.optionsJson && $json.optionsJson !== '[]' ? $json.optionsJson : undefined }}"
           }
