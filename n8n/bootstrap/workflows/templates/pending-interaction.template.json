@@ -191,7 +191,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
+        "jsonBody": "={{ $('Отправляем ожидающую интеракцию').item.json.interactionType === 'permission' ? { reply: $('Отправляем ожидающую интеракцию').item.json.permissionReply, ...( $('Отправляем ожидающую интеракцию').item.json.permissionMessage ? { message: $('Отправляем ожидающую интеракцию').item.json.permissionMessage } : {} ) } : $('Отправляем ожидающую интеракцию').item.json.requestAction === 'reject' ? {} : { answers: [$('Отправляем ожидающую интеракцию').item.json.text || $('Отправляем ожидающую интеракцию').item.json.message?.text || ''] } }}",
         "options": {
           "response": {
             "response": {
@@ -246,19 +246,22 @@
     },
     {
       "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
+        "messageType": "freeText",
+        "message": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML",
           "reply_markup": "={{ JSON.parse($('Готовим ответ пользователю').item.json.replyMarkup || '{}') }}"
         },
-        "operation": "sendMessage"
+        "options": {}
       },
       "id": "send-pending-question",
       "name": "Отправляем ожидающую интеракцию",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "typeVersion": 1.3,
       "position": [
         1420,
         200
@@ -577,7 +580,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Маркируем: вопрос отправлен пользователю в Telegram.\n// Возвращаем updatedPendingOptionsJson с deliveredAt чтобы не слать повторно.\n\nconst context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\n\nreturn {\n  json: {\n    taskKey: context.taskKey,\n    sessionId: context.sessionId,\n    chatId: context.chatId,\n    resultType: 'pending_sent',\n    questionSent: true,\n    updatedPendingOptionsJson: JSON.stringify(pendingMeta),\n  },\n}",
+        "jsCode": "// После sendAndWait получаем ответ пользователя напрямую.\n// Отправляем в OpenCode API.\n\nconst context = $('Разбираем входные данные').item.json\nconst waitResponse = $input.item.json\nconst userAnswer = String(waitResponse.text || waitResponse.message?.text || '').trim()\n\nconst answer = $('Готовим ответ пользователю').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\nconst isReject = /^\\/?(reject|skip|cancel)\\b/i.test(userAnswer)\n\nconst answers = isReject ? [] : [userAnswer]\n\nreturn {\n  json: {\n    taskKey: answer.taskKey || context.taskKey,\n    sessionId: answer.sessionId || context.sessionId,\n    chatId: answer.chatId || context.chatId,\n    resultType: 'interaction_processed',\n    interactionType: 'question',\n    hasInteraction: true,\n    hasAnswerPayload: true,\n    pendingOptionsJson: JSON.stringify({\n      ...pendingMeta,\n      answers: isReject ? null : answers,\n      rejectRequested: isReject,\n      answeredAt: new Date().toISOString(),\n    }),\n    replyError: '',\n  },\n}",
         "language": "javaScript"
       }
     },
@@ -835,7 +838,7 @@
       "main": [
         [
           {
-            "node": "Обогащаем: вопрос отправлен",
+            "node": "Отвечаем на вопрос OpenCode",
             "type": "main",
             "index": 0
           }
