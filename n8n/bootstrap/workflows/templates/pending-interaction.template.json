@@ -575,7 +575,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
+        "jsCode": "const context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, pendingQuestionText: context.pendingQuestion || '', updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
         "language": "javaScript"
       }
     },
