@@ -898,6 +898,21 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Копируем данные из exec-interaction в текущий item, чтобы save-pending-data мог читать через $json\nconst interaction = $('Обработка интеракций').first().json\nreturn {\n  json: {\n    ...$input.item.json,\n    pendingQuestionText: interaction.pendingQuestionText || '',\n    pendingOptionsJson: interaction.pendingOptionsJson || '[]',\n  },\n}"
+      },
+      "id": "copy-interaction-data",
+      "name": "Копируем данные интеракции",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        520
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -982,8 +997,8 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pending_question": "={{ $('Обработка интеракций').first().json.pendingQuestionText || '' }}",
-            "pending_options_json": "={{ $('Обработка интеракций').first().json.pendingOptionsJson || '[]' }}"
+            "pending_question": "={{ $json.pendingQuestionText || '' }}",
+            "pending_options_json": "={{ $json.pendingOptionsJson || '[]' }}"
           }
         },
         "options": {
@@ -1408,7 +1423,7 @@
       "main": [
         [
           {
-            "node": "Сохраняем pending данные в БД",
+            "node": "Копируем данные интеракции",
             "type": "main",
             "index": 0
           }
@@ -1420,6 +1435,17 @@
         [
           {
             "node": "Задача завершена?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Копируем данные интеракции": {
+      "main": [
+        [
+          {
+            "node": "Сохраняем pending данные в БД",
             "type": "main",
             "index": 0
           }
