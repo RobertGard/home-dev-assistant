@@ -352,6 +352,8 @@ install_cleanup_cron() {
   (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
   log_ok 'Cron-задача очистки executions установлена (каждый час).'
 }
+
+run_startup_pipeline() {
   local run_cmd=("${compose_cmd[@]}")
 
   step_start 'Запускаю docker compose'
