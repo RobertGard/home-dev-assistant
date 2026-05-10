@@ -731,6 +731,45 @@
     },
     {
       "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $json.taskKey }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_options_json": "={{ $json.pendingOptionsJson || '[]' }}",
+            "pending_question": "={{ $json.pendingQuestionText || '' }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-pending-immediate",
+      "name": "Сохраняем pending после интеракции",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2140,
+        620
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "900015",
@@ -981,9 +1020,7 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": {
-            "pending_question": "={{ $json.pendingQuestionText || '' }}"
-          }
+          "value": {}
         },
         "options": {
           "dryRun": false
@@ -1265,7 +1302,7 @@
       "main": [
         [
           {
-            "node": "Есть ошибка ответа?",
+            "node": "Сохраняем pending после интеракции",
             "type": "main",
             "index": 0
           }
@@ -1419,6 +1456,17 @@
         [
           {
             "node": "Задача завершена?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохраняем pending после интеракции": {
+      "main": [
+        [
+          {
+            "node": "Есть ошибка ответа?",
             "type": "main",
             "index": 0
           }

@@ -246,16 +246,12 @@
     },
     {
       "parameters": {
-        "resource": "message",
-        "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "message": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
-        "responseType": "freeText",
+        "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
-        },
-        "options": {}
+        }
       },
       "id": "send-pending-question",
       "name": "Отправляем ожидающую интеракцию",
@@ -579,48 +575,9 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// После sendAndWait — ответ пользователя в $input.item.json\nconst context = $('Разбираем входные данные').item.json\nconst resp = $input.item.json\n// sendAndWait freeText возвращает {data: {text: \"...\"}} или {text: \"...\"}\nconst userText = String(resp.text || resp.data?.text || '').trim()\n\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\nif (userText) pendingMeta.answers = [userText]\npendingMeta.deliveredAt = new Date().toISOString()\n\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
+        "jsCode": "const context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
         "language": "javaScript"
       }
-    },
-    {
-      "parameters": {
-        "resource": "row",
-        "operation": "update",
-        "dataTableId": {
-          "mode": "id",
-          "value": "__TASKS_TABLE_ID__"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "task_key",
-              "condition": "eq",
-              "keyValue": "={{ $('Разбираем входные данные').item.json.taskKey }}"
-            }
-          ]
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "pending_options_json": "={{ $('Обогащаем: вопрос отправлен').item.json.updatedPendingOptionsJson || '[]' }}",
-            "status": "={{ $('Обогащаем: вопрос отправлен').item.json.questionSent ? 'needs_input' : undefined }}"
-          }
-        },
-        "options": {
-          "dryRun": false
-        }
-      },
-      "id": "save-answer-directly",
-      "name": "Сохраняем ответ в БД напрямую",
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1.1,
-      "position": [
-        1660,
-        240
-      ],
-      "alwaysOutputData": true
     },
     {
       "id": "enrich-abort",
@@ -898,7 +855,7 @@
       "main": [
         [
           {
-            "node": "Сохраняем ответ в БД напрямую",
+            "node": "Собираем итог интеракции",
             "type": "main",
             "index": 0
           }
@@ -917,17 +874,6 @@
       ]
     },
     "Обогащаем: ответ в OpenCode отправлен": {
-      "main": [
-        [
-          {
-            "node": "Собираем итог интеракции",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сохраняем ответ в БД напрямую": {
       "main": [
         [
           {
