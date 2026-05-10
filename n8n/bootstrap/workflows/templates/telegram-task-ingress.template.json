@@ -14,7 +14,7 @@
       "typeVersion": 1.2,
       "position": [
         112,
-        336
+        424
       ],
       "credentials": {
         "telegramApi": {
@@ -50,8 +50,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        768,
-        320
+        1680,
+        520
       ],
       "id": "if-command",
       "name": "Это кандидат ответа?"
@@ -84,8 +84,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        528,
-        336
+        784,
+        424
       ],
       "id": "if-chat-allowed",
       "name": "Чат разрешён?"
@@ -107,8 +107,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        320,
-        336
+        336,
+        424
       ],
       "id": "set-vars",
       "name": "Задаём переменные"
@@ -124,8 +124,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        320,
-        224
+        560,
+        424
       ]
     },
     {
@@ -142,8 +142,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1008,
-        528
+        2800,
+        448
       ],
       "credentials": {
         "telegramApi": {
@@ -166,8 +166,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        768,
-        528
+        1008,
+        328
       ],
       "credentials": {
         "telegramApi": {
@@ -187,8 +187,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1008,
-        304
+        1456,
+        520
       ]
     },
     {
@@ -205,8 +205,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1488,
-        304
+        2800,
+        664
       ],
       "credentials": {
         "telegramApi": {
@@ -432,8 +432,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1248,
-        304
+        2576,
+        664
       ],
       "alwaysOutputData": true
     },
@@ -456,7 +456,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.3,
       "position": [
-        1180,
+        1008,
         520
       ]
     },
@@ -493,8 +493,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        768,
-        208
+        1232,
+        520
       ],
       "alwaysOutputData": true
     },
@@ -526,8 +526,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1488,
-        416
+        2128,
+        592
       ]
     },
     {
@@ -568,7 +568,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1488,
+        2800,
         208
       ],
       "alwaysOutputData": true
@@ -607,7 +607,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1728,
+        3024,
         208
       ],
       "alwaysOutputData": true
@@ -626,7 +626,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1968,
+        3248,
         208
       ],
       "credentials": {
@@ -647,8 +647,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        208
+        1904,
+        256
       ]
     },
     {
@@ -679,8 +679,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1488,
-        208
+        2576,
+        256
       ]
     },
     {
@@ -694,8 +694,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        416
+        2352,
+        664
       ]
     },
     {
@@ -726,8 +726,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1008,
-        528
+        1904,
+        688
       ]
     },
     {
@@ -741,8 +741,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        528
+        2128,
+        856
       ]
     },
     {
@@ -778,8 +778,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1488,
-        528
+        2352,
+        856
       ],
       "alwaysOutputData": true
     },
@@ -794,8 +794,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        528
+        2576,
+        856
       ]
     },
     {
@@ -836,8 +836,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1968,
-        528
+        2800,
+        856
       ],
       "alwaysOutputData": true
     },
@@ -855,8 +855,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2208,
-        528
+        3024,
+        856
       ],
       "credentials": {
         "telegramApi": {
@@ -893,8 +893,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1488,
-        208
+        2128,
+        256
       ]
     },
     {
@@ -908,7 +908,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
+        2352,
         160
       ]
     },
@@ -923,8 +923,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        256
+        2352,
+        352
       ]
     }
   ],

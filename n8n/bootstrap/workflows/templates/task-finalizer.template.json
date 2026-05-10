@@ -45,7 +45,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        220,
+        224,
         320
       ]
     },
@@ -60,7 +60,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
+        448,
         320
       ]
     },
@@ -90,7 +90,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        700,
+        672,
         320
       ],
       "alwaysOutputData": true,
@@ -107,7 +107,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
+        896,
         320
       ]
     },
@@ -140,7 +140,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1180,
+        1120,
         320
       ]
     },
@@ -170,7 +170,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1420,
+        1344,
         320
       ],
       "alwaysOutputData": true,
@@ -187,7 +187,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1660,
+        1568,
         320
       ]
     }

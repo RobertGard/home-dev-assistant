@@ -17,8 +17,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        220,
-        320
+        224,
+        792
       ]
     },
     {
@@ -32,8 +32,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        460,
-        320
+        448,
+        792
       ]
     },
     {
@@ -54,8 +54,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        700,
-        320
+        672,
+        792
       ],
       "alwaysOutputData": true
     },
@@ -70,8 +70,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
-        320
+        896,
+        792
       ]
     },
     {
@@ -110,8 +110,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1300,
-        320
+        1344,
+        432
       ]
     },
     {
@@ -125,8 +125,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1540,
-        320
+        1568,
+        432
       ]
     },
     {
@@ -157,8 +157,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1900,
-        320
+        1792,
+        432
       ]
     },
     {
@@ -185,8 +185,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2140,
-        320
+        2016,
+        360
       ],
       "alwaysOutputData": true
     },
@@ -216,8 +216,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2140,
-        520
+        2240,
+        360
       ],
       "alwaysOutputData": true
     },
@@ -249,8 +249,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2380,
-        320
+        2464,
+        360
       ]
     },
     {
@@ -289,8 +289,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2864,
-        360
+        2688,
+        672
       ],
       "alwaysOutputData": true
     },
@@ -308,8 +308,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3104,
-        360
+        2912,
+        672
       ],
       "credentials": {
         "telegramApi": {
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2860,
-        320
+        2688,
+        288
       ]
     },
     {
@@ -394,8 +394,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        3104,
-        280
+        2912,
+        288
       ],
       "alwaysOutputData": true
     },
@@ -413,8 +413,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3344,
-        280
+        3136,
+        288
       ],
       "credentials": {
         "telegramApi": {
@@ -437,8 +437,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4300,
-        520
+        3808,
+        432
       ],
       "credentials": {
         "telegramApi": {
@@ -461,8 +461,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        5020,
-        560
+        3808,
+        624
       ],
       "credentials": {
         "telegramApi": {
@@ -485,8 +485,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        5984,
-        620
+        2016,
+        1200
       ],
       "credentials": {
         "telegramApi": {
@@ -531,8 +531,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        5024,
-        460
+        2688,
+        960
       ],
       "alwaysOutputData": true
     },
@@ -550,8 +550,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        5264,
-        460
+        2912,
+        960
       ],
       "credentials": {
         "telegramApi": {
@@ -588,8 +588,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1180,
-        520
+        1120,
+        792
       ]
     },
     {
@@ -603,8 +603,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1420,
-        520
+        1344,
+        1128
       ]
     },
     {
@@ -633,8 +633,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3100,
-        420
+        2912,
+        480
       ],
       "alwaysOutputData": true
     },
@@ -649,8 +649,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3400,
-        420
+        3136,
+        480
       ]
     },
     {
@@ -684,8 +684,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4540,
-        320
+        3360,
+        480
       ],
       "alwaysOutputData": true
     },
@@ -724,8 +724,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1900,
-        520
+        1568,
+        1128
       ],
       "alwaysOutputData": true
     },
@@ -757,8 +757,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2620,
-        520
+        2240,
+        1128
       ],
       "alwaysOutputData": true
     },
@@ -776,8 +776,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3344,
-        580
+        2912,
+        1152
       ],
       "credentials": {
         "telegramApi": {
@@ -819,8 +819,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        3584,
-        580
+        3136,
+        1224
       ],
       "alwaysOutputData": true
     },
@@ -852,8 +852,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4780,
-        320
+        3584,
+        480
       ]
     },
     {
@@ -885,8 +885,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2880,
-        460
+        2464,
+        1128
       ]
     },
     {
@@ -917,8 +917,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3104,
-        580
+        2688,
+        1224
       ]
     },
     {
@@ -927,8 +927,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2140,
-        640
+        1792,
+        1128
       ],
       "parameters": {
         "conditions": {

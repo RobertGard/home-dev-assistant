@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        220,
-        320
+        224,
+        640
       ]
     },
     {
@@ -88,8 +88,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
-        320
+        448,
+        640
       ]
     },
     {
@@ -120,8 +120,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        700,
-        320
+        672,
+        640
       ]
     },
     {
@@ -135,8 +135,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
-        320
+        1568,
+        352
       ]
     },
     {
@@ -168,8 +168,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1180,
-        320
+        1792,
+        352
       ]
     },
     {
@@ -205,8 +205,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1420,
-        320
+        2240,
+        496
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -240,8 +240,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1180,
-        200
+        2016,
+        280
       ]
     },
     {
@@ -258,8 +258,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1420,
-        200
+        2240,
+        208
       ],
       "credentials": {
         "telegramApi": {
@@ -294,8 +294,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        940,
-        700
+        1120,
+        784
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -311,8 +311,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1180,
-        700
+        1344,
+        784
       ]
     },
     {
@@ -344,8 +344,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1420,
-        700
+        1568,
+        784
       ]
     },
     {
@@ -374,8 +374,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1660,
-        700
+        1792,
+        712
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -391,8 +391,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1900,
-        700
+        2016,
+        712
       ]
     },
     {
@@ -424,8 +424,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2140,
-        700
+        2240,
+        712
       ]
     },
     {
@@ -457,8 +457,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        940,
-        900
+        896,
+        880
       ]
     },
     {
@@ -487,8 +487,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1180,
-        900
+        2240,
+        1072
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -529,8 +529,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1420,
-        900
+        2464,
+        1072
       ],
       "alwaysOutputData": true
     },
@@ -545,8 +545,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2380,
-        700
+        2464,
+        856
       ]
     },
     {
@@ -560,8 +560,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2620,
-        320
+        2912,
+        496
       ]
     },
     {
@@ -570,8 +570,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
-        200
+        2464,
+        208
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
@@ -614,8 +614,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1660,
-        240
+        2688,
+        208
       ],
       "alwaysOutputData": true
     },
@@ -625,8 +625,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
-        600
+        2688,
+        1072
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
@@ -640,8 +640,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1660,
-        320
+        2464,
+        496
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
