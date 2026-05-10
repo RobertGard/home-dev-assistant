@@ -907,9 +907,14 @@
         "filters": {
           "conditions": [
             {
-              "keyName": "task_key",
+              "keyName": "session_id",
               "condition": "eq",
-              "keyValue": "={{ $json.taskKey }}"
+              "keyValue": "={{ $json.sessionId }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "running"
             }
           ]
         },
