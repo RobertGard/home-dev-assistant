@@ -870,7 +870,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Завершение задачи').first().json.taskKey }}"
+              "keyValue": "={{ $json.taskKey }}"
             }
           ]
         },
@@ -975,7 +975,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем активную задачу').first().json.task.task_key }}"
+              "keyValue": "={{ $json.taskKey }}"
             }
           ]
         },
