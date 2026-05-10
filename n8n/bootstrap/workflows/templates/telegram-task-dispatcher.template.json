@@ -877,9 +877,9 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "status": "={{ $('Завершение задачи').first().json.questionText ? 'needs_input' : $('Завершение задачи').first().json.resultStatus }}",
-            "pending_question": "={{ $('Завершение задачи').first().json.questionText || '' }}",
-            "pending_options_json": "={{ $('Выбираем активную задачу').first().json.task.pending_question ? undefined : $('Завершение задачи').first().json.optionsJson }}"
+            "status": "={{ $json.questionText ? 'needs_input' : $json.resultStatus }}",
+            "pending_question": "={{ $json.questionText || '' }}",
+            "pending_options_json": "={{ $json.optionsJson || '[]' }}"
           }
         },
         "options": {
@@ -982,8 +982,8 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pending_question": "={{ $json.pendingQuestionText || '' }}",
-            "pending_options_json": "={{ $json.pendingOptionsJson || '[]' }}"
+            "pending_question": "={{ $('Обработка интеракций').first().json.pendingQuestionText || '' }}",
+            "pending_options_json": "={{ $('Обработка интеракций').first().json.pendingOptionsJson || '[]' }}"
           }
         },
         "options": {
@@ -1408,7 +1408,7 @@
       "main": [
         [
           {
-            "node": "Задача завершена?",
+            "node": "Сохраняем pending данные в БД",
             "type": "main",
             "index": 0
           }
@@ -1419,7 +1419,7 @@
       "main": [
         [
           {
-            "node": "Есть ошибка ответа?",
+            "node": "Задача завершена?",
             "type": "main",
             "index": 0
           }
