@@ -1,6 +1,6 @@
 .env
 .env.*
-example.json
+example/
 !.env.example
 .DS_Store
 n8n/local-files/workflows/telegram-task-ingress.json
