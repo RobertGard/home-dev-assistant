@@ -290,7 +290,7 @@
       "typeVersion": 1.1,
       "position": [
         2864,
-        440
+        360
       ],
       "alwaysOutputData": true
     },
@@ -309,7 +309,7 @@
       "typeVersion": 1.2,
       "position": [
         3104,
-        440
+        360
       ],
       "credentials": {
         "telegramApi": {
@@ -395,7 +395,7 @@
       "typeVersion": 1.1,
       "position": [
         3104,
-        360
+        280
       ],
       "alwaysOutputData": true
     },
@@ -414,7 +414,7 @@
       "typeVersion": 1.2,
       "position": [
         3344,
-        360
+        280
       ],
       "credentials": {
         "telegramApi": {
@@ -532,7 +532,7 @@
       "typeVersion": 1.2,
       "position": [
         5984,
-        560
+        620
       ],
       "credentials": {
         "telegramApi": {
@@ -578,7 +578,7 @@
       "typeVersion": 1.1,
       "position": [
         5024,
-        440
+        460
       ],
       "alwaysOutputData": true
     },
@@ -597,7 +597,7 @@
       "typeVersion": 1.2,
       "position": [
         5264,
-        440
+        460
       ],
       "credentials": {
         "telegramApi": {
@@ -823,8 +823,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2880,
-        560
+        3344,
+        580
       ],
       "credentials": {
         "telegramApi": {
@@ -866,8 +866,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        3120,
-        560
+        3584,
+        580
       ],
       "alwaysOutputData": true
     },
@@ -933,7 +933,7 @@
       "typeVersion": 2.2,
       "position": [
         2880,
-        520
+        460
       ]
     },
     {
@@ -965,7 +965,7 @@
       "typeVersion": 2.2,
       "position": [
         3104,
-        560
+        580
       ]
     },
     {
