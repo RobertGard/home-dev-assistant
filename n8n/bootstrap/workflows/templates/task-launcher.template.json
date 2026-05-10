@@ -265,11 +265,6 @@
               "keyName": "status",
               "condition": "eq",
               "keyValue": "running"
-            },
-            {
-              "keyName": "session_id",
-              "condition": "eq",
-              "keyValue": "={{ $('Разбираем входные данные').item.json.claimToken }}"
             }
           ]
         },
