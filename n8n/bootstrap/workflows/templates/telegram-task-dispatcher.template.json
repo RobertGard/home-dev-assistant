@@ -858,6 +858,46 @@
     },
     {
       "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Завершение задачи').item.json.taskKey }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $('Завершение задачи').item.json.questionText ? 'needs_input' : $('Завершение задачи').item.json.resultStatus }}",
+            "pending_question": "={{ $('Завершение задачи').item.json.questionText || '' }}",
+            "pending_options_json": "={{ $('Завершение задачи').item.json.optionsJson || '[]' }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-question-if-any",
+      "name": "Сохраняем вопрос OpenCode если есть",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2620,
+        520
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -1198,7 +1238,7 @@
       "main": [
         [
           {
-            "node": "Задача завершена?",
+            "node": "Сохраняем вопрос OpenCode если есть",
             "type": "main",
             "index": 0
           }
@@ -1319,6 +1359,17 @@
         [
           {
             "node": "Помечаем прогресс отправленным",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохраняем вопрос OpenCode если есть": {
+      "main": [
+        [
+          {
+            "node": "Задача завершена?",
             "type": "main",
             "index": 0
           }
