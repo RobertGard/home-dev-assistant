@@ -687,6 +687,21 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Копируем sessionId и launchError от менеджера сессий в отдельные поля,\n// чтобы exec-launch мог ссылаться на них без проблем paired-item цепочки.\n\nconst sessionOutput = $('Управление сессией').first().json\n\nreturn {\n  json: {\n    sessionId: String(sessionOutput.sessionId || '').trim(),\n    launchError: String(sessionOutput.launchError || '').trim(),\n  },\n}"
+      },
+      "id": "capture-session-result",
+      "name": "Фиксируем результат менеджера сессий",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3400,
+        420
+      ]
+    },
+    {
+      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "900013",
@@ -702,8 +717,8 @@
             "taskStatus": "={{ $('Выбираем кандидатную задачу').item.json.task.status }}",
             "claimToken": "={{ $('Выбираем кандидатную задачу').item.json.claimToken }}",
             "promptText": "={{ $('Выбираем кандидатную задачу').item.json.promptText }}",
-            "sessionId": "={{ $('Управление сессией').item.json.sessionId }}",
-            "launchError": "={{ $('Управление сессией').item.json.launchError }}",
+            "sessionId": "={{ $('Фиксируем результат менеджера сессий').item.json.sessionId }}",
+            "launchError": "={{ $('Фиксируем результат менеджера сессий').item.json.launchError }}",
             "promptAsyncPath": "={{ $('Готовим пакеты обработчиков').item.json.promptAsyncPath }}",
             "opencodeAgent": "={{ $('Готовим пакеты обработчиков').item.json.opencodeAgent }}",
             "opencodeModelProviderID": "={{ $('Готовим пакеты обработчиков').item.json.opencodeModel?.providerID }}",
@@ -1166,7 +1181,7 @@
       "main": [
         [
           {
-            "node": "Запуск задачи",
+            "node": "Фиксируем результат менеджера сессий",
             "type": "main",
             "index": 0
           }
@@ -1297,6 +1312,17 @@
         [
           {
             "node": "Завершение задачи",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Фиксируем результат менеджера сессий": {
+      "main": [
+        [
+          {
+            "node": "Запуск задачи",
             "type": "main",
             "index": 0
           }
