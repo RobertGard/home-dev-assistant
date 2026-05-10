@@ -593,15 +593,15 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Разбираем входные данные').item.json.taskKey }}"
+              "keyValue": "={{ $json.taskKey }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pending_question": "={{ $('Обогащаем: вопрос отправлен').item.json.pendingQuestionText || '' }}",
-            "pending_options_json": "={{ $('Обогащаем: вопрос отправлен').item.json.updatedPendingOptionsJson || '[]' }}"
+            "pending_question": "={{ $json.pendingQuestionText || '' }}",
+            "pending_options_json": "={{ $json.updatedPendingOptionsJson || $json.pendingOptionsJson || '[]' }}"
           }
         },
         "options": {
@@ -861,7 +861,7 @@
       "main": [
         [
           {
-            "node": "Собираем итог интеракции",
+            "node": "Сохраняем pending в БД (sub-workflow)",
             "type": "main",
             "index": 0
           }
