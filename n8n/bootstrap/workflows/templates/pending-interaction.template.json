@@ -191,7 +191,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
+        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: [String(($('Отправляем ожидающую интеракцию').first().json.text || '').trim())] } }}",
         "options": {
           "response": {
             "response": {
@@ -246,12 +246,16 @@
     },
     {
       "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
+        "message": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
+        "responseType": "freeText",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
-        }
+        },
+        "options": {}
       },
       "id": "send-pending-question",
       "name": "Отправляем ожидающую интеракцию",
@@ -833,7 +837,7 @@
       "main": [
         [
           {
-            "node": "Обогащаем: вопрос отправлен",
+            "node": "Отвечаем на вопрос OpenCode",
             "type": "main",
             "index": 0
           }
