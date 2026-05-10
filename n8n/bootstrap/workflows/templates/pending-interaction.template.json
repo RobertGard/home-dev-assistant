@@ -191,7 +191,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: $('Готовим ответ пользователю').item.json.answers } }}",
+        "jsonBody": "={{ $('Готовим ответ пользователю').item.json.interactionType === 'permission' ? { reply: $('Готовим ответ пользователю').item.json.permissionReply, ...( $('Готовим ответ пользователю').item.json.permissionMessage ? { message: $('Готовим ответ пользователю').item.json.permissionMessage } : {} ) } : $('Готовим ответ пользователю').item.json.requestAction === 'reject' ? {} : { answers: [String(($('Отправляем ожидающую интеракцию').first().json.text || '').trim())] } }}",
         "options": {
           "response": {
             "response": {
@@ -246,13 +246,17 @@
     },
     {
       "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
         "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
+        "messageType": "freeText",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML",
           "reply_markup": "={{ JSON.parse($('Готовим ответ пользователю').item.json.replyMarkup || '{}') }}"
-        }
+        },
+        "options": {}
       },
       "id": "send-pending-question",
       "name": "Отправляем ожидающую интеракцию",
@@ -576,7 +580,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Маркируем: вопрос отправлен. Возвращаем deliveredAt чтобы не слать повторно.\nconst context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
+        "jsCode": "// После sendAndWait получаем ответ и маркируем отправку.\nconst context = $('Разбираем входные данные').item.json\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'interaction_processed', questionSent: true } }",
         "language": "javaScript"
       }
     },
@@ -834,7 +838,7 @@
       "main": [
         [
           {
-            "node": "Обогащаем: вопрос отправлен",
+            "node": "Отвечаем на вопрос OpenCode",
             "type": "main",
             "index": 0
           }
