@@ -134,7 +134,7 @@
         "text": "={{ (() => { try { if ($json.replyText) return $json.replyText } catch {} try { return $('Готовим ожидающую интеракцию').first().json.replyText } catch {} return $('Разбираем базовое сообщение Telegram').first().json.replyText })() }}",
         "additionalFields": {
           "appendAttribution": false,
-            "parse_mode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-parse-error",
@@ -158,7 +158,7 @@
         "text": "Недопустимый чат",
         "additionalFields": {
           "appendAttribution": false,
-            "parse_mode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-invalid-chat",
@@ -197,7 +197,7 @@
         "text": "={{ $('Готовим новую задачу').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
-            "parse_mode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-queued-message",
@@ -439,6 +439,29 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "chatId",
+              "value": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-chat-id",
+      "name": "Фиксируем chat_id",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1180,
+        520
+      ]
+    },
+    {
+      "parameters": {
         "resource": "row",
         "operation": "get",
         "dataTableId": {
@@ -451,7 +474,7 @@
             {
               "keyName": "chat_id",
               "condition": "eq",
-              "keyValue": "={{ $('Задаём переменные').first().json.telegram_chat_id }}"
+              "keyValue": "={{ $json.chatId }}"
             },
             {
               "keyName": "status",
@@ -595,7 +618,7 @@
         "text": "={{ $('Ответ распознан?').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
-            "parse_mode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-answer-accepted",
@@ -824,7 +847,7 @@
         "text": "={{ $('Определяем цель прерывания').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
-            "parse_mode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-abort-confirmation",
@@ -1007,7 +1030,7 @@
       "main": [
         [
           {
-            "node": "Получаем задачи с ожиданием ответа",
+            "node": "Фиксируем chat_id",
             "type": "main",
             "index": 0
           }
@@ -1200,6 +1223,17 @@
         [
           {
             "node": "Ответ распознан?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Фиксируем chat_id": {
+      "main": [
+        [
+          {
+            "node": "Получаем задачи с ожиданием ответа",
             "type": "main",
             "index": 0
           }
