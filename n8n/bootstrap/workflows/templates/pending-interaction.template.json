@@ -246,16 +246,12 @@
     },
     {
       "parameters": {
-        "resource": "message",
-        "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "message": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
-        "responseType": "freeText",
+        "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
-        },
-        "options": {}
+        }
       },
       "id": "send-pending-question",
       "name": "Отправляем ожидающую интеракцию",
@@ -579,7 +575,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// После sendAndWait: сохраняем ответ пользователя в pending_options_json.answers\n// На следующем тике prepare-answer увидит hasAnswerPayload=true и отправит в OpenCode.\n\nconst context = $('Разбираем входные данные').item.json\nconst waitResponse = $input.item.json\nconst userText = String(waitResponse.text || waitResponse.message?.text || '').trim()\n\n// Обновляем pendingMeta с ответом пользователя\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.answers = userText ? [userText] : []\npendingMeta.deliveredAt = new Date().toISOString()\n\nreturn {\n  json: {\n    taskKey: context.taskKey,\n    sessionId: context.sessionId,\n    chatId: context.chatId,\n    resultType: 'pending_sent',\n    questionSent: true,\n    updatedPendingOptionsJson: JSON.stringify(pendingMeta),\n  },\n}",
+        "jsCode": "// Маркируем вопрос отправленным. Ответ придёт через ingress.\nconst context = $('Разбираем входные данные').item.json\nconst pendingMeta = {}\ntry { Object.assign(pendingMeta, JSON.parse(String(context.pendingOptionsJson || '{}'))) } catch {}\npendingMeta.deliveredAt = new Date().toISOString()\nreturn { json: { taskKey: context.taskKey, sessionId: context.sessionId, chatId: context.chatId, resultType: 'pending_sent', questionSent: true, updatedPendingOptionsJson: JSON.stringify(pendingMeta) } }",
         "language": "javaScript"
       }
     },
