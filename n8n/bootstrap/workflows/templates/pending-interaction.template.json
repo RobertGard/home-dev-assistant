@@ -602,7 +602,7 @@
           "value": {
             "pending_question": "={{ $json.pendingQuestionText || '' }}",
             "pending_options_json": "={{ $json.updatedPendingOptionsJson || $json.pendingOptionsJson || '[]' }}",
-            "status": "={{ $json.pendingQuestionText ? 'needs_input' : undefined }}"
+            "status": "needs_input"
           }
         },
         "options": {
