@@ -250,9 +250,7 @@
         "operation": "sendAndWait",
         "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
         "message": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
-        "responseType": "customForm",
-        "defineForm": "json",
-        "jsonForm": "={{ $('Готовим ответ пользователю').item.json.formFieldsJson }}",
+        "responseType": "freeText",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
