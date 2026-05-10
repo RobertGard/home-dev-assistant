@@ -555,7 +555,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем активную задачу').first().json.task.task_key }}"
+              "keyValue": "={{ $('Завершение задачи').item.json.taskKey }}"
             }
           ]
         },
@@ -563,7 +563,6 @@
           "mappingMode": "defineBelow",
           "value": {
             "status": "={{ $('Завершение задачи').item.json.resultStatus }}",
-            "session_id": "={{ $('Выбираем активную задачу').first().json.sessionId }}",
             "pending_question": "",
             "pending_options_json": "[]",
             "result_text": "={{ $('Завершение задачи').item.json.replyText }}"
@@ -848,14 +847,14 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $('Выбираем активную задачу').first().json.task.task_key }}"
+              "keyValue": "={{ $('Завершение задачи').item.json.taskKey }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "context_json": "={{ (() => { try { const ctx = $('Выбираем активную задачу').first().json.contextJson; ctx.latestSentId = String($('Завершение задачи').item.json.latestSentId || '').trim(); return JSON.stringify(ctx) } catch { return JSON.stringify({ latestSentId: String($('Завершение задачи').item.json.latestSentId || '').trim() }) } })() }}"
+            "context_json": "={{ JSON.stringify({ latestSentId: String($('Завершение задачи').item.json.latestSentId || '').trim() }) }}"
           }
         },
         "options": {
