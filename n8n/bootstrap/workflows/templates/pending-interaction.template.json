@@ -584,6 +584,45 @@
       }
     },
     {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "condition": "eq",
+              "keyValue": "={{ $('Разбираем входные данные').item.json.taskKey }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_options_json": "={{ $('Обогащаем: вопрос отправлен').item.json.updatedPendingOptionsJson || '[]' }}",
+            "status": "={{ $('Обогащаем: вопрос отправлен').item.json.questionSent ? 'needs_input' : undefined }}"
+          }
+        },
+        "options": {
+          "dryRun": false
+        }
+      },
+      "id": "save-answer-directly",
+      "name": "Сохраняем ответ в БД напрямую",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1660,
+        240
+      ],
+      "alwaysOutputData": true
+    },
+    {
       "id": "enrich-abort",
       "name": "Обогащаем: задача отменена",
       "type": "n8n-nodes-base.code",
@@ -859,7 +898,7 @@
       "main": [
         [
           {
-            "node": "Собираем итог интеракции",
+            "node": "Сохраняем ответ в БД напрямую",
             "type": "main",
             "index": 0
           }
@@ -878,6 +917,17 @@
       ]
     },
     "Обогащаем: ответ в OpenCode отправлен": {
+      "main": [
+        [
+          {
+            "node": "Собираем итог интеракции",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохраняем ответ в БД напрямую": {
       "main": [
         [
           {

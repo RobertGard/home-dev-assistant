@@ -898,21 +898,6 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const interaction = $('Обработка интеракций').first().json\nreturn { json: { ...$input.item.json, pendingQuestionText: interaction.pendingQuestionText || '', pendingOptionsJson: interaction.pendingOptionsJson || '[]' } }"
-      },
-      "id": "copy-interaction-data",
-      "name": "Копируем данные интеракции",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2860,
-        520
-      ]
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -997,8 +982,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "pending_question": "={{ $json.pendingQuestionText || '' }}",
-            "pending_options_json": "={{ $json.pendingOptionsJson || '[]' }}"
+            "pending_question": "={{ $json.pendingQuestionText || '' }}"
           }
         },
         "options": {
@@ -1423,7 +1407,7 @@
       "main": [
         [
           {
-            "node": "Копируем данные интеракции",
+            "node": "Сохраняем pending данные в БД",
             "type": "main",
             "index": 0
           }
@@ -1435,17 +1419,6 @@
         [
           {
             "node": "Задача завершена?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Копируем данные интеракции": {
-      "main": [
-        [
-          {
-            "node": "Сохраняем pending данные в БД",
             "type": "main",
             "index": 0
           }
