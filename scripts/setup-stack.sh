@@ -338,7 +338,7 @@ install_cleanup_cron() {
   local cron_marker="# n8n-opencode-cleanup"
   local cleanup_script="${ROOT_DIR}/scripts/cleanup-executions.sh"
   local log_dir="${ROOT_DIR}/logs"
-  local cron_line="0 */6 * * * bash ${cleanup_script} >> ${log_dir}/cleanup.log 2>&1 ${cron_marker}"
+  local cron_line="0 * * * * bash ${cleanup_script} >> ${log_dir}/cleanup.log 2>&1 ${cron_marker}"
 
   mkdir -p "$log_dir"
 
@@ -350,7 +350,7 @@ install_cleanup_cron() {
 
   # Add cron entry
   (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
-  log_ok 'Cron-задача очистки executions установлена (каждые 6 часов).'
+  log_ok 'Cron-задача очистки executions установлена (каждый час).'
 }
   local run_cmd=("${compose_cmd[@]}")
 
@@ -598,7 +598,6 @@ recover_existing_configuration() {
   ensure_env_default N8N_EXECUTIONS_TIMEOUT 604800
   ensure_env_default N8N_EXECUTIONS_TIMEOUT_MAX 604800
   ensure_env_default N8N_EXECUTION_RETENTION_HOURS 1
-  ensure_env_default N8N_EXECUTION_MAX_DELETE_PER_RUN 500
   ensure_env_default POSTGRES_DB n8n
   ensure_env_default POSTGRES_USER n8n
   ensure_env_default N8N_BASIC_AUTH_ACTIVE true
@@ -1277,7 +1276,6 @@ step_start 'Записываю .env'
   write_env_line N8N_EXECUTIONS_TIMEOUT "$N8N_EXECUTIONS_TIMEOUT"
   write_env_line N8N_EXECUTIONS_TIMEOUT_MAX "$N8N_EXECUTIONS_TIMEOUT_MAX"
   write_env_line N8N_EXECUTION_RETENTION_HOURS '1'
-  write_env_line N8N_EXECUTION_MAX_DELETE_PER_RUN '500'
   printf '\n'
   write_env_line POSTGRES_DB 'n8n'
   write_env_line POSTGRES_USER 'n8n'
