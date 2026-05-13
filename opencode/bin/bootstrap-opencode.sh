@@ -205,37 +205,37 @@ EOF
 fi
 
 if [ ! -f "${STATE_FILE}" ] && [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
-  TOOLING_CFG="/workspace-config/tooling.json"
+  TOOLING_CFG="/workspace-config/repos.json"
   
-  if [ -f "${TOOLING_CFG}" ]; then
+  if [ -f "${TOOLING_CFG}" ] && jq -e '.tooling' "${TOOLING_CFG}" >/dev/null 2>&1; then
     # Global npx packages
-    for row in $(jq -r '.global.npx[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
+    for row in $(jq -r '.tooling.global.npx[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
       pkg="$(_pkg '.package')"; args="$(_pkg '.args // empty')"
       echo "→ installing npx: ${pkg} ${args}"
       npx -y "${pkg}" ${args} || printf 'warn: npx %s failed\n' "${pkg}"
     done
     # Global npm packages
-    for row in $(jq -r '.global.npm[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
+    for row in $(jq -r '.tooling.global.npm[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       pkg="$(echo "${row}" | base64 -d | jq -r '.')"
       echo "→ installing npm: ${pkg}"
       npm install -g "${pkg}" || printf 'warn: npm install -g %s failed\n' "${pkg}"
     done
     # Global uv tools
-    for row in $(jq -r '.global.uv[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
+    for row in $(jq -r '.tooling.global.uv[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
       pkg="$(_pkg '.package')"; py="$(_pkg '.python // "3.13"')"; args="$(_pkg '.args // empty')"
       echo "→ installing uv: ${pkg} (python=${py})"
       uv tool install -p "${py}" "${pkg}" ${args} || printf 'warn: uv tool install %s failed\n' "${pkg}"
     done
     # Post-install commands
-    for row in $(jq -r '.global.post_install[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
+    for row in $(jq -r '.tooling.global.post_install[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       cmd="$(echo "${row}" | base64 -d | jq -r '.')"
       echo "→ post-install: ${cmd}"
       eval "${cmd}" || printf 'warn: %s failed\n' "${cmd}"
     done
   else
-    printf 'warn: tooling config not found at %s, skipping auto-install\n' "${TOOLING_CFG}"
+    printf 'warn: tooling section not found in %s, skipping auto-install\n' "${TOOLING_CFG}"
   fi
 
   touch "${STATE_FILE}"

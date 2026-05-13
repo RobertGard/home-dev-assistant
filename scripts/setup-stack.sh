@@ -927,7 +927,8 @@ write_repos_file() {
       "$auto_start_docker" \
       "$post_bootstrap"
     printf '\n'
-    printf '  ]\n'
+    printf '  ],\n'
+    printf '  "tooling": %s\n' "$(jq -c '.tooling' "${ROOT_DIR}/workers/worker-1/repos.json.example")"
     printf '}\n'
   } >"$file"
 }
@@ -961,7 +962,34 @@ write_disabled_placeholder_repo() {
       "auto_start_docker": false,
       "enabled": false
     }
-  ]
+  ],
+  "tooling": {
+    "global": {
+      "npx": [
+        { "package": "get-shit-done-cc@latest", "args": "--opencode --global" }
+      ],
+      "npm": [
+        "ctx7",
+        "@upstash/context7-mcp",
+        "@modelcontextprotocol/server-filesystem",
+        "@modelcontextprotocol/server-git",
+        "@modelcontextprotocol/server-github",
+        "@modelcontextprotocol/server-memory",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "uv": [
+        { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow" }
+      ],
+      "post_install": [
+        "serena init"
+      ]
+    },
+    "per_repo": {
+      "npx": [
+        { "package": "get-shit-done-cc@latest", "args": "--opencode --local" }
+      ]
+    }
+  }
 }
 EOF
 }
