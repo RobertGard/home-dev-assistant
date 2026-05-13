@@ -952,6 +952,40 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "parent-failed",
+              "leftValue": "={{ ['failed','cancelled','error'].includes($('Получаем родительскую задачу').item.json.status) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-parent-failed",
+      "name": "Родитель завершился ошибкой?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2764,
+        460
+      ]
     }
   ],
   "pinData": {},
@@ -1103,7 +1137,7 @@
         ],
         [
           {
-            "node": "Отменяем: родитель неуспешен",
+            "node": "Родитель завершился ошибкой?",
             "type": "main",
             "index": 0
           }
@@ -1323,6 +1357,18 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Родитель завершился ошибкой?": {
+      "main": [
+        [
+          {
+            "node": "Отменяем: родитель неуспешен",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
