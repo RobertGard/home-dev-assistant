@@ -965,7 +965,7 @@
           "conditions": [
             {
               "id": "parent-failed",
-              "leftValue": "={{ ['failed','cancelled','error'].includes($('Получаем родительскую задачу').item.json.status) }}",
+              "leftValue": "={{ ['failed','cancelled'].includes($('Получаем родительскую задачу').item.json.status) }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
