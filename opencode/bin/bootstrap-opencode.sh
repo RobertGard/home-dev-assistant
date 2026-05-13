@@ -205,7 +205,7 @@ EOF
 fi
 
 if [ ! -f "${STATE_FILE}" ] && [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
-  npx -y get-shit-done-cc@latest --opencode --global || true
+  npx -y get-shit-done-cc@latest --opencode --global || printf 'warn: GSD install failed (network or npm issue). Run manually: npx get-shit-done-cc@latest --opencode --global\n'
   npm install -g ctx7 @upstash/context7-mcp \
     @modelcontextprotocol/server-filesystem \
     @modelcontextprotocol/server-git \

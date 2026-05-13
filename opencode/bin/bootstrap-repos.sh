@@ -194,7 +194,7 @@ while IFS= read -r repo; do
   fi
 
   if [ "${gsd_local}" = "true" ]; then
-    (cd "${repo_dir}" && npx -y get-shit-done-cc@latest --opencode --local) || true
+    (cd "${repo_dir}" && npx -y get-shit-done-cc@latest --opencode --local) || printf 'warn: GSD local install failed for %s\n' "${slug}"
   fi
 
   if [ -n "${post_bootstrap}" ]; then
