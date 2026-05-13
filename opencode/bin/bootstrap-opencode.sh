@@ -205,7 +205,7 @@ EOF
 fi
 
 if [ ! -f "${STATE_FILE}" ] && [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
-  TOOLING_CFG="/opt/opencode-shared/tooling.json"
+  TOOLING_CFG="/workspace-config/tooling.json"
   
   if [ -f "${TOOLING_CFG}" ]; then
     # Global npx packages

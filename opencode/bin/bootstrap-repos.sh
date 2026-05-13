@@ -193,7 +193,7 @@ while IFS= read -r repo; do
     run_turbo_smoke "${repo_dir}" "${turbo_tasks}"
   fi
 
-  TOOLING_CFG="/opt/opencode-shared/tooling.json"
+  TOOLING_CFG="/workspace-config/tooling.json"
   if [ -f "${TOOLING_CFG}" ]; then
     for row in $(jq -r '.per_repo.npx[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
