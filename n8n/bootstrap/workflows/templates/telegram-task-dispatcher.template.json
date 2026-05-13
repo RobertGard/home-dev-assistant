@@ -277,7 +277,7 @@
             "status": "cancelled",
             "pending_question": "",
             "pending_options_json": "[]",
-            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: родительская задача ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}"
+            "result_text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена: родительская задача <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}"
           }
         },
         "options": {
@@ -297,7 +297,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: родительская задача ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}",
+        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена: родительская задача <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -382,7 +382,7 @@
             "status": "cancelled",
             "pending_question": "",
             "pending_options_json": "[]",
-            "result_text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: в результате ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}"
+            "result_text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена: в результате <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}"
           }
         },
         "options": {
@@ -402,7 +402,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} отменена: в результате ${$('Выбираем кандидатную задачу').item.json.parentTaskKey} не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}",
+        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена: в результате <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -426,7 +426,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача ${$('Выбираем кандидатную задачу').item.json.task.task_key} успешно запущена. Ожидайте результат.` }}",
+        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> успешно запущена. Ожидайте результат.` }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -450,7 +450,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Асинхронный запуск задачи ${$('Выбираем кандидатную задачу').item.json.task.task_key} не удался: ${$('Запуск задачи').item.json.launchError || 'OpenCode не принял запрос.'}` }}",
+        "text": "={{ `Асинхронный запуск задачи <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> не удался: ${$('Запуск задачи').item.json.launchError || 'OpenCode не принял запрос.'}` }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -474,7 +474,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
-        "text": "={{ `Ответ на вопрос по задаче ${$('Выбираем активную задачу').first().json.task.task_key} не отправлен: ${String($('Обработка интеракций').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
+        "text": "={{ `Ответ на вопрос по задаче <code>${$('Выбираем активную задачу').first().json.task.task_key}</code> не отправлен: ${String($('Обработка интеракций').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
