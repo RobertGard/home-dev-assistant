@@ -35,7 +35,7 @@
           "conditions": [
             {
               "id": "chat-id-allowed",
-              "leftValue": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
+              "leftValue": "={{ $('Триггер Telegram').first().json.message.chat.id.toString() }}",
               "rightValue": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
               "operator": {
                 "type": "string",
