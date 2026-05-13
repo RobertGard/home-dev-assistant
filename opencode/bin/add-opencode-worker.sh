@@ -21,10 +21,37 @@ fi
 
 mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
 
-if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/repos.json" ]; then
-  cat > "${ROOT_DIR}/${CONFIG_DIR}/repos.json" <<'EOF'
+if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/config.json" ]; then
+  cat > "${ROOT_DIR}/${CONFIG_DIR}/config.json" <<'EOF'
 {
-  "repos": []
+  "repos": [],
+  "tooling": {
+    "global": {
+      "npx": [
+        { "package": "get-shit-done-cc@latest", "args": "--opencode --global" }
+      ],
+      "npm": [
+        "ctx7",
+        "@upstash/context7-mcp",
+        "@modelcontextprotocol/server-filesystem",
+        "@modelcontextprotocol/server-git",
+        "@modelcontextprotocol/server-github",
+        "@modelcontextprotocol/server-memory",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "uv": [
+        { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow" }
+      ],
+      "post_install": [
+        "serena init"
+      ]
+    },
+    "per_repo": {
+      "npx": [
+        { "package": "get-shit-done-cc@latest", "args": "--opencode --local" }
+      ]
+    }
+  }
 }
 EOF
 fi
@@ -55,7 +82,7 @@ services:
       OPENCODE_INSTANCE_NAME: ${NAME}
       OPENCODE_WORKSPACE_ROOT: /workspace
       OPENCODE_CONFIG_ROOT: /workspace-config
-      OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+      OPENCODE_CONFIG_FILE: /workspace-config/config.json
       OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
       OPENCODE_AUTO_INSTALL_TOOLING: "1"
     volumes:

@@ -20,7 +20,7 @@ x-opencode-common: &opencode-common
     OPENCODE_SERVER_PORT: 4096
     OPENCODE_WORKSPACE_ROOT: /workspace
     OPENCODE_CONFIG_ROOT: /workspace-config
-    OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+    OPENCODE_CONFIG_FILE: /workspace-config/config.json
     OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
     OPENCODE_AUTO_INSTALL_TOOLING: "1"
     OPENCODE_PROVIDER_TIMEOUT_MS: ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}
@@ -183,7 +183,7 @@ services:
       OPENCODE_INSTANCE_NAME: ${OPENCODE_WORKER_1_NAME:-worker-1}
       OPENCODE_WORKSPACE_ROOT: /workspace
       OPENCODE_CONFIG_ROOT: /workspace-config
-      OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+      OPENCODE_CONFIG_FILE: /workspace-config/config.json
       OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
       OPENCODE_AUTO_INSTALL_TOOLING: "1"
       OPENCODE_PROVIDER_TIMEOUT_MS: ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}

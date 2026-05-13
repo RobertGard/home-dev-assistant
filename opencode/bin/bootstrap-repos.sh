@@ -2,7 +2,7 @@
 set -euo pipefail
 
 WORKSPACE_ROOT="${OPENCODE_WORKSPACE_ROOT:-/workspace}"
-CATALOG_FILE="${OPENCODE_REPO_CATALOG_FILE:-}"
+CATALOG_FILE="${OPENCODE_CONFIG_FILE:-}"
 ALLOW_POST_BOOTSTRAP="${OPENCODE_ALLOW_POST_BOOTSTRAP:-0}"
 WORKSPACE_ROOT_REAL="$(realpath -m -- "${WORKSPACE_ROOT}")"
 
@@ -193,7 +193,7 @@ while IFS= read -r repo; do
     run_turbo_smoke "${repo_dir}" "${turbo_tasks}"
   fi
 
-  TOOLING_CFG="/workspace-config/repos.json"
+  TOOLING_CFG="/workspace-config/config.json"
   if [ -f "${TOOLING_CFG}" ] && jq -e '.tooling' "${TOOLING_CFG}" >/dev/null 2>&1; then
     for row in $(jq -r '.tooling.per_repo.npx[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
       _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }

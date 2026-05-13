@@ -6,7 +6,7 @@ PLUGIN_DIR="${CONFIG_DIR}/plugins"
 CONFIG_FILE="${CONFIG_DIR}/opencode.json"
 STATE_FILE="${CONFIG_DIR}/.bootstrap-complete"
 WORKSPACE_ROOT="${OPENCODE_WORKSPACE_ROOT:-/workspace}"
-REPO_CATALOG_FILE="${OPENCODE_REPO_CATALOG_FILE:-/workspace-config/repos.json}"
+CONFIG_FILE="${OPENCODE_CONFIG_FILE:-/workspace-config/config.json}"
 INSTANCE_NAME="${OPENCODE_INSTANCE_NAME:-worker}"
 TEMPLATE_ROOT="${OPENCODE_TEMPLATE_ROOT:-/opt/opencode/templates}"
 
@@ -194,7 +194,7 @@ if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
 # ${INSTANCE_NAME}
 
 - Workspace root: ${WORKSPACE_ROOT}
-- Repo catalog: ${REPO_CATALOG_FILE}
+- Config: ${CONFIG_FILE}
 - Default agent: ${OPENCODE_AGENT:-build}
 - Docker access is provided through the mounted host socket.
 - Use serena for semantic code navigation and symbol-aware refactors.
@@ -205,7 +205,7 @@ EOF
 fi
 
 if [ ! -f "${STATE_FILE}" ] && [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
-  TOOLING_CFG="/workspace-config/repos.json"
+  TOOLING_CFG="/workspace-config/config.json"
   
   if [ -f "${TOOLING_CFG}" ] && jq -e '.tooling' "${TOOLING_CFG}" >/dev/null 2>&1; then
     # Global npx packages

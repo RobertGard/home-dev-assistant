@@ -220,7 +220,7 @@ preferred_fs_owner() {
 
 ensure_worker_dir_writable() {
   local worker_dir="$1"
-  local repo_file="${worker_dir}/repos.json"
+  local repo_file="${worker_dir}/config.json"
   local owner_group
 
   if [ -w "$worker_dir" ] && { [ ! -e "$repo_file" ] || [ -w "$repo_file" ]; }; then
@@ -726,9 +726,9 @@ recover_existing_configuration() {
     worker_dir_abs="${ROOT_DIR}/${worker_dir_rel}"
     mkdir -p "$worker_dir_abs"
     ensure_worker_dir_writable "$worker_dir_abs"
-    if [ ! -f "${worker_dir_abs}/repos.json" ]; then
-      write_disabled_placeholder_repo "${worker_dir_abs}/repos.json"
-      log_warn "Не найден ${worker_dir_rel}/repos.json. Создан placeholder-файл."
+    if [ ! -f "${worker_dir_abs}/config.json" ]; then
+      write_disabled_placeholder_repo "${worker_dir_abs}/config.json"
+      log_warn "Не найден ${worker_dir_rel}/config.json. Создан placeholder-файл."
     fi
 
     WORKER_NAMES+=("$worker_name")
@@ -902,7 +902,7 @@ write_repos_file() {
 
   parent_dir="$(dirname "$file")"
   if [ ! -d "$parent_dir" ]; then
-    die "Каталог для repos.json не найден: ${parent_dir}"
+    die "Каталог для config.json не найден: ${parent_dir}"
   fi
   if [ -e "$file" ] && [ ! -w "$file" ]; then
     die "Нет прав на запись в ${file}. Проверьте owner/permissions каталога worker-а."
@@ -928,7 +928,7 @@ write_repos_file() {
       "$post_bootstrap"
     printf '\n'
     printf '  ],\n'
-    printf '  "tooling": %s\n' "$(jq -c '.tooling' "${ROOT_DIR}/workers/worker-1/repos.json.example")"
+    printf '  "tooling": %s\n' "$(jq -c '.tooling' "${ROOT_DIR}/workers/worker-1/config.json.example")"
     printf '}\n'
   } >"$file"
 }
@@ -939,7 +939,7 @@ write_disabled_placeholder_repo() {
 
   parent_dir="$(dirname "$file")"
   if [ ! -d "$parent_dir" ]; then
-    die "Каталог для repos.json не найден: ${parent_dir}"
+    die "Каталог для config.json не найден: ${parent_dir}"
   fi
   if [ -e "$file" ] && [ ! -w "$file" ]; then
     die "Нет прав на запись в ${file}. Проверьте owner/permissions каталога worker-а."
@@ -1029,7 +1029,7 @@ services:
       OPENCODE_INSTANCE_NAME: ${worker_name}
       OPENCODE_WORKSPACE_ROOT: /workspace
       OPENCODE_CONFIG_ROOT: /workspace-config
-      OPENCODE_REPO_CATALOG_FILE: /workspace-config/repos.json
+      OPENCODE_CONFIG_FILE: /workspace-config/config.json
       OPENCODE_AUTO_BOOTSTRAP_REPOS: "1"
       OPENCODE_AUTO_INSTALL_TOOLING: "1"
       OPENCODE_PROVIDER_TIMEOUT_MS: \${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}
@@ -1246,7 +1246,7 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
     fi
 
     write_repos_file \
-      "${worker_dir_abs}/repos.json" \
+      "${worker_dir_abs}/config.json" \
       "$repo_slug" \
       "$repo_url" \
       "$repo_ref" \
@@ -1258,10 +1258,10 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
       "$install_gsd_local" \
       "$auto_start_docker" \
       "$post_bootstrap"
-    log_ok "worker ${i}/${WORKER_COUNT}: repos.json создан"
+    log_ok "worker ${i}/${WORKER_COUNT}: config.json создан"
   else
-    write_disabled_placeholder_repo "${worker_dir_abs}/repos.json"
-    log_warn "worker ${i}/${WORKER_COUNT}: записан отключенный placeholder repos.json"
+    write_disabled_placeholder_repo "${worker_dir_abs}/config.json"
+    log_warn "worker ${i}/${WORKER_COUNT}: записан отключенный placeholder config.json"
   fi
 
   WORKER_NAMES+=("$worker_name")
@@ -1373,7 +1373,7 @@ log_ok "Routing-конфиг сохранен: ${ROUTING_JSON}"
 printf '\nГотово. Созданы файлы:\n'
 printf -- '- %s\n' "$ENV_FILE"
 for ((i = 0; i < WORKER_COUNT; i++)); do
-  printf -- '- %s/repos.json\n' "${ROOT_DIR}/${WORKER_CONFIG_DIRS[$i]}"
+  printf -- '- %s/config.json\n' "${ROOT_DIR}/${WORKER_CONFIG_DIRS[$i]}"
 done
 printf -- '- %s\n' "$ROUTING_JSON"
 

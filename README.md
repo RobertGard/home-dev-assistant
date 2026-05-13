@@ -45,7 +45,7 @@ bash ./scripts/setup-stack.sh
 
 - создаст `.env`
 - настроит worker-ов
-- создаст `workers/*/repos.json`
+- создаст `workers/*/config.json`
 - при необходимости включит внешний HTTPS для `n8n`
 - поднимет контейнеры, если ты это подтвердил
 - если `N8N_API_KEY` уже есть, создаст Telegram credential и Telegram workflow
@@ -164,13 +164,13 @@ Agent-расширения:
 
 У каждого worker-а есть свой файл:
 
-- `workers/worker-1/repos.json` создается установщиком
-- `workers/<worker-name>/repos.json` создается установщиком для дополнительных worker-ов
+- `workers/worker-1/config.json` создается установщиком
+- `workers/<worker-name>/config.json` создается установщиком для дополнительных worker-ов
 
 Шаблоны лежат здесь:
 
-- `workers/worker-1/repos.json.example`
-- `workers/worker-2/repos.json.example`
+- `workers/worker-1/config.json.example`
+- `workers/worker-2/config.json.example`
 
 Пример:
 
