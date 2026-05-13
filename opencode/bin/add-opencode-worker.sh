@@ -22,38 +22,23 @@ fi
 mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
 
 if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/config.json" ]; then
-  cat > "${ROOT_DIR}/${CONFIG_DIR}/config.json" <<'EOF'
-{
-  "repos": [],
-  "tooling": {
-    "global": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --global" }
-      ],
-      "npm": [
-        "ctx7",
-        "@upstash/context7-mcp",
-        "@modelcontextprotocol/server-filesystem",
-        "@modelcontextprotocol/server-git",
-        "@modelcontextprotocol/server-github",
-        "@modelcontextprotocol/server-memory",
-        "@modelcontextprotocol/server-postgres"
-      ],
-      "uv": [
-        { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow" }
-      ],
-      "post_install": [
-        "serena init"
-      ]
-    },
-    "per_repo": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --local" }
-      ]
-    }
-  }
-}
+  local_example="${ROOT_DIR}/${CONFIG_DIR}/config.json.example"
+  fallback_example="${ROOT_DIR}/workers/worker-1/config.json.example"
+  tooling_src="${local_example}"
+  if [ ! -f "${tooling_src}" ]; then
+    tooling_src="${fallback_example}"
+  fi
+
+  if [ -f "${tooling_src}" ] && jq -e '.tooling' "${tooling_src}" >/dev/null 2>&1; then
+    jq -n --argjson t "$(jq '.tooling' "${tooling_src}")" '{repos: [], tooling: $t}' \
+      > "${ROOT_DIR}/${CONFIG_DIR}/config.json"
+  else
+    printf 'warn: no tooling config found at %s or %s, creating empty config\n' \
+      "${local_example}" "${fallback_example}" >&2
+    cat > "${ROOT_DIR}/${CONFIG_DIR}/config.json" <<'EOF'
+{"repos": [], "tooling": {}}
 EOF
+  fi
 fi
 
 cat > "${OUT_FILE}" <<EOF
