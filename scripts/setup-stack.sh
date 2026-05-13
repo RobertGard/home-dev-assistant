@@ -928,7 +928,15 @@ write_repos_file() {
       "$post_bootstrap"
     printf '\n'
     printf '  ],\n'
-    printf '  "tooling": %s\n' "$(jq -c '.tooling' "${ROOT_DIR}/workers/worker-1/config.json.example")"
+    local example_cfg="${parent_dir}/config.json.example"
+    local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
+    local tooling_src="${example_cfg}"
+    if [ ! -f "${tooling_src}" ]; then
+      tooling_src="${fallback_cfg}"
+    fi
+    if [ -f "${tooling_src}" ]; then
+      printf '  "tooling": %s\n' "$(jq -c '.tooling' "${tooling_src}")"
+    fi
     printf '}\n'
   } >"$file"
 }
