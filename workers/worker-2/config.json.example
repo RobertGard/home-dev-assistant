@@ -1,4 +1,5 @@
 {
+  // Репозитории для авто-клонирования
   "repos": [
     {
       "slug": "example-project",
@@ -13,31 +14,32 @@
       "auto_start_docker": true
     }
   ],
+
   "tooling": {
-    "global": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --global" }
-      ],
-      "npm": [
-        "ctx7",
-        "@upstash/context7-mcp",
-        "@modelcontextprotocol/server-filesystem",
-        "@modelcontextprotocol/server-git",
-        "@modelcontextprotocol/server-github",
-        "@modelcontextprotocol/server-memory",
-        "@modelcontextprotocol/server-postgres"
-      ],
-      "uv": [
-        { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow" }
-      ],
-      "post_install": [
-        "serena init"
-      ]
-    },
-    "per_repo": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --local" }
-      ]
-    }
+    // npm install -g. mcp = зарегистрировать как MCP-сервер в OpenCode
+    "npm": [
+      { "package": "get-shit-done-cc@latest", "args": "--opencode --global" },
+      { "package": "@modelcontextprotocol/server-filesystem", "mcp": { "name": "filesystem", "args": ["/workspace"] } },
+      { "package": "@modelcontextprotocol/server-git", "mcp": { "name": "git", "args": ["/workspace"] } },
+      { "package": "@modelcontextprotocol/server-github", "mcp": { "name": "github" } },
+      { "package": "@modelcontextprotocol/server-memory", "mcp": { "name": "memory" } },
+      { "package": "@upstash/context7-mcp", "mcp": { "name": "context7", "type": "remote", "url": "https://mcp.context7.com/mcp" } },
+      { "package": "@modelcontextprotocol/server-brave-search", "mcp": { "name": "brave-search" } },
+      { "package": "@modelcontextprotocol/server-sequential-thinking", "mcp": { "name": "sequential-thinking" } },
+      { "package": "@playwright/mcp", "mcp": { "name": "playwright" } },
+      { "package": "@modelcontextprotocol/server-postgres", "mcp": { "name": "postgres", "args": ["{env:DATABASE_URL}"] } }
+    ],
+
+    // uv tool install. mcp = зарегистрировать как MCP-сервер в OpenCode
+    "uv": [
+      { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow", "mcp": { "name": "serena", "command": ["serena", "start-mcp-server", "--context", "ide", "--project-from-cwd"], "enabled": true } },
+      { "package": "browser-use", "python": "3.13" }
+    ],
+
+    // после установки всех пакетов
+    "post_install": [
+      "serena init",
+      "playwright install chromium"
+    ]
   }
 }

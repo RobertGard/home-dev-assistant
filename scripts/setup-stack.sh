@@ -956,50 +956,33 @@ write_disabled_placeholder_repo() {
     die "Нет прав на запись в ${parent_dir}. Проверьте owner/permissions каталога worker-а."
   fi
 
-  cat >"$file" <<'EOF'
-{
-  "repos": [
-    {
-      "slug": "example-project",
-      "url": "https://github.com/example/example.git",
-      "ref": "main",
-      "path": "example-project",
-      "install_dependencies": false,
-      "package_manager": "auto",
-      "install_gsd_local": true,
-      "auto_start_docker": false,
-      "enabled": false
-    }
-  ],
-  "tooling": {
-    "global": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --global" }
-      ],
-      "npm": [
-        "ctx7",
-        "@upstash/context7-mcp",
-        "@modelcontextprotocol/server-filesystem",
-        "@modelcontextprotocol/server-git",
-        "@modelcontextprotocol/server-github",
-        "@modelcontextprotocol/server-memory",
-        "@modelcontextprotocol/server-postgres"
-      ],
-      "uv": [
-        { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow" }
-      ],
-      "post_install": [
-        "serena init"
-      ]
-    },
-    "per_repo": {
-      "npx": [
-        { "package": "get-shit-done-cc@latest", "args": "--opencode --local" }
-      ]
-    }
-  }
-}
-EOF
+  local example_cfg="${parent_dir}/config.json.example"
+  local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
+  local tooling_src="${example_cfg}"
+  if [ ! -f "${tooling_src}" ]; then
+    tooling_src="${fallback_cfg}"
+  fi
+
+  {
+    printf '{\n'
+    printf '  "repos": [\n'
+    printf '    {\n'
+    printf '      "slug": "example-project",\n'
+    printf '      "url": "https://github.com/example/example.git",\n'
+    printf '      "ref": "main",\n'
+    printf '      "path": "example-project",\n'
+    printf '      "install_dependencies": false,\n'
+    printf '      "package_manager": "auto",\n'
+    printf '      "install_gsd_local": true,\n'
+    printf '      "auto_start_docker": false,\n'
+    printf '      "enabled": false\n'
+    printf '    }\n'
+    printf '  ],\n'
+    if [ -f "${tooling_src}" ]; then
+      printf '  "tooling": %s\n' "$(jq -c '.tooling' "${tooling_src}")"
+    fi
+    printf '}\n'
+  } >"$file"
 }
 
 generate_override_for_extra_worker() {
@@ -1026,7 +1009,6 @@ services:
       DEEPSEEK_API_KEY: \${DEEPSEEK_API_KEY:-}
       ANTHROPIC_API_KEY: \${ANTHROPIC_API_KEY:-}
       OPENROUTER_API_KEY: \${OPENROUTER_API_KEY:-}
-      CONTEXT7_API_KEY: \${CONTEXT7_API_KEY:-}
       GITHUB_TOKEN: \${GITHUB_TOKEN:-}
       NPM_TOKEN: \${NPM_TOKEN:-}
       PNPM_HOME: \${PNPM_HOME:-}
@@ -1147,7 +1129,6 @@ OPENAI_API_KEY=""
 DEEPSEEK_API_KEY=""
 ANTHROPIC_API_KEY=""
 OPENROUTER_API_KEY=""
-CONTEXT7_API_KEY=""
 N8N_API_KEY=""
 TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
@@ -1159,7 +1140,6 @@ if ask_yes_no "Хочешь сразу указать API ключи?" y; then
   DEEPSEEK_API_KEY="$(ask "DEEPSEEK_API_KEY (можно пусто)" "")"
   ANTHROPIC_API_KEY="$(ask "ANTHROPIC_API_KEY (можно пусто)" "")"
   OPENROUTER_API_KEY="$(ask "OPENROUTER_API_KEY (можно пусто)" "")"
-  CONTEXT7_API_KEY="$(ask "CONTEXT7_API_KEY (можно пусто)" "")"
   GITHUB_TOKEN="$(ask "GITHUB_TOKEN для приватных репозиториев (можно пусто)" "")"
   NPM_TOKEN="$(ask "NPM_TOKEN (можно пусто)" "")"
 fi
@@ -1340,7 +1320,6 @@ step_start 'Записываю .env'
   write_env_line DEEPSEEK_API_KEY "$DEEPSEEK_API_KEY"
   write_env_line ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY"
   write_env_line OPENROUTER_API_KEY "$OPENROUTER_API_KEY"
-  write_env_line CONTEXT7_API_KEY "$CONTEXT7_API_KEY"
   write_env_line N8N_API_KEY "$N8N_API_KEY"
   write_env_line TELEGRAM_BOT_TOKEN "$TELEGRAM_BOT_TOKEN"
   write_env_line TELEGRAM_CHAT_ID "$TELEGRAM_CHAT_ID"

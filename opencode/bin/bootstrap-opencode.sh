@@ -4,13 +4,13 @@ set -euo pipefail
 CONFIG_DIR="${HOME}/.config/opencode"
 PLUGIN_DIR="${CONFIG_DIR}/plugins"
 CONFIG_FILE="${CONFIG_DIR}/opencode.json"
-STATE_FILE="${CONFIG_DIR}/.bootstrap-complete"
+STATE_DIR="/tmp/.opencode-tooling-state"
 WORKSPACE_ROOT="${OPENCODE_WORKSPACE_ROOT:-/workspace}"
-CONFIG_FILE="${OPENCODE_CONFIG_FILE:-/workspace-config/config.json}"
+WORKSPACE_CFG="${OPENCODE_CONFIG_FILE:-/workspace-config/config.json}"
 INSTANCE_NAME="${OPENCODE_INSTANCE_NAME:-worker}"
 TEMPLATE_ROOT="${OPENCODE_TEMPLATE_ROOT:-/opt/opencode/templates}"
 
-mkdir -p "${CONFIG_DIR}" "${PLUGIN_DIR}" "${WORKSPACE_ROOT}" "${WORKSPACE_ROOT}/.opencode/commands"
+mkdir -p "${CONFIG_DIR}" "${PLUGIN_DIR}" "${STATE_DIR}" "${WORKSPACE_ROOT}" "${WORKSPACE_ROOT}/.opencode/commands"
 
 cat > "${PLUGIN_DIR}/inject-env.js" <<'EOF'
 export const InjectEnvPlugin = async () => {
@@ -21,7 +21,6 @@ export const InjectEnvPlugin = async () => {
         "DEEPSEEK_API_KEY",
         "ANTHROPIC_API_KEY",
         "OPENROUTER_API_KEY",
-        "CONTEXT7_API_KEY",
         "GITHUB_TOKEN",
         "NPM_TOKEN",
         "CI",
@@ -46,36 +45,62 @@ export const EnvProtectionPlugin = async () => {
 }
 EOF
 
-if [ -n "${CONTEXT7_API_KEY:-}" ]; then
-  context7_mcp=$(cat <<'EOF'
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true,
-      "headers": {
-        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
-      }
-    },
-EOF
-)
-else
-  context7_mcp=$(cat <<'EOF'
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true
-    },
-EOF
-)
-fi
+# Генерируем MCP-секцию из tooling-конфига
+generate_mcp_section() {
+  local mcp_json
+  if ! mcp_json="$(jq -c -n --argjson cfg "$(cat "${WORKSPACE_CFG}" 2>/dev/null || echo '{}')" \
+    --arg timeout "${OPENCODE_MCP_TIMEOUT_MS:-120000}" '
+    # Validate timeout is numeric
+    ($timeout | test("^[0-9]+$")) as $valid_timeout |
+    if $valid_timeout | not then error("OPENCODE_MCP_TIMEOUT_MS must be numeric, got: \($timeout)") else . end |
 
-cat > "${CONFIG_FILE}" <<EOF
+    def mcp_entry:
+      .mcp as $m |
+      if ($m | has("name") | not) then
+        error("mcp entry missing required field: name")
+      else . end |
+      {
+        key: $m.name,
+        value: ({
+          type: ($m.type // "local"),
+          enabled: ($m.enabled // false),
+          timeout: ($timeout | tonumber)
+        } + if $m.type == "remote" then
+          if ($m | has("url") | not) then error("remote mcp \($m.name) missing url") else . end |
+          { url: $m.url }
+        elif $m.command then
+          { command: $m.command }
+        else
+          { command: (["npx", "-y", .package] + ($m.args // [])) }
+        end)
+      };
+
+    [ ($cfg.tooling.npm[]? // empty | select(.mcp) | mcp_entry) ] +
+    [ ($cfg.tooling.uv[]?  // empty | select(.mcp) | mcp_entry) ] |
+    from_entries
+  ' 2>&1)"; then
+    echo "{}"
+    printf 'warn: generate_mcp_section failed: %s\n' "${mcp_json}" >&2
+    return
+  fi
+
+  # Проверяем что на выходе валидный JSON
+  if ! echo "${mcp_json}" | jq empty >/dev/null 2>&1; then
+    echo "{}"
+    printf 'warn: generated MCP section is not valid JSON\n' >&2
+    return
+  fi
+
+  echo "${mcp_json}"
+}
+
+cat > "${CONFIG_FILE}" <<'BASE_EOF'
 {
-  "\$schema": "https://opencode.ai/config.json",
+  "$schema": "https://opencode.ai/config.json",
   "autoupdate": false,
   "server": {
-    "hostname": "${OPENCODE_SERVER_HOST:-0.0.0.0}",
-    "port": ${OPENCODE_SERVER_PORT:-4096}
+    "hostname": "__HOSTNAME__",
+    "port": __PORT__
   },
   "compaction": {
     "auto": true,
@@ -109,6 +134,8 @@ cat > "${CONFIG_FILE}" <<EOF
       "npx *": "allow",
       "pnpm *": "allow",
       "bun *": "allow",
+      "yarn *": "allow",
+      "deno *": "allow",
       "python *": "allow",
       "python3 *": "allow",
       "pip *": "allow",
@@ -119,11 +146,10 @@ cat > "${CONFIG_FILE}" <<EOF
       "tsx *": "allow",
       "tsc *": "allow",
       "uv *": "allow",
-      "serena *": "allow",
-      "ctx7 *": "allow",
       "jq *": "allow",
       "ls *": "allow",
-      "pwd": "allow"
+      "pwd": "allow",
+      "make *": "allow"
     }
   },
   "plugin": [
@@ -132,57 +158,58 @@ cat > "${CONFIG_FILE}" <<EOF
   "provider": {
     "anthropic": {
       "options": {
-        "timeout": ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000},
-        "chunkTimeout": ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+        "timeout": __PROVIDER_TIMEOUT__,
+        "chunkTimeout": __PROVIDER_CHUNK_TIMEOUT__
       }
     },
     "openai": {
       "options": {
-        "timeout": ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000},
-        "chunkTimeout": ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+        "timeout": __PROVIDER_TIMEOUT__,
+        "chunkTimeout": __PROVIDER_CHUNK_TIMEOUT__
       }
     },
     "openrouter": {
       "options": {
-        "timeout": ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000},
-        "chunkTimeout": ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+        "timeout": __PROVIDER_TIMEOUT__,
+        "chunkTimeout": __PROVIDER_CHUNK_TIMEOUT__
       }
     },
     "deepseek": {
       "options": {
-        "timeout": ${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000},
-        "chunkTimeout": ${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}
+        "timeout": __PROVIDER_TIMEOUT__,
+        "chunkTimeout": __PROVIDER_CHUNK_TIMEOUT__
       }
     }
   },
-  "mcp": {
-${context7_mcp}    "serena": {
-      "type": "local",
-      "command": ["serena", "start-mcp-server", "--context", "ide", "--project-from-cwd"],
-      "enabled": true,
-      "timeout": ${OPENCODE_MCP_TIMEOUT_MS:-120000}
-    },
-    "filesystem": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
-      "enabled": false,
-      "timeout": ${OPENCODE_MCP_TIMEOUT_MS:-120000}
-    },
-    "gitmcp": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-git", "/workspace"],
-      "enabled": false,
-      "timeout": ${OPENCODE_MCP_TIMEOUT_MS:-120000}
-    },
-    "memory": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-      "enabled": false,
-      "timeout": ${OPENCODE_MCP_TIMEOUT_MS:-120000}
-    }
-  }
+  "mcp": __MCP_SECTION__
 }
-EOF
+BASE_EOF
+
+MCP_SECTION="{}"
+if [ -f "${WORKSPACE_CFG}" ] && jq -e '.tooling' "${WORKSPACE_CFG}" >/dev/null 2>&1; then
+  MCP_SECTION="$(generate_mcp_section)"
+  if [ -z "${MCP_SECTION}" ]; then
+    MCP_SECTION="{}"
+  fi
+fi
+
+# Подставляем плейсхолдеры. __MCP_SECTION__ без кавычек — sed подставит JSON-объект
+sed -i.bak \
+  -e "s|__HOSTNAME__|${OPENCODE_SERVER_HOST:-0.0.0.0}|" \
+  -e "s|__PORT__|${OPENCODE_SERVER_PORT:-4096}|" \
+  -e "s|__PROVIDER_TIMEOUT__|${OPENCODE_PROVIDER_TIMEOUT_MS:-1800000}|" \
+  -e "s|__PROVIDER_CHUNK_TIMEOUT__|${OPENCODE_PROVIDER_CHUNK_TIMEOUT_MS:-900000}|" \
+  -e "s|__MCP_SECTION__|${MCP_SECTION}|g" \
+  "${CONFIG_FILE}"
+rm -f "${CONFIG_FILE}.bak"
+
+# Проверяем что итоговый opencode.json — валидный JSON и форматируем
+if jq empty "${CONFIG_FILE}" >/dev/null 2>&1; then
+  jq '.' "${CONFIG_FILE}" > "${CONFIG_FILE}.pretty"
+  mv "${CONFIG_FILE}.pretty" "${CONFIG_FILE}"
+else
+  printf 'warn: generated %s is not valid JSON\n' "${CONFIG_FILE}" >&2
+fi
 
 install -m 0644 "${TEMPLATE_ROOT}/verify.md" "${WORKSPACE_ROOT}/.opencode/commands/verify.md"
 install -m 0644 "${TEMPLATE_ROOT}/docker-up.md" "${WORKSPACE_ROOT}/.opencode/commands/docker-up.md"
@@ -197,46 +224,100 @@ if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
 - Config: ${CONFIG_FILE}
 - Default agent: ${OPENCODE_AGENT:-build}
 - Docker access is provided through the mounted host socket.
-- Use serena for semantic code navigation and symbol-aware refactors.
-- Use context7 when you need current library and framework docs.
 - Do not read .env files unless the operator explicitly asks for it.
 - Prefer .opencode/commands for repeatable verification, bootstrap, and Docker workflows.
 EOF
 fi
 
-if [ ! -f "${STATE_FILE}" ] && [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
-  TOOLING_CFG="/workspace-config/config.json"
-  
-  if [ -f "${TOOLING_CFG}" ] && jq -e '.tooling' "${TOOLING_CFG}" >/dev/null 2>&1; then
-    # Global npx packages
-    for row in $(jq -r '.tooling.global.npx[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
-      _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
-      pkg="$(_pkg '.package')"; args="$(_pkg '.args // empty')"
-      echo "→ installing npx: ${pkg} ${args}"
-      npx -y "${pkg}" ${args} || printf 'warn: npx %s failed\n' "${pkg}"
-    done
-    # Global npm packages
-    for row in $(jq -r '.tooling.global.npm[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
-      pkg="$(echo "${row}" | base64 -d | jq -r '.')"
-      echo "→ installing npm: ${pkg}"
-      npm install -g "${pkg}" || printf 'warn: npm install -g %s failed\n' "${pkg}"
-    done
-    # Global uv tools
-    for row in $(jq -r '.tooling.global.uv[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
-      _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
-      pkg="$(_pkg '.package')"; py="$(_pkg '.python // "3.13"')"; args="$(_pkg '.args // empty')"
-      echo "→ installing uv: ${pkg} (python=${py})"
-      uv tool install -p "${py}" "${pkg}" ${args} || printf 'warn: uv tool install %s failed\n' "${pkg}"
-    done
-    # Post-install commands
-    for row in $(jq -r '.tooling.global.post_install[]? | @base64' "${TOOLING_CFG}" 2>/dev/null); do
-      cmd="$(echo "${row}" | base64 -d | jq -r '.')"
-      echo "→ post-install: ${cmd}"
-      eval "${cmd}" || printf 'warn: %s failed\n' "${cmd}"
-    done
-  else
-    printf 'warn: tooling section not found in %s, skipping auto-install\n' "${TOOLING_CFG}"
-  fi
+if [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
+  if [ -f "${WORKSPACE_CFG}" ] && jq -e '.tooling' "${WORKSPACE_CFG}" >/dev/null 2>&1; then
 
-  touch "${STATE_FILE}"
+    # --- npm packages ---
+    NPM_COUNT="$(jq -r '.tooling.npm | length' "${WORKSPACE_CFG}" 2>/dev/null || echo 0)"
+    if [ "${NPM_COUNT}" -gt 0 ]; then
+      if ! command -v npm >/dev/null 2>&1; then
+        printf 'warn: npm not found, skipping npm packages\n' >&2
+      else
+        for row in $(jq -r '.tooling.npm[]? | @base64' "${WORKSPACE_CFG}" 2>/dev/null); do
+          _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
+          pkg="$(_pkg '.package // ""')"
+          if [ -z "${pkg}" ]; then
+            printf 'warn: npm entry missing package field, skipping\n' >&2
+            continue
+          fi
+          args="$(_pkg '.args // ""')"
+          pkg_name="$(echo "${pkg}" | sed 's/@[^/@]*$//')"
+          if [ -z "${pkg_name}" ]; then
+            printf 'warn: could not parse package name from: %s\n' "${pkg}" >&2
+            continue
+          fi
+          state_key="$(echo "${pkg_name}" | tr '/' '-')"
+          if npm list -g --depth=0 "${pkg_name}" >/dev/null 2>&1; then
+            echo "→ npm: ${pkg_name} (уже установлен)"
+          else
+            echo "→ installing npm: ${pkg}"
+            if ! npm install -g "${pkg}"; then
+              printf 'warn: npm install -g %s failed\n' "${pkg}" >&2
+              continue
+            fi
+          fi
+          if [ -n "${args}" ] && [ ! -f "${STATE_DIR}/.${state_key}-run" ]; then
+            bin_name="$(_pkg '.binary // ""')"
+            [ -z "${bin_name}" ] && bin_name="${pkg_name}"
+            echo "→ running: ${bin_name} ${args}"
+            if ${bin_name} ${args}; then
+              touch "${STATE_DIR}/.${state_key}-run"
+            else
+              printf 'warn: %s %s failed\n' "${bin_name}" "${args}" >&2
+            fi
+          fi
+        done
+      fi
+    fi
+
+    # --- uv tools ---
+    UV_COUNT="$(jq -r '.tooling.uv | length' "${WORKSPACE_CFG}" 2>/dev/null || echo 0)"
+    if [ "${UV_COUNT}" -gt 0 ]; then
+      if ! command -v uv >/dev/null 2>&1; then
+        printf 'warn: uv not found, skipping uv tools\n' >&2
+      else
+        for row in $(jq -r '.tooling.uv[]? | @base64' "${WORKSPACE_CFG}" 2>/dev/null); do
+          _pkg() { echo "${row}" | base64 -d | jq -r "${1}"; }
+          pkg="$(_pkg '.package // ""')"
+          if [ -z "${pkg}" ]; then
+            printf 'warn: uv entry missing package field, skipping\n' >&2
+            continue
+          fi
+          py="$(_pkg '.python // "3.13"')"
+          args="$(_pkg '.args // ""')"
+          pkg_name="$(echo "${pkg}" | sed 's/@[^/@]*$//')"
+          if uv tool list --show-paths 2>/dev/null | grep -q "^${pkg_name} "; then
+            echo "→ uv: ${pkg_name} (уже установлен)"
+          else
+            echo "→ installing uv: ${pkg} (python=${py})"
+            if ! uv tool install -p "${py}" "${pkg}" ${args}; then
+              printf 'warn: uv tool install %s failed\n' "${pkg}" >&2
+            fi
+          fi
+        done
+      fi
+    fi
+
+    # --- post-install ---
+    POST_COUNT="$(jq -r '.tooling.post_install | length' "${WORKSPACE_CFG}" 2>/dev/null || echo 0)"
+    if [ "${POST_COUNT}" -gt 0 ] && [ ! -f "${STATE_DIR}/.post-install-done" ]; then
+      for row in $(jq -r '.tooling.post_install[]? | @base64' "${WORKSPACE_CFG}" 2>/dev/null); do
+        cmd="$(echo "${row}" | base64 -d | jq -r '. // ""')"
+        if [ -z "${cmd}" ]; then continue; fi
+        echo "→ post-install: ${cmd}"
+        if ! eval "${cmd}"; then
+          printf 'warn: post-install command failed: %s\n' "${cmd}" >&2
+        fi
+      done
+      touch "${STATE_DIR}/.post-install-done"
+    fi
+
+  else
+    printf 'warn: tooling section not found in %s, skipping auto-install\n' "${WORKSPACE_CFG}" >&2
+  fi
 fi
