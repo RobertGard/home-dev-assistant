@@ -859,7 +859,7 @@
             "questionRejectPath": "={{ $('Готовим пакеты обработчиков').item.json.questionRejectPath }}",
             "permissionListPath": "={{ $('Готовим пакеты обработчиков').item.json.permissionListPath }}",
             "permissionReplyPath": "={{ $('Готовим пакеты обработчиков').item.json.permissionReplyPath }}",
-            "abortRequested": "={{ $('Выбираем активную задачу').first().json.abortRequested }}",
+            "abortRequested": "={{ String($('Выбираем активную задачу').first().json.abortRequested) }}",
             "contextJson": "={{ JSON.stringify($('Выбираем активную задачу').first().json.contextJson) }}"
           },
           "matchingColumns": [],
