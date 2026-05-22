@@ -22,11 +22,11 @@ fi
 mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
 
 if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/config.json" ]; then
-  local_example="${ROOT_DIR}/${CONFIG_DIR}/config.json.template"
-  fallback_example="${ROOT_DIR}/workers/worker-1/config.json.template"
-  tooling_src="${local_example}"
+  local_template="${ROOT_DIR}/${CONFIG_DIR}/config.json.template"
+  default_template="${ROOT_DIR}/workers/config.json.default"
+  tooling_src="${local_template}"
   if [ ! -f "${tooling_src}" ]; then
-    tooling_src="${fallback_example}"
+    tooling_src="${default_template}"
   fi
 
   if [ -f "${tooling_src}" ] && jq -e '.tooling' "${tooling_src}" >/dev/null 2>&1; then
@@ -34,7 +34,7 @@ if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/config.json" ]; then
       > "${ROOT_DIR}/${CONFIG_DIR}/config.json"
   else
     printf 'warn: no tooling config found at %s or %s, creating empty config\n' \
-      "${local_example}" "${fallback_example}" >&2
+      "${local_template}" "${default_template}" >&2
     cat > "${ROOT_DIR}/${CONFIG_DIR}/config.json" <<'EOF'
 {"repos": [], "tooling": {}}
 EOF

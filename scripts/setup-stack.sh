@@ -1016,7 +1016,7 @@ resolve_template_config() {
     printf '%s' "$worker_example"
     return 0
   fi
-  local default_cfg="${ROOT_DIR}/workers/config.json.template"
+  local default_cfg="${ROOT_DIR}/workers/config.json.default"
   if [ -f "$default_cfg" ]; then
     printf '%s' "$default_cfg"
     return 0
