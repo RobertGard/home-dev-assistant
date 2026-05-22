@@ -154,7 +154,7 @@ if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
     fi
 
     # Проверяем существование workflow
-    wf_count="$(curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows" 2>/dev/null | jq -r '[.data // . // [] | length]' 2>/dev/null)" || wf_count="0"
+    wf_count="$(curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows" 2>/dev/null | jq -r '.data // . // [] | length' 2>/dev/null)" || wf_count="0"
     log_ok "Найдено workflow в n8n: ${wf_count:-0}"
   fi
 fi
