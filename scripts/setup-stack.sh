@@ -521,12 +521,11 @@ ask_model_id() {
 }
 
 write_routing_file() {
-  local worker1_alias="${WORKER_ALIASES[0]}"
   {
     printf '{\n'
     printf '  "defaultAgent": "%s",\n' "$(json_escape "$OPENCODE_AGENT")"
     printf '  "defaultModel": "%s",\n' "$(json_escape "$OPENCODE_MODEL")"
-    printf '  "defaultWorker": "%s",\n' "$(json_escape "$worker1_alias")"
+    printf '  "defaultWorker": "%s",\n' "$(json_escape "${WORKER_ALIASES[0]}")"
     printf '  "workers": {\n'
     for ((i = 0; i < ${#WORKER_NAMES[@]}; i++)); do
       alias="${WORKER_ALIASES[$i]}"
@@ -772,9 +771,8 @@ recover_existing_configuration() {
       log_warn "config.json отсутствует или содержит отключенный placeholder. Требуется настройка репозитория."
       printf '\n--- Настройка репозитория для %s ---\n' "$worker_name"
       local example_cfg="${worker_dir_abs}/config.json.example"
-      local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
-      local example_src="${example_cfg}"
-      [ ! -f "$example_src" ] && example_src="${fallback_cfg}"
+      local example_src
+      example_src="$(resolve_example_config "$example_cfg")"
 
       local repo_slug repo_url repo_ref repo_path
       repo_slug="$(read_example_repo_value "$example_src" '.repos[0].slug' '')"
@@ -831,7 +829,7 @@ recover_existing_configuration() {
     WORKER_CONFIG_DIRS+=("$worker_dir_rel")
 
     if [ "$index" -ge 2 ]; then
-      generate_override_for_extra_worker "$index" "$worker_name" "$worker_port" "$worker_password" "$worker_dir_rel"
+      generate_worker_override "$index" "$worker_name" "$worker_port" "$worker_password" "$worker_dir_rel"
       WORKER_OVERRIDE_FILES+=("compose.overrides/opencode-${worker_name}.yml")
     fi
   done
@@ -917,11 +915,7 @@ json_escape() {
 }
 
 worker_default_alias() {
-  case "$1" in
-    1) printf 'primary' ;;
-    2) printf 'sandbox' ;;
-    *) printf 'worker-%s' "$1" ;;
-  esac
+  printf 'worker-%s' "$1"
 }
 
 worker_default_port() {
@@ -1013,6 +1007,22 @@ jq_tooling_from_example() {
   grep -v '^\s*//' "$example_file" | jq -c '.tooling' 2>/dev/null
 }
 
+resolve_example_config() {
+  local preferred="$1"
+  if [ -f "$preferred" ]; then
+    printf '%s' "$preferred"
+    return 0
+  fi
+  local found
+  shopt -s nullglob
+  for found in "${ROOT_DIR}"/workers/*/config.json.example; do
+    printf '%s' "$found"
+    return 0
+  done
+  shopt -u nullglob
+  return 1
+}
+
 write_repos_file() {
   local file="$1"
   local repo_slug="$2"
@@ -1056,13 +1066,9 @@ write_repos_file() {
       "$post_bootstrap"
     printf '\n'
     printf '  ],\n'
-    local example_cfg="${parent_dir}/config.json.example"
-    local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
-    local tooling_src="${example_cfg}"
-    if [ ! -f "${tooling_src}" ]; then
-      tooling_src="${fallback_cfg}"
-    fi
-    if [ -f "${tooling_src}" ]; then
+    local tooling_src
+    tooling_src="$(resolve_example_config "${parent_dir}/config.json.example")"
+    if [ -n "$tooling_src" ]; then
       printf '  "tooling": %s\n' "$(jq_tooling_from_example "${tooling_src}")"
     fi
     printf '}\n'
@@ -1072,8 +1078,10 @@ write_repos_file() {
 write_disabled_placeholder_repo() {
   local file="$1"
   local parent_dir
+  local parent_dir_abs
 
   parent_dir="$(dirname "$file")"
+  parent_dir_abs="$(cd "$parent_dir" 2>/dev/null && pwd)" || parent_dir_abs="$parent_dir"
   if [ ! -d "$parent_dir" ]; then
     die "Каталог для config.json не найден: ${parent_dir}"
   fi
@@ -1084,12 +1092,8 @@ write_disabled_placeholder_repo() {
     die "Нет прав на запись в ${parent_dir}. Проверьте owner/permissions каталога worker-а."
   fi
 
-  local example_cfg="${parent_dir}/config.json.example"
-  local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
-  local tooling_src="${example_cfg}"
-  if [ ! -f "${tooling_src}" ]; then
-    tooling_src="${fallback_cfg}"
-  fi
+  local tooling_src
+  tooling_src="$(resolve_example_config "${parent_dir}/config.json.example")"
 
   {
     printf '{\n'
@@ -1106,14 +1110,14 @@ write_disabled_placeholder_repo() {
     printf '      "enabled": false\n'
     printf '    }\n'
     printf '  ],\n'
-    if [ -f "${tooling_src}" ]; then
+    if [ -n "$tooling_src" ]; then
       printf '  "tooling": %s\n' "$(jq_tooling_from_example "${tooling_src}")"
     fi
     printf '}\n'
   } >"$file"
 }
 
-generate_override_for_extra_worker() {
+generate_worker_override() {
   local worker_index="$1"
   local worker_name="$2"
   local host_port="$3"
@@ -1326,9 +1330,8 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
   log_info "worker ${i}/${WORKER_COUNT}: каталог ${worker_dir_rel} подготовлен"
 
   local example_cfg="${worker_dir_abs}/config.json.example"
-  local fallback_cfg="${ROOT_DIR}/workers/worker-1/config.json.example"
-  local example_src="${example_cfg}"
-  [ ! -f "$example_src" ] && example_src="${fallback_cfg}"
+  local example_src
+  example_src="$(resolve_example_config "$example_cfg")"
 
   repo_slug="$(read_example_repo_value "$example_src" '.repos[0].slug' '')"
   repo_url="$(read_example_repo_value "$example_src" '.repos[0].url' '')"
@@ -1393,12 +1396,10 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
   WORKER_CONFIG_DIRS+=("$worker_dir_rel")
 
   if [ "$i" -ge 2 ]; then
-    generate_override_for_extra_worker "$i" "$worker_name" "$worker_port" "$worker_password" "$worker_dir_rel"
+    generate_worker_override "$i" "$worker_name" "$worker_port" "$worker_password" "$worker_dir_rel"
     WORKER_OVERRIDE_FILES+=("compose.overrides/opencode-${worker_name}.yml")
   fi
 done
-
-worker1_alias="${WORKER_ALIASES[0]}"
 
 START_CONTAINERS="false"
 if ask_yes_no "Сразу запустить контейнеры?" y; then

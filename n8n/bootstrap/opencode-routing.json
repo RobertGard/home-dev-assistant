@@ -1,10 +1,10 @@
 {
   "defaultAgent": "build",
-  "defaultWorker": "primary",
+  "defaultWorker": "worker-1",
   "workers": {
-    "primary": {
+    "worker-1": {
       "service": "opencode-worker-1",
-      "alias": "primary",
+      "alias": "worker-1",
       "baseUrl": "http://opencode-worker-1:4096",
       "healthUrl": "http://opencode-worker-1:4096/global/health",
       "username": "opencode",
