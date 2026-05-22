@@ -782,10 +782,10 @@ recover_existing_configuration() {
 
       if is_placeholder_repo_value "$repo_slug" || is_placeholder_repo_value "$repo_url"; then
         repo_slug="$(ask_required "Slug репозитория для ${worker_name}" "${worker_name}")"
-        repo_url="$(ask_required "Git URL репозитория для ${worker_name}" "")"
+        repo_url="$(ask_required "Git URL репозитория для ${worker_name} (https://...)" "")"
       else
         repo_slug="$(ask "Slug репозитория" "${repo_slug:-${worker_name}}")"
-        repo_url="$(ask "Git URL репозитория" "$repo_url")"
+        repo_url="$(ask "Git URL репозитория (https://...)" "$repo_url")"
       fi
       repo_ref="$(ask "Ветка / ref" "${repo_ref:-main}")"
       repo_path="$(ask "Папка внутри workspace" "${repo_path:-${repo_slug}}")"
@@ -1347,7 +1347,7 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
     is_placeholder_repo_value "$repo_slug" && slug_default="${worker_name}"
     is_placeholder_repo_value "$repo_url" && url_default=""
     repo_slug="$(ask_required "Slug репозитория для worker ${i}" "$slug_default")"
-    repo_url="$(ask_required "Git URL репозитория для worker ${i}" "$url_default")"
+    repo_url="$(ask_required "Git URL репозитория для worker ${i} (https://...)" "$url_default")"
     repo_ref="$(ask_required "Ветка / ref для worker ${i}" "$repo_ref")"
     repo_path="$(ask_required "Папка внутри workspace worker ${i}" "$repo_path")"
 
