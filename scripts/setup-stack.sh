@@ -788,7 +788,7 @@ recover_existing_configuration() {
         repo_url="$(ask "Git URL репозитория (https://...)" "$repo_url")"
       fi
       repo_ref="$(ask "Ветка / ref" "${repo_ref:-main}")"
-      repo_path="$(ask "Папка внутри workspace" "${repo_path:-${repo_slug}}")"
+      repo_path="$(ask "Папка внутри workspace" "$(is_placeholder_repo_value "$repo_path" && printf '%s' "$repo_slug" || printf '%s' "${repo_path:-${repo_slug}}")")"
 
       local pkg_mgr turbo_en turbo_tasks auto_dock post_boot
       pkg_mgr="$(read_template_repo_value "$template_src" '.repos[0].package_manager' 'auto')"
@@ -797,7 +797,7 @@ recover_existing_configuration() {
       auto_dock="$(read_template_repo_value "$template_src" '.repos[0].auto_start_docker' 'true')"
       post_boot=""
 
-      if [ "$ADVANCED_MODE" = "true" ]; then
+      if [ "${ADVANCED_MODE:-false}" = "true" ]; then
         pkg_mgr="$(ask_required "Пакетный менеджер (auto/pnpm/npm/npm-ci/bun)" "$pkg_mgr")"
         if ask_yes_no "Запускать Turborepo-задачи?" "$( [ "$turbo_en" = "true" ] && printf y || printf n )"; then
           turbo_en="true"
