@@ -785,19 +785,26 @@ recover_existing_configuration() {
     fi
   done
 
-  # Detect workers from filesystem (directories with config.json or template)
-  local dir_name dir_num
+  # Detect workers from filesystem (directories with config.json or config.json.template)
+  local dir_name dir_num config_file template_file
+  shopt -s nullglob
   for dir_name in "${WORKERS_DIR}"/*/; do
     dir_name="${dir_name%/}"
     dir_name="${dir_name##*/}"
     [[ "$dir_name" =~ ^worker- ]] || continue
     dir_num="${dir_name#worker-}"
     [[ "$dir_num" =~ ^[0-9]+$ ]] || continue
+    config_file="${WORKERS_DIR}/${dir_name}/config.json"
+    template_file="${WORKERS_DIR}/${dir_name}/config.json.template"
+    if [ ! -f "$config_file" ] && [ ! -f "$template_file" ]; then
+      continue
+    fi
     if [ "$dir_num" -gt "$worker_count" ]; then
       worker_count="$dir_num"
       log_info "Обнаружен каталог ${dir_name} на диске, добавляю worker ${dir_num}"
     fi
   done
+  shopt -u nullglob
 
   if [ "$worker_count" -eq 0 ]; then
     worker_count="$(ask_worker_count 'Сколько всего worker-ов нужно восстановить?' '1')"
