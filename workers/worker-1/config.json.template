@@ -10,7 +10,6 @@
       "package_manager": "auto",
       "turbo_smoke": false,
       "turbo_tasks": ["build", "test"],
-      "install_gsd_local": true,
       "auto_start_docker": true
     }
   ],

@@ -790,12 +790,11 @@ recover_existing_configuration() {
       repo_ref="$(ask "Ветка / ref" "${repo_ref:-main}")"
       repo_path="$(ask "Папка внутри workspace" "${repo_path:-${repo_slug}}")"
 
-      local pkg_mgr turbo_en turbo_tasks inst_deps inst_gsd auto_dock post_boot
+      local pkg_mgr turbo_en turbo_tasks inst_deps auto_dock post_boot
       pkg_mgr="$(read_template_repo_value "$template_src" '.repos[0].package_manager' 'auto')"
       turbo_en="$(read_template_repo_value "$template_src" '.repos[0].turbo_smoke' 'false')"
       turbo_tasks="$(read_template_repo_value "$template_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
       inst_deps="$(read_template_repo_value "$template_src" '.repos[0].install_dependencies' 'true')"
-      inst_gsd="$(read_template_repo_value "$template_src" '.repos[0].install_gsd_local' 'true')"
       auto_dock="$(read_template_repo_value "$template_src" '.repos[0].auto_start_docker' 'true')"
       post_boot=""
 
@@ -820,7 +819,7 @@ recover_existing_configuration() {
       write_repos_file \
         "${worker_dir_abs}/config.json" \
         "$repo_slug" "$repo_url" "$repo_ref" "$repo_path" \
-        "$pkg_mgr" "$turbo_en" "$turbo_tasks" "$inst_deps" "$inst_gsd" "$auto_dock" "$post_boot"
+        "$pkg_mgr" "$turbo_en" "$turbo_tasks" "$inst_deps" "$auto_dock" "$post_boot"
       log_ok "config.json настроен: ${worker_dir_rel}/config.json"
     fi
 
@@ -934,9 +933,8 @@ repo_json_block() {
   local package_manager="$6"
   local turbo_enabled="$7"
   local turbo_tasks_csv="$8"
-  local install_gsd_local="$9"
-  local auto_start_docker="${10}"
-  local post_bootstrap="${11:-}"
+  local auto_start_docker="$9"
+  local post_bootstrap="${10:-}"
 
   printf '    {\n'
   printf '      "slug": "%s",\n' "$(json_escape "$slug")"
@@ -966,7 +964,6 @@ repo_json_block() {
     printf '      "turbo_tasks": ["build", "test"],\n'
   fi
 
-  printf '      "install_gsd_local": %s,\n' "$install_gsd_local"
   printf '      "auto_start_docker": %s' "$auto_start_docker"
   if [ -n "$post_bootstrap" ]; then
     printf ',\n      "post_bootstrap": "%s"' "$(json_escape "$post_bootstrap")"
@@ -1042,9 +1039,8 @@ write_repos_file() {
   local turbo_enabled="$7"
   local turbo_tasks="$8"
   local install_deps="$9"
-  local install_gsd_local="${10}"
-  local auto_start_docker="${11}"
-  local post_bootstrap="${12:-}"
+  local auto_start_docker="${10}"
+  local post_bootstrap="${11:-}"
   local parent_dir
 
   parent_dir="$(dirname "$file")"
@@ -1070,7 +1066,6 @@ write_repos_file() {
       "$package_manager" \
       "$turbo_enabled" \
       "$turbo_tasks" \
-      "$install_gsd_local" \
       "$auto_start_docker" \
       "$post_bootstrap"
     printf '\n'
@@ -1114,7 +1109,6 @@ write_disabled_placeholder_repo() {
     printf '      "path": "example-project",\n'
     printf '      "install_dependencies": false,\n'
     printf '      "package_manager": "auto",\n'
-    printf '      "install_gsd_local": true,\n'
     printf '      "auto_start_docker": false,\n'
     printf '      "enabled": false\n'
     printf '    }\n'
@@ -1350,7 +1344,6 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
   turbo_enabled="$(read_template_repo_value "$template_src" '.repos[0].turbo_smoke' 'false')"
   turbo_tasks="$(read_template_repo_value "$template_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
   install_deps="$(read_template_repo_value "$template_src" '.repos[0].install_dependencies' 'true')"
-  install_gsd_local="$(read_template_repo_value "$template_src" '.repos[0].install_gsd_local' 'true')"
   auto_start_docker="$(read_template_repo_value "$template_src" '.repos[0].auto_start_docker' 'true')"
   post_bootstrap=""
 
@@ -1393,7 +1386,6 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
       "$turbo_enabled" \
       "$turbo_tasks" \
       "$install_deps" \
-      "$install_gsd_local" \
       "$auto_start_docker" \
       "$post_bootstrap"
     log_ok "worker ${i}/${WORKER_COUNT}: config.json создан"

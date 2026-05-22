@@ -166,7 +166,7 @@ while IFS= read -r repo; do
   install_deps="$(printf '%s' "${repo}" | jq -r '.install_dependencies // true')"
   turbo_smoke="$(printf '%s' "${repo}" | jq -r '.turbo_smoke // false')"
   turbo_tasks="$(printf '%s' "${repo}" | jq -r '(.turbo_tasks // ["build","test"]) | join(",")')"
-  # install_gsd_local handled by tooling.npm (bootstrap-opencode.sh)
+  # install_gsd_local removed — tooling.npm handles all package installation
   post_bootstrap="$(printf '%s' "${repo}" | jq -r '.post_bootstrap // empty')"
   auto_start_docker="$(printf '%s' "${repo}" | jq -r '.auto_start_docker // false')"
   docker_file="$(printf '%s' "${repo}" | jq -r '.docker_file // empty')"
