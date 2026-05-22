@@ -169,8 +169,8 @@ Agent-расширения:
 
 Шаблоны лежат здесь:
 
-- `workers/worker-1/config.json.example`
-- `workers/worker-2/config.json.example`
+- `workers/worker-1/config.json.template`
+- `workers/worker-2/config.json.template`
 
 Пример:
 

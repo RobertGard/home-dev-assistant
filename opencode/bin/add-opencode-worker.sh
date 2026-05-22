@@ -22,8 +22,8 @@ fi
 mkdir -p "${OUT_DIR}" "${ROOT_DIR}/${CONFIG_DIR}"
 
 if [ ! -f "${ROOT_DIR}/${CONFIG_DIR}/config.json" ]; then
-  local_example="${ROOT_DIR}/${CONFIG_DIR}/config.json.example"
-  fallback_example="${ROOT_DIR}/workers/worker-1/config.json.example"
+  local_example="${ROOT_DIR}/${CONFIG_DIR}/config.json.template"
+  fallback_example="${ROOT_DIR}/workers/worker-1/config.json.template"
   tooling_src="${local_example}"
   if [ ! -f "${tooling_src}" ]; then
     tooling_src="${fallback_example}"

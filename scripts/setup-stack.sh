@@ -770,15 +770,15 @@ recover_existing_configuration() {
     if [ ! -f "${worker_dir_abs}/config.json" ] || config_is_disabled_placeholder "${worker_dir_abs}/config.json"; then
       log_warn "config.json отсутствует или содержит отключенный placeholder. Требуется настройка репозитория."
       printf '\n--- Настройка репозитория для %s ---\n' "$worker_name"
-      local example_cfg="${worker_dir_abs}/config.json.example"
-      local example_src
-      example_src="$(resolve_example_config "$example_cfg")"
+      local template_cfg="${worker_dir_abs}/config.json.template"
+      local template_src
+      template_src="$(resolve_template_config "$template_cfg")"
 
       local repo_slug repo_url repo_ref repo_path
-      repo_slug="$(read_example_repo_value "$example_src" '.repos[0].slug' '')"
-      repo_url="$(read_example_repo_value "$example_src" '.repos[0].url' '')"
-      repo_ref="$(read_example_repo_value "$example_src" '.repos[0].ref' 'main')"
-      repo_path="$(read_example_repo_value "$example_src" '.repos[0].path' '')"
+      repo_slug="$(read_template_repo_value "$template_src" '.repos[0].slug' '')"
+      repo_url="$(read_template_repo_value "$template_src" '.repos[0].url' '')"
+      repo_ref="$(read_template_repo_value "$template_src" '.repos[0].ref' 'main')"
+      repo_path="$(read_template_repo_value "$template_src" '.repos[0].path' '')"
 
       if is_placeholder_repo_value "$repo_slug" || is_placeholder_repo_value "$repo_url"; then
         repo_slug="$(ask_required "Slug репозитория для ${worker_name}" "")"
@@ -791,12 +791,12 @@ recover_existing_configuration() {
       repo_path="$(ask "Папка внутри workspace" "${repo_path:-${repo_slug}}")"
 
       local pkg_mgr turbo_en turbo_tasks inst_deps inst_gsd auto_dock post_boot
-      pkg_mgr="$(read_example_repo_value "$example_src" '.repos[0].package_manager' 'auto')"
-      turbo_en="$(read_example_repo_value "$example_src" '.repos[0].turbo_smoke' 'false')"
-      turbo_tasks="$(read_example_repo_value "$example_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
-      inst_deps="$(read_example_repo_value "$example_src" '.repos[0].install_dependencies' 'true')"
-      inst_gsd="$(read_example_repo_value "$example_src" '.repos[0].install_gsd_local' 'true')"
-      auto_dock="$(read_example_repo_value "$example_src" '.repos[0].auto_start_docker' 'true')"
+      pkg_mgr="$(read_template_repo_value "$template_src" '.repos[0].package_manager' 'auto')"
+      turbo_en="$(read_template_repo_value "$template_src" '.repos[0].turbo_smoke' 'false')"
+      turbo_tasks="$(read_template_repo_value "$template_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
+      inst_deps="$(read_template_repo_value "$template_src" '.repos[0].install_dependencies' 'true')"
+      inst_gsd="$(read_template_repo_value "$template_src" '.repos[0].install_gsd_local' 'true')"
+      auto_dock="$(read_template_repo_value "$template_src" '.repos[0].auto_start_docker' 'true')"
       post_boot=""
 
       if [ "$ADVANCED_MODE" = "true" ]; then
@@ -974,16 +974,16 @@ repo_json_block() {
   printf '\n    }'
 }
 
-read_example_repo_value() {
-  local example_file="$1"
+read_template_repo_value() {
+  local template_file="$1"
   local jq_filter="$2"
   local fallback="$3"
-  if [ ! -f "$example_file" ]; then
+  if [ ! -f "$template_file" ]; then
     printf '%s' "$fallback"
     return
   fi
   local val
-  val="$(grep -v '^\s*//' "$example_file" | jq -r "$jq_filter" 2>/dev/null)" || true
+  val="$(grep -v '^\s*//' "$template_file" | jq -r "$jq_filter" 2>/dev/null)" || true
   if [ -z "$val" ] || [ "$val" = "null" ]; then
     printf '%s' "$fallback"
   else
@@ -1002,21 +1002,21 @@ config_is_disabled_placeholder() {
   return 0
 }
 
-jq_tooling_from_example() {
-  local example_file="$1"
-  if [ ! -f "$example_file" ]; then
+jq_tooling_from_template() {
+  local template_file="$1"
+  if [ ! -f "$template_file" ]; then
     return 1
   fi
-  grep -v '^\s*//' "$example_file" | jq -c '.tooling' 2>/dev/null
+  grep -v '^\s*//' "$template_file" | jq -c '.tooling' 2>/dev/null
 }
 
-resolve_example_config() {
+resolve_template_config() {
   local worker_example="$1"
   if [ -f "$worker_example" ]; then
     printf '%s' "$worker_example"
     return 0
   fi
-  local default_cfg="${ROOT_DIR}/workers/config.json.default"
+  local default_cfg="${ROOT_DIR}/workers/config.json.template"
   if [ -f "$default_cfg" ]; then
     printf '%s' "$default_cfg"
     return 0
@@ -1076,9 +1076,9 @@ write_repos_file() {
     printf '\n'
     printf '  ],\n'
     local tooling_src
-    tooling_src="$(resolve_example_config "${parent_dir}/config.json.example")"
+    tooling_src="$(resolve_template_config "${parent_dir}/config.json.template")"
     if [ -n "$tooling_src" ]; then
-      printf '  "tooling": %s\n' "$(jq_tooling_from_example "${tooling_src}")"
+      printf '  "tooling": %s\n' "$(jq_tooling_from_template "${tooling_src}")"
     fi
     printf '}\n'
   } >"$file"
@@ -1102,7 +1102,7 @@ write_disabled_placeholder_repo() {
   fi
 
   local tooling_src
-  tooling_src="$(resolve_example_config "${parent_dir}/config.json.example")"
+  tooling_src="$(resolve_template_config "${parent_dir}/config.json.template")"
 
   {
     printf '{\n'
@@ -1120,7 +1120,7 @@ write_disabled_placeholder_repo() {
     printf '    }\n'
     printf '  ],\n'
     if [ -n "$tooling_src" ]; then
-      printf '  "tooling": %s\n' "$(jq_tooling_from_example "${tooling_src}")"
+      printf '  "tooling": %s\n' "$(jq_tooling_from_template "${tooling_src}")"
     fi
     printf '}\n'
   } >"$file"
@@ -1338,20 +1338,20 @@ for ((i = 1; i <= WORKER_COUNT; i++)); do
   ensure_worker_dir_writable "$worker_dir_abs"
   log_info "worker ${i}/${WORKER_COUNT}: каталог ${worker_dir_rel} подготовлен"
 
-  local example_cfg="${worker_dir_abs}/config.json.example"
-  local example_src
-  example_src="$(resolve_example_config "$example_cfg")"
+  local template_cfg="${worker_dir_abs}/config.json.template"
+  local template_src
+  template_src="$(resolve_template_config "$template_cfg")"
 
-  repo_slug="$(read_example_repo_value "$example_src" '.repos[0].slug' '')"
-  repo_url="$(read_example_repo_value "$example_src" '.repos[0].url' '')"
-  repo_ref="$(read_example_repo_value "$example_src" '.repos[0].ref' 'main')"
-  repo_path="$(read_example_repo_value "$example_src" '.repos[0].path' '')"
-  package_manager="$(read_example_repo_value "$example_src" '.repos[0].package_manager' 'auto')"
-  turbo_enabled="$(read_example_repo_value "$example_src" '.repos[0].turbo_smoke' 'false')"
-  turbo_tasks="$(read_example_repo_value "$example_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
-  install_deps="$(read_example_repo_value "$example_src" '.repos[0].install_dependencies' 'true')"
-  install_gsd_local="$(read_example_repo_value "$example_src" '.repos[0].install_gsd_local' 'true')"
-  auto_start_docker="$(read_example_repo_value "$example_src" '.repos[0].auto_start_docker' 'true')"
+  repo_slug="$(read_template_repo_value "$template_src" '.repos[0].slug' '')"
+  repo_url="$(read_template_repo_value "$template_src" '.repos[0].url' '')"
+  repo_ref="$(read_template_repo_value "$template_src" '.repos[0].ref' 'main')"
+  repo_path="$(read_template_repo_value "$template_src" '.repos[0].path' '')"
+  package_manager="$(read_template_repo_value "$template_src" '.repos[0].package_manager' 'auto')"
+  turbo_enabled="$(read_template_repo_value "$template_src" '.repos[0].turbo_smoke' 'false')"
+  turbo_tasks="$(read_template_repo_value "$template_src" '.repos[0].turbo_tasks | join(",")' 'build,test')"
+  install_deps="$(read_template_repo_value "$template_src" '.repos[0].install_dependencies' 'true')"
+  install_gsd_local="$(read_template_repo_value "$template_src" '.repos[0].install_gsd_local' 'true')"
+  auto_start_docker="$(read_template_repo_value "$template_src" '.repos[0].auto_start_docker' 'true')"
   post_bootstrap=""
 
   if ask_yes_no "Настроить реальный репозиторий для worker ${i} прямо сейчас?" y; then
