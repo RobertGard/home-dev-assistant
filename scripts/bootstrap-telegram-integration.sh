@@ -51,6 +51,11 @@ die() {
 cleanup_temp_files() {
   [ -n "$INGRESS_WORKFLOW_TEMP" ] && rm -f "$INGRESS_WORKFLOW_TEMP"
   [ -n "$DISPATCH_WORKFLOW_TEMP" ] && rm -f "$DISPATCH_WORKFLOW_TEMP"
+  [ -n "$SESSION_MGR_WORKFLOW_TEMP" ] && rm -f "$SESSION_MGR_WORKFLOW_TEMP"
+  [ -n "$TASK_LAUNCHER_WORKFLOW_TEMP" ] && rm -f "$TASK_LAUNCHER_WORKFLOW_TEMP"
+  [ -n "$PENDING_INTERACTION_WORKFLOW_TEMP" ] && rm -f "$PENDING_INTERACTION_WORKFLOW_TEMP"
+  [ -n "$TASK_FINALIZER_WORKFLOW_TEMP" ] && rm -f "$TASK_FINALIZER_WORKFLOW_TEMP"
+  [ -n "$AUTO_GENERATOR_WORKFLOW_TEMP" ] && rm -f "$AUTO_GENERATOR_WORKFLOW_TEMP"
 }
 
 trap cleanup_temp_files EXIT
@@ -127,7 +132,7 @@ wait_for_n8n_api() {
   local attempt=1
   local max_attempts=60
   while [ "$attempt" -le "$max_attempts" ]; do
-    if curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/credentials" 2>/dev/null | jq . >/dev/null 2>&1; then
+    if curl -fsS "${N8N_URL}/healthz/readiness" >/dev/null 2>&1; then
       log_ok "n8n REST API готов"
       return 0
     fi
