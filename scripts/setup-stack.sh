@@ -1214,6 +1214,7 @@ services:
       start_period: 60s
     stop_grace_period: 10m
     networks:
+      - edge
       - control
 
 volumes:

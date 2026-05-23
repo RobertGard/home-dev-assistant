@@ -57,6 +57,7 @@ RUN npm install -g \
   zx
 
 RUN useradd -m -s /bin/bash agent
+RUN su agent -c 'mkdir -p /home/agent/.npm-global && npm config set prefix /home/agent/.npm-global'
 RUN su agent -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 RUN su agent -c 'curl -fsSL https://bun.sh/install | bash'
 
@@ -70,7 +71,7 @@ COPY templates/ /opt/opencode/templates/
 
 RUN chmod +x /opt/opencode/bin/*.sh
 
-ENV PATH="/home/agent/.opencode/bin:/home/agent/.local/bin:/home/agent/.bun/bin:/usr/local/bin:/usr/bin:/bin"
+ENV PATH="/home/agent/.npm-global/bin:/home/agent/.opencode/bin:/home/agent/.local/bin:/home/agent/.bun/bin:/usr/local/bin:/usr/bin:/bin"
 
 WORKDIR /workspace
 
