@@ -18,7 +18,6 @@
     "npm": [
       { "package": "get-shit-done-cc@latest", "args": "--opencode --global" },
       { "package": "@modelcontextprotocol/server-filesystem", "mcp": { "name": "filesystem", "args": ["/workspace"], "enabled": true } },
-      { "package": "@modelcontextprotocol/server-git", "mcp": { "name": "git", "args": ["/workspace"], "enabled": true } },
       { "package": "@modelcontextprotocol/server-github", "mcp": { "name": "github", "enabled": true } },
       { "package": "@modelcontextprotocol/server-memory", "mcp": { "name": "memory", "enabled": true } },
       { "package": "@upstash/context7-mcp", "mcp": { "name": "context7", "type": "remote", "url": "https://mcp.context7.com/mcp", "enabled": true } },

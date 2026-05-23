@@ -307,7 +307,7 @@ if [ "${OPENCODE_AUTO_INSTALL_TOOLING:-1}" = "1" ]; then
     POST_COUNT="$(jq -r '.tooling.post_install | length' "${WORKSPACE_CFG}" 2>/dev/null || echo 0)"
     if [ "${POST_COUNT}" -gt 0 ] && [ ! -f "${STATE_DIR}/.post-install-done" ]; then
       for row in $(jq -r '.tooling.post_install[]? | @base64' "${WORKSPACE_CFG}" 2>/dev/null); do
-        cmd="$(echo "${row}" | base64 -d | jq -r '. // ""')"
+        cmd="$(echo "${row}" | base64 -d)"
         if [ -z "${cmd}" ]; then continue; fi
         echo "→ post-install: ${cmd}"
         if ! eval "${cmd}"; then
