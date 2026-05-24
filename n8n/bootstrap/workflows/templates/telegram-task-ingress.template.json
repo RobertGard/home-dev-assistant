@@ -1149,7 +1149,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Фиксируем chat_id').item.json.chat_id }}",
-        "text": "={{ $json.flags.auto_mode === 'true' ? 'Автономный режим включён. Агент будет сам создавать следующие задачи.' : 'Автономный режим выключен.' }}",
+        "text": "={{ $json.auto_mode === 'true' ? 'Автономный режим включён. Агент будет сам создавать следующие задачи.' : 'Автономный режим выключен.' }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
