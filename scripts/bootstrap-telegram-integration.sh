@@ -381,6 +381,7 @@ step_start 'Сохраняю bootstrap state и рендерю workflow'
 
 opencode_routing_json="$(render_opencode_routing_json)"
 opencode_routing_json_escaped="$(escape_json_string_content "$opencode_routing_json")"
+default_worker_alias="$(jq -r '.defaultWorker // "worker-1"' "${ROUTING_FILE}")"
 INGRESS_WORKFLOW_TEMP="$(mktemp)"
 DISPATCH_WORKFLOW_TEMP="$(mktemp)"
 SESSION_MGR_WORKFLOW_TEMP="$(mktemp)"
@@ -419,6 +420,7 @@ render_template "$TASK_LAUNCHER_TEMPLATE" "$TASK_LAUNCHER_WORKFLOW_TEMP" "$crede
 render_template "$PENDING_INTERACTION_TEMPLATE" "$PENDING_INTERACTION_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
 render_template "$TASK_FINALIZER_TEMPLATE" "$TASK_FINALIZER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped"
 render_template "$AUTO_GENERATOR_TEMPLATE" "$AUTO_GENERATOR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "${deepseek_credential_id:-}"
+sed -i "s|__DEFAULT_WORKER_ALIAS__|${default_worker_alias}|g" "$AUTO_GENERATOR_WORKFLOW_TEMP"
 
 log_ok 'Временные workflow-файлы подготовлены.'
 
