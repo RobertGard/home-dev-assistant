@@ -770,7 +770,7 @@
             "createNewSession": "={{ $('Выбираем кандидатную задачу').item.json.createNewSession }}",
             "taskKey": "={{ $('Выбираем кандидатную задачу').item.json.task.task_key }}"
           }
-        }
+        },
         "options": {}
       },
       "id": "exec-session",
@@ -818,7 +818,7 @@
             "opencodeModelProviderID": "={{ $('Готовим пакеты обработчиков').item.json.opencodeModel?.providerID }}",
             "opencodeModelModelID": "={{ $('Готовим пакеты обработчиков').item.json.opencodeModel?.modelID }}"
           }
-        }
+        },
         "options": {}
       },
       "id": "exec-launch",
@@ -997,7 +997,7 @@
           ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
-        }
+        },
         "options": {}
       },
       "id": "exec-interaction",
