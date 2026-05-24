@@ -204,7 +204,7 @@ while IFS= read -r repo; do
     fi
     compose_file="$(compose_file_for_repo "${repo_dir}" "${docker_file}")"
     if [ -n "${compose_file}" ]; then
-      docker compose -f "${compose_file}" up -d || true
+      docker-compose -f "${compose_file}" up -d || true
     fi
   fi
 
