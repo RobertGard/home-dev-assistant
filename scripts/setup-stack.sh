@@ -377,29 +377,20 @@ prompt_for_n8n_api_key_if_needed() {
 }
 
 install_cleanup_cron() {
-  local cron_marker_cleanup="# n8n-opencode-cleanup"
-  local cron_marker_health="# n8n-opencode-dispatcher-health"
+  local cron_marker="# n8n-opencode-cleanup"
   local cleanup_script="${ROOT_DIR}/scripts/cleanup-executions.sh"
-  local health_script="${ROOT_DIR}/scripts/health-check-dispatcher.sh"
   local log_dir="${ROOT_DIR}/logs"
 
   mkdir -p "$log_dir"
 
   local crontab_content
   crontab_content="$(crontab -l 2>/dev/null || true)"
-
-  # Cleanup executions: every hour at minute 0
-  crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker_cleanup")"
+  crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker")"
   crontab_content="${crontab_content}
-0 * * * * bash ${cleanup_script} >> ${log_dir}/cleanup.log 2>&1 ${cron_marker_cleanup}"
-
-  # Dispatcher health check: every 5 minutes
-  crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker_health")"
-  crontab_content="${crontab_content}
-*/5 * * * * bash ${health_script} >> ${log_dir}/dispatcher-health.log 2>&1 ${cron_marker_health}"
+0 * * * * bash ${cleanup_script} >> ${log_dir}/cleanup.log 2>&1 ${cron_marker}"
 
   printf '%s\n' "$crontab_content" | grep -v '^$' | crontab -
-  log_ok 'Cron-задачи установлены: cleanup (каждый час), health-check (каждые 5 мин)'
+  log_ok 'Cron-задача очистки executions установлена (каждый час)'
 }
 
 run_startup_pipeline() {
