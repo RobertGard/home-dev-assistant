@@ -105,7 +105,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
-        "text": "={{ (() => { try { if ($json.replyText) return $json.replyText } catch {} try { return $('Готовим ожидающую интеракцию').first().json.replyText } catch {} return $('Разбираем базовое сообщение Telegram').first().json.replyText })() }}",
+        "text": "={{ (() => { try { if ($json.replyText) return $json.replyText } catch {} try { return $('Готовим ожидающую интеракцию').first().json.replyText } catch {} return $input.first().json.replyText })() }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -733,7 +733,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Связывает answer_candidate с pending-задачей.\n// Ответ приходит только в формате /task --answer=\"...\" или /task --task_key=\"xxx\" --answer=\"...\"\n\nconst candidate = $('Разбираем базовое сообщение Telegram').first().json\nconst pendingTasks = $('Получаем задачи с ожиданием ответа').all().map((item) => item.json)\n\nfunction parsePendingMeta(task) {\n  try { return JSON.parse(String(task.pending_options_json || '{}')) } catch { return {} }\n}\n\n// Определяем какую задачу: --task_key или авто-выбор если одна\nconst flags = candidate.flags || {}\nconst specifiedTaskKey = String(flags.task_key || '').trim()\nlet targetTaskKey = specifiedTaskKey\n\nif (!targetTaskKey && pendingTasks.length === 1) {\n  targetTaskKey = String(pendingTasks[0].task_key || '').trim()\n}\n\nif (!targetTaskKey) {\n  const taskList = pendingTasks.map((task) => `- <code>${task.task_key || 'неизвестно'}</code>`).join('\\n')\n  return [{ json: { mode: 'parse_error', replyText: `Несколько задач ожидают ответа:\\n${taskList}\\n\\nУкажите задачу: /task --task_key=\"task-key\" --answer=\"ваш ответ\"` } }]\n}\n\nconst task = pendingTasks.find((item) => String(item.task_key || '').trim() === targetTaskKey)\nif (!task) {\n  return [{ json: { mode: 'parse_error', replyText: `Не удалось найти задачу <code>${targetTaskKey}</code> среди ожидающих ответа.` } }]\n}\n\nconst pendingMeta = parsePendingMeta(task)\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst interactionType = Array.isArray(pendingMeta.questions) ? 'question' : String(pendingMeta.type || 'permission').trim()\n\nif (!requestId) {\n  return [{ json: { mode: 'parse_error', replyText: `У задачи <code>${targetTaskKey}</code> повреждены данные pending интеракции.` } }]\n}\n\nreturn [{\n  json: {\n    mode: interactionType + '_candidate',\n    rawText: candidate.rawText,\n    targetTaskKey,\n    answerText: candidate.answerText,\n    rejectRequested: String(candidate.answerText || '').trim().toLowerCase() === '/reject',\n    interactionType,\n    pendingMeta,\n  }\n}]"
+        "jsCode": "// Связывает answer_candidate с pending-задачей.\n// Ответ приходит только в формате /task --answer=\"...\" или /task --task_key=\"xxx\" --answer=\"...\"\n\nconst candidate = $input.first().json\nconst pendingTasks = $('Получаем задачи с ожиданием ответа').all().map((item) => item.json)\n\nfunction parsePendingMeta(task) {\n  try { return JSON.parse(String(task.pending_options_json || '{}')) } catch { return {} }\n}\n\n// Определяем какую задачу: --task_key или авто-выбор если одна\nconst flags = candidate.flags || {}\nconst specifiedTaskKey = String(flags.task_key || '').trim()\nlet targetTaskKey = specifiedTaskKey\n\nif (!targetTaskKey && pendingTasks.length === 1) {\n  targetTaskKey = String(pendingTasks[0].task_key || '').trim()\n}\n\nif (!targetTaskKey) {\n  const taskList = pendingTasks.map((task) => `- <code>${task.task_key || 'неизвестно'}</code>`).join('\\n')\n  return [{ json: { mode: 'parse_error', replyText: `Несколько задач ожидают ответа:\\n${taskList}\\n\\nУкажите задачу: /task --task_key=\"task-key\" --answer=\"ваш ответ\"` } }]\n}\n\nconst task = pendingTasks.find((item) => String(item.task_key || '').trim() === targetTaskKey)\nif (!task) {\n  return [{ json: { mode: 'parse_error', replyText: `Не удалось найти задачу <code>${targetTaskKey}</code> среди ожидающих ответа.` } }]\n}\n\nconst pendingMeta = parsePendingMeta(task)\nconst requestId = String(pendingMeta.requestId || '').trim()\nconst interactionType = Array.isArray(pendingMeta.questions) ? 'question' : String(pendingMeta.type || 'permission').trim()\n\nif (!requestId) {\n  return [{ json: { mode: 'parse_error', replyText: `У задачи <code>${targetTaskKey}</code> повреждены данные pending интеракции.` } }]\n}\n\nreturn [{\n  json: {\n    mode: interactionType + '_candidate',\n    rawText: candidate.rawText,\n    targetTaskKey,\n    answerText: candidate.answerText,\n    rejectRequested: String(candidate.answerText || '').trim().toLowerCase() === '/reject',\n    interactionType,\n    pendingMeta,\n  }\n}]"
       },
       "id": "resolve-answer",
       "name": "Готовим ожидающую интеракцию",
@@ -778,7 +778,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Создаём новую задачу: генерируем taskKey, сохраняем контекст.\n\nconst parsed = $('Разбираем базовое сообщение Telegram').first().json\nconst taskKey = `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\nconst contextJson = JSON.stringify({\n  rawText: parsed.rawText,\n  commandType: parsed.commandType,\n  flags: parsed.flags,\n  args: parsed.args,\n  parentTaskId: parsed.parentTaskId,\n  parentMatchText: parsed.parentMatchText,\n  prompt: parsed.prompt,\n  newSessionRequested: parsed.newSessionRequested,\n})\n\nreturn [{\n  json: {\n    mode: 'command',\n    rawText: parsed.rawText,\n    commandType: parsed.commandType,\n    flags: parsed.flags,\n    args: parsed.args,\n    taskKey,\n    queuedAt: new Date().toISOString(),\n    parentTaskId: parsed.parentTaskId,\n    parentMatchText: parsed.parentMatchText,\n    prompt: parsed.prompt,\n    contextJson,\n    replyText: `Задача поставлена в очередь: <code>${taskKey}</code>`,\n  },\n}]"
+        "jsCode": "// Создаём новую задачу: генерируем taskKey, сохраняем контекст.\n\nconst parsed = $input.first().json\nconst taskKey = `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\nconst contextJson = JSON.stringify({\n  rawText: parsed.rawText,\n  commandType: parsed.commandType,\n  flags: parsed.flags,\n  args: parsed.args,\n  parentTaskId: parsed.parentTaskId,\n  parentMatchText: parsed.parentMatchText,\n  prompt: parsed.prompt,\n  newSessionRequested: parsed.newSessionRequested,\n})\n\nreturn [{\n  json: {\n    mode: 'command',\n    rawText: parsed.rawText,\n    commandType: parsed.commandType,\n    flags: parsed.flags,\n    args: parsed.args,\n    taskKey,\n    queuedAt: new Date().toISOString(),\n    parentTaskId: parsed.parentTaskId,\n    parentMatchText: parsed.parentMatchText,\n    prompt: parsed.prompt,\n    contextJson,\n    replyText: `Задача поставлена в очередь: <code>${taskKey}</code>`,\n  },\n}]"
       },
       "id": "prepare-command",
       "name": "Готовим новую задачу",
@@ -823,7 +823,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Готовим запрос на прерывание задачи.\n// task_key извлекается из флага --task_key.\n\nconst parsed = $('Разбираем базовое сообщение Telegram').first().json\nconst flags = parsed.flags || {}\nconst inputTaskKey = String(flags.task_key || '').trim()\n\nreturn [{ json: { mode: 'abort_request', rawText: parsed.rawText, targetTaskKey: inputTaskKey } }]"
+        "jsCode": "// Готовим запрос на прерывание задачи.\n// task_key извлекается из флага --task_key.\n\nconst parsed = $input.first().json\nconst flags = parsed.flags || {}\nconst inputTaskKey = String(flags.task_key || '').trim()\n\nreturn [{ json: { mode: 'abort_request', rawText: parsed.rawText, targetTaskKey: inputTaskKey } }]"
       },
       "id": "prepare-abort-request",
       "name": "Готовим запрос прерывания",
@@ -1006,7 +1006,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Проверяет допустимость команды по декларативному списку из «Задаём переменные».\n// Каждый элемент allowed_commands: { command, require: [...] }\n// usage для ошибок генерируется автоматически из command + require.\n\nconst vars = $('Задаём переменные').first().json\nconst allowedCommands = Array.isArray(vars.allowed_commands) ? vars.allowed_commands : []\nconst input = $('Разбираем базовое сообщение Telegram').first().json\n// Пропускаем не-команды (parse_error и т.д.) насквозь\nif (input.mode !== 'command_candidate') return { json: input }\n\nconst commandType = String(input.commandType || '').trim()\nconst flags = input.flags || {}\n\nconst flagFilled = (val) =>\n  val !== undefined && val !== null && String(val).trim() !== ''\n\nconst patterns = allowedCommands.filter((p) => p.command === commandType)\n\nif (patterns.length === 0) {\n  const known = [...new Set(allowedCommands.map((p) => `/${p.command}`))].join(', ')\n  return { json: { ...input, mode: 'parse_error', replyText: `Неизвестная команда${commandType ? ' /' + commandType : ''}. Доступные команды: ${known}.` } }\n}\n\nconst satisfied = patterns.find((p) => {\n  const rf = Array.isArray(p.require) ? p.require : [p.require]\n  return rf.every((flag) => flagFilled(flags[flag]))\n})\n\nif (satisfied) {\n  return { json: input }\n}\n\n// Генерируем usage на лету: /command --flag1 --flag2\nconst usages = patterns\n  .map((p) => `/${p.command} ` + (Array.isArray(p.require) ? p.require : [p.require]).map((f) => `--${f}=\"...\"`).join(' '))\n  .join('\\n  или ')\n\nreturn { json: { ...input, mode: 'parse_error', replyText: `Команда /${commandType} требует обязательные флаги:\\n  ${usages}` } }"
+        "jsCode": "// Проверяет допустимость команды по декларативному списку из «Задаём переменные».\n// Каждый элемент allowed_commands: { command, require: [...] }\n// usage для ошибок генерируется автоматически из command + require.\n\nconst vars = $('Задаём переменные').first().json\nconst allowedCommands = Array.isArray(vars.allowed_commands) ? vars.allowed_commands : []\nconst input = $input.item.json\n// Пропускаем не-команды (parse_error и т.д.) насквозь\nif (input.mode !== 'command_candidate') return { json: input }\n\nconst commandType = String(input.commandType || '').trim()\nconst flags = input.flags || {}\n\nconst flagFilled = (val) =>\n  val !== undefined && val !== null && String(val).trim() !== ''\n\nconst patterns = allowedCommands.filter((p) => p.command === commandType)\n\nif (patterns.length === 0) {\n  const known = [...new Set(allowedCommands.map((p) => `/${p.command}`))].join(', ')\n  return { json: { ...input, mode: 'parse_error', replyText: `Неизвестная команда${commandType ? ' /' + commandType : ''}. Доступные команды: ${known}.` } }\n}\n\nconst satisfied = patterns.find((p) => {\n  const rf = Array.isArray(p.require) ? p.require : [p.require]\n  return rf.every((flag) => flagFilled(flags[flag]))\n})\n\nif (satisfied) {\n  return { json: input }\n}\n\n// Генерируем usage на лету: /command --flag1 --flag2\nconst usages = patterns\n  .map((p) => `/${p.command} ` + (Array.isArray(p.require) ? p.require : [p.require]).map((f) => `--${f}=\"...\"`).join(' '))\n  .join('\\n  или ')\n\nreturn { json: { ...input, mode: 'parse_error', replyText: `Команда /${commandType} требует обязательные флаги:\\n  ${usages}` } }"
       },
       "id": "validate-command",
       "name": "Проверяем допустимость команды",
@@ -1091,7 +1091,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $('Проверяем допустимость команды').first().json.flags.auto_mode }}",
+              "leftValue": "={{ $json.flags.auto_mode }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -1123,15 +1123,15 @@
           "conditions": [
             {
               "keyName": "chat_id",
-              "keyValue": "={{ $('Фиксируем chat_id').first().json.chatId }}"
+              "keyValue": "={{ $('Фиксируем chat_id').item.json.chatId }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "chat_id": "={{ $('Фиксируем chat_id').first().json.chatId }}",
-            "auto_mode": "={{ String($('Проверяем допустимость команды').first().json.flags.auto_mode).toLowerCase() === 'true' }}"
+            "chat_id": "={{ $('Фиксируем chat_id').item.json.chatId }}",
+            "auto_mode": "={{ String($json.auto_mode).toLowerCase() === 'true' }}"
           }
         },
         "options": {}
@@ -1148,8 +1148,8 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Фиксируем chat_id').first().json.chatId }}",
-        "text": "={{ $('Обновляем режим авто-задач').first().json.auto_mode === true ? 'Автономный режим включён. Агент будет сам создавать следующие задачи.' : 'Автономный режим выключен.' }}",
+        "chatId": "={{ $('Фиксируем chat_id').item.json.chatId }}",
+        "text": "={{ $json.auto_mode === true ? 'Автономный режим включён. Агент будет сам создавать следующие задачи.' : 'Автономный режим выключен.' }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
