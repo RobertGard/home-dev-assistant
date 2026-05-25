@@ -366,7 +366,7 @@ if [ -z "$deepseek_credential_id" ]; then
       -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
       -H 'Content-Type: application/json' \
       -X POST \
-      -d "{\"name\":\"${DEEPSEEK_CREDENTIAL_NAME}\",\"type\":\"deepSeekApi\",\"nodesAccess\":[{\"nodeType\":\"@n8n/n8n-nodes-langchain.lmChatDeepSeek\"}],\"data\":{\"apiKey\":\"${DEEPSEEK_API_KEY}\"}}" \
+      -d "{\"name\":\"${DEEPSEEK_CREDENTIAL_NAME}\",\"type\":\"deepSeekApi\",\"data\":{\"apiKey\":\"${DEEPSEEK_API_KEY}\",\"allowedHttpRequestDomains\":\"all\"}}" \
       "${N8N_URL}/api/v1/credentials" | jq -r '.data.id // .id')"; then
       log_warn 'Не удалось создать DeepSeek credential в n8n — AI Agent не будет работать.'
     else
@@ -504,8 +504,7 @@ for wf_name in "$SESSION_MGR_WORKFLOW_NAME" "$TASK_LAUNCHER_WORKFLOW_NAME" \
     die "Не удалось найти sub-workflow по имени: ${wf_name}"
   fi
   if [ "$wf_name" = "$AUTO_GENERATOR_WORKFLOW_NAME" ] && [ -z "${deepseek_credential_id:-}" ]; then
-    log_warn "Авто-генератор задач импортирован, но не активирован — нет DeepSeek кредов. Добавь креды в n8n UI и активируй вручную."
-    continue
+    log_warn 'Авто-генератор задач активирован, но DeepSeek креды не созданы — авто-режим не будет работать.'
   fi
   activate_and_verify "$sub_wf_id" "$wf_name"
 done
