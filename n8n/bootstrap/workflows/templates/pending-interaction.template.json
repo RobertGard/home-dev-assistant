@@ -103,10 +103,10 @@
           "conditions": [
             {
               "leftValue": "={{ $('Разбираем входные данные').item.json.taskStatus }}",
-              "rightValue": "needs_input",
+              "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "equals"
+                "operation": "isNotEmpty"
               }
             }
           ],
