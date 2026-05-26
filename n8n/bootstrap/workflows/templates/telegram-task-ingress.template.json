@@ -206,6 +206,8 @@
             "parent_task_key": "={{ $('Готовим новую задачу').first().json.parentTaskId }}",
             "parent_match_text": "={{ $('Готовим новую задачу').first().json.parentMatchText }}",
             "context_json": "={{ $('Готовим новую задачу').first().json.contextJson }}",
+            "pending_question": "",
+            "pending_options_json": "[]",
             "status": "={{ 'queued' }}",
             "queued_at": "={{ $('Готовим новую задачу').first().json.queuedAt }}"
           },
