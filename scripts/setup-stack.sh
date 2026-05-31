@@ -404,7 +404,7 @@ install_cleanup_cron() {
 
   local crontab_content
   crontab_content="$(crontab -l 2>/dev/null || true)"
-  crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker")"
+  crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker" || true)"
   crontab_content="${crontab_content}
 ${cron_entry}"
 
