@@ -1129,7 +1129,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "chat_id": "={{ $('Фиксируем chat_id').item.json.chatId }}",
-            "auto_mode": "={{ String($json.auto_mode).toLowerCase() === 'true' }}"
+            "auto_mode": "={{ String($json.flags.auto_mode).toLowerCase() === 'true' }}"
           }
         },
         "options": {}
