@@ -380,17 +380,59 @@ install_cleanup_cron() {
   local cron_marker="# n8n-opencode-cleanup"
   local cleanup_script="${ROOT_DIR}/scripts/cleanup-executions.sh"
   local log_dir="${ROOT_DIR}/logs"
+  local max_retries=3
+  local attempt=0
+  local installed=0
+  local crontab_err=""
+  local crontab_l_err=""
 
   mkdir -p "$log_dir"
+
+  if ! command -v crontab >/dev/null 2>&1; then
+    log_warn 'crontab не найден. Установи cron: sudo apt install cron && sudo systemctl enable --now cron'
+    log_warn 'Автоочистка executions пропущена. Запусти "crontab -e" вручную позже.'
+    return 0
+  fi
+
+  if [ ! -f "$cleanup_script" ]; then
+    log_warn "Скрипт очистки не найден: ${cleanup_script}"
+    log_warn 'Автоочистка executions пропущена.'
+    return 0
+  fi
+
+  local cron_entry="0 * * * * bash \"${cleanup_script}\" >> \"${log_dir}/cleanup.log\" 2>&1 ${cron_marker}"
 
   local crontab_content
   crontab_content="$(crontab -l 2>/dev/null || true)"
   crontab_content="$(printf '%s\n' "$crontab_content" | grep -vF "$cron_marker")"
   crontab_content="${crontab_content}
-0 * * * * bash ${cleanup_script} >> ${log_dir}/cleanup.log 2>&1 ${cron_marker}"
+${cron_entry}"
 
-  printf '%s\n' "$crontab_content" | grep -v '^$' | crontab -
-  log_ok 'Cron-задача очистки executions установлена (каждый час)'
+  while [ "$attempt" -lt "$max_retries" ]; do
+    attempt=$((attempt + 1))
+
+    if crontab_err="$(printf '%s\n' "$crontab_content" | grep -v '^$' | crontab - 2>&1)"; then
+      if crontab_l_err="$(crontab -l 2>&1)" && printf '%s\n' "$crontab_l_err" | grep -qF "$cron_marker"; then
+        installed=1
+        break
+      fi
+    fi
+
+    [ "$attempt" -lt "$max_retries" ] && sleep 1
+  done
+
+  if [ "$installed" -eq 1 ]; then
+    log_ok 'Cron-задача очистки executions установлена (каждый час)'
+  else
+    log_warn 'Не удалось установить cron-задачу очистки исполнения.'
+    if [ -n "$crontab_err" ]; then
+      log_warn "crontab: ${crontab_err}"
+    fi
+    if [ -n "$crontab_l_err" ]; then
+      log_warn "crontab -l: ${crontab_l_err}"
+    fi
+    log_warn "Добавь вручную: ${cron_entry}"
+  fi
 }
 
 run_startup_pipeline() {
