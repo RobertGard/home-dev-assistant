@@ -1028,7 +1028,8 @@
             "authorizationHeader": "={{ $('Готовим пакеты обработчиков').item.json.authorizationHeader }}",
             "sessionStatusPath": "={{ $('Готовим пакеты обработчиков').item.json.sessionStatusPath }}",
             "messageListPath": "={{ $('Готовим пакеты обработчиков').item.json.messageListPath }}",
-            "latestSentId": "={{ $('Выбираем активную задачу').first().json.latestSentId }}"
+            "latestSentId": "={{ $('Выбираем активную задачу').first().json.latestSentId }}",
+            "queuedAt": "={{ $('Выбираем активную задачу').first().json.task.queued_at }}"
           },
           "matchingColumns": [],
           "schema": [
