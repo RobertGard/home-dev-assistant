@@ -562,6 +562,7 @@ write_routing_file() {
     printf '  "defaultAgent": "%s",\n' "$(json_escape "$OPENCODE_AGENT")"
     printf '  "defaultModel": "%s",\n' "$(json_escape "$OPENCODE_MODEL")"
     printf '  "defaultWorker": "%s",\n' "$(json_escape "${WORKER_ALIASES[0]}")"
+    printf '  "defaultVariant": "%s",\n' "$(json_escape "${OPENCODE_VARIANT:-xhigh}")"
     printf '  "workers": {\n'
     for ((i = 0; i < ${#WORKER_NAMES[@]}; i++)); do
       alias="${WORKER_ALIASES[$i]}"
@@ -572,6 +573,7 @@ write_routing_file() {
       printf '      "baseUrl": "http://%s:4096",\n' "$(json_escape "$service")"
       printf '      "healthUrl": "http://%s:4096/global/health",\n' "$(json_escape "$service")"
       printf '      "username": "opencode",\n'
+      printf '      "variant": "%s",\n' "$(json_escape "${OPENCODE_VARIANT:-xhigh}")"
       printf '      "passwordEnv": "%s"\n' "$(json_escape "OPENCODE_WORKER_${service##opencode-worker-}_PASSWORD")"
       if [ "$i" -lt $((${#WORKER_NAMES[@]} - 1)) ]; then
         printf '    },\n'
