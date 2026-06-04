@@ -559,7 +559,7 @@
       "typeVersion": 2,
       "position": [
         2912,
-        496
+        568
       ]
     },
     {
@@ -617,7 +617,7 @@
       "typeVersion": 1.1,
       "position": [
         2688,
-        208
+        856
       ],
       "alwaysOutputData": true
     },
@@ -659,7 +659,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2912,
+        2688,
         208
       ],
       "alwaysOutputData": true
