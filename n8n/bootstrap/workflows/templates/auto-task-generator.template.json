@@ -8,8 +8,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        320,
-        432
+        -2384,
+        240
       ]
     },
     {
@@ -57,6 +57,12 @@
               "name": "workerAlias",
               "value": "={{ $('Триггер: вызов из диспетчера').first().json.worker_alias || '__DEFAULT_WORKER_ALIAS__' }}",
               "type": "string"
+            },
+            {
+              "id": "final-opinion-prompt",
+              "name": "promptFinalOpinionSystem",
+              "value": "<role>\nТы — агент «Итоговое мнение». Твоя задача: рассудить расхождение между предложением предыдущего AI-агента и ожидаемым поведением.\n</role>\n\n<instructions>\nПолучив историю задач, сырой ответ предыдущего агента и текст ошибки валидации, определи КОРРЕКТНУЮ следующую команду.\n\n— Ты ВСЕГДА выдаёшь команду. Ты не можешь отказаться или вернуть ошибку.\n— Если предыдущий агент предложил неправильную команду — исправь её.\n— Учитывай полный цикл GSD: plan-phase → execute-phase → code-review → verify-work → ship.\n— Если фаза N не завершила цикл, НЕ предлагай /gsd-plan-phase N+1. Вместо этого предложи следующую незавершённую команду цикла для фазы N (например /gsd-execute-phase N).\n— Если цикл фазы N завершён полностью (plan→execute→review→verify→ship), ТОЛЬКО тогда переходи к /gsd-plan-phase N+1.\n— Используй ТОЛЬКО команды из GSD-цикла и quality_gates.\n</instructions>\n\n<output_format>\nОтвечай СТРОГО валидным JSON (без markdown, без ```json):\n{\"prompt\": \"твоя команда\"}\n</output_format>",
+              "type": "string"
             }
           ]
         },
@@ -67,8 +73,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        544,
-        432
+        -2160,
+        240
       ]
     },
     {
@@ -106,8 +112,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        768,
-        432
+        -1936,
+        240
       ],
       "alwaysOutputData": true
     },
@@ -120,8 +126,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        992,
-        432
+        -1712,
+        240
       ]
     },
     {
@@ -134,8 +140,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1216,
-        432
+        -1488,
+        240
       ]
     },
     {
@@ -148,8 +154,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        1288,
-        656
+        -1416,
+        464
       ],
       "credentials": {
         "deepSeekApi": {
@@ -167,8 +173,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1568,
-        432
+        -1136,
+        240
       ]
     },
     {
@@ -180,8 +186,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1792,
-        432
+        -912,
+        240
       ]
     },
     {
@@ -194,7 +200,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $('Валидируем ответ').first().json.error }}",
+              "leftValue": "={{ $json.error }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -210,8 +216,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2016,
-        432
+        336,
+        240
       ]
     },
     {
@@ -224,7 +230,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $('Валидируем ответ').first().json.is_needs_input }}",
+              "leftValue": "={{ $json.is_needs_input }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -241,7 +247,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2240,
+        560,
         336
       ]
     },
@@ -257,7 +263,7 @@
           "conditions": [
             {
               "keyName": "task_key",
-              "keyValue": "={{ $('Валидируем ответ').first().json.taskKey }}"
+              "keyValue": "={{ $json.taskKey }}"
             },
             {
               "keyName": "status",
@@ -269,7 +275,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "pending_question": "",
-            "pending_options_json": "={{ $('Валидируем ответ').first().json.pendingOptionsJson }}"
+            "pending_options_json": "={{ $json.pendingOptionsJson }}"
           }
         }
       },
@@ -278,7 +284,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2464,
+        784,
         240
       ],
       "alwaysOutputData": true
@@ -295,13 +301,13 @@
           "value": {
             "task_key": "={{ 'auto-' + new Date().getTime().toString(36) + '-' + Math.random().toString(36).substring(2, 8) }}",
             "source": "auto",
-            "chat_id": "={{ $('Валидируем ответ').first().json.chatId }}",
+            "chat_id": "={{ $json.chatId }}",
             "worker_alias": "={{ $('Конфигурация авто-генератора').first().json.workerAlias }}",
             "command_name": "task",
-            "prompt": "={{ $('Валидируем ответ').first().json.prompt }}",
+            "prompt": "={{ $json.prompt }}",
             "status": "queued",
-            "parent_task_key": "={{ $('Валидируем ответ').first().json.lastTaskKey }}",
-            "context_json": "={{ JSON.stringify({ autoGenerated: true, source: 'auto-generator', parentTaskKey: $('Валидируем ответ').first().json.lastTaskKey, schemaVersion: 1 }) }}",
+            "parent_task_key": "={{ $json.lastTaskKey }}",
+            "context_json": "={{ JSON.stringify({ autoGenerated: true, source: \"auto-generator\", parentTaskKey: $json.lastTaskKey, schemaVersion: 1 }) }}",
             "queued_at": "={{ new Date().toISOString() }}"
           }
         }
@@ -311,7 +317,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2464,
+        784,
         432
       ],
       "alwaysOutputData": true
@@ -319,7 +325,7 @@
     {
       "parameters": {
         "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
-        "text": "=🤖 Авто-задача [<code>{{ $json.task_key }}</code>] [{{ $json.worker_alias || 'primary' }}]: {{ $('Валидируем ответ').first().json.prompt }}\n\n/task --auto_mode=\"false\" — выключить авто-режим",
+        "text": "=🤖 Авто-задача [<code>{{ $json.task_key }}</code>] [{{ $json.worker_alias || 'primary' }}]: {{ $json.prompt }}\n\n/task --auto_mode=\"false\" — выключить авто-режим",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "HTML"
@@ -330,7 +336,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2688,
+        1008,
         432
       ],
       "credentials": {
@@ -354,7 +360,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2688,
+        1008,
         240
       ],
       "credentials": {
@@ -378,13 +384,103 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
-        528
+        560,
+        144
       ],
       "credentials": {
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "Ошибка авто-генератора:",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-auto-err",
+      "name": "Это ошибка авто-генератора?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const toText = (v) => String(v ?? '').trim();\n\nconst config = (() => {\n  try { return $('Конфигурация авто-генератора').first().json; } catch (_) {\n    return { promptFinalOpinionSystem: 'Ты — агент Итоговое мнение. Исправь команду. Отвечай JSON: {\"prompt\": \"...\"}' };\n  }\n})();\n\nconst errorText = (() => {\n  try { return $('Валидируем ответ').first().json.error; } catch (_) { return ''; }\n})();\n\nconst rawAgentOutput = (() => {\n  try { return toText($('AI Agent').first().json.output); } catch (_) { return ''; }\n})();\n\nconst ctxInput = (() => {\n  try { return $('Формируем контекст для агента').first().json; } catch (_) { return {}; }\n})();\n\nconst completedPrompt = ctxInput.completedPrompt || '';\n\nconst systemPrompt = config.promptFinalOpinionSystem || 'Ты — агент Итоговое мнение. Исправь команду.';\n\nconst userPrompt = `История последней задачи:\\nКоманда: ${completedPrompt}\\n\\nПредыдущий AI-агент предложил:\\n${rawAgentOutput}\\n\\nОшибка валидации:\\n${errorText}\\n\\nИсправь команду. Выдай СТРОГО JSON: {\"prompt\": \"...\"}`;\n\nreturn {\n  json: {\n    prompt: systemPrompt + '\\n\\n' + userPrompt\n  }\n};"
+      },
+      "id": "build-final-context",
+      "name": "Формируем контекст для ИМ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        364
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}"
+      },
+      "id": "ai-final-opinion",
+      "name": "AI Agent (Итоговое мнение)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -240,
+        364
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const toText = (v) => String(v ?? '').trim();\n\nlet rawOutput = {};\ntry { rawOutput = $('AI Agent (Итоговое мнение)').first().json; } catch (_) {}\nconst content = toText(rawOutput.output ?? rawOutput.text ?? '');\n\nif (!content) {\n  return { json: { error: 'Итоговое мнение вернуло пустой ответ' } };\n}\n\nfunction extractJson(text) {\n  const stripped = text.replace(/```(?:json)?\\n?/g, '').replace(/```/g, '').trim();\n  try { return JSON.parse(stripped); } catch (_) {}\n  const start = text.indexOf('{');\n  if (start === -1) return null;\n  let depth = 0, inString = false, escape = false;\n  for (let i = start; i < text.length; i++) {\n    const ch = text[i];\n    if (escape) { escape = false; continue; }\n    if (ch === '\\\\') { escape = true; continue; }\n    if (ch === '\"') { inString = !inString; continue; }\n    if (inString) continue;\n    if (ch === '{') depth++;\n    if (ch === '}') {\n      depth--;\n      if (depth === 0) {\n        try { return JSON.parse(text.slice(start, i + 1)); } catch (_) { return null; }\n      }\n    }\n  }\n  return null;\n}\n\nconst parsed = extractJson(content);\nif (!parsed) {\n  return { json: { error: 'Не удалось извлечь JSON из ответа Итогового мнения' } };\n}\n\nconst prompt = toText(parsed.prompt);\nif (!prompt) {\n  return { json: { error: 'Итоговое мнение не вернуло команду' } };\n}\n\nconst ctxInput = (() => {\n  try { return $('Формируем контекст для агента').first().json; } catch (_) { return {}; }\n})();\n\nreturn {\n  json: {\n    is_needs_input: false,\n    prompt,\n    lastTaskKey: ctxInput.lastTaskKey || '',\n    chatId: ctxInput.chatId || ''\n  }\n};"
+      },
+      "id": "extract-final-result",
+      "name": "Формируем результат ИМ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        364
+      ]
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-pro",
+        "options": {}
+      },
+      "id": "ds-model-im",
+      "name": "DeepSeek Chat Model (Итоговое мнение)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -168,
+        588
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "__DEEPSEEK_CREDENTIAL_ID__",
+          "name": "__DEEPSEEK_CREDENTIAL_NAME__"
         }
       }
     }
@@ -471,7 +567,7 @@
       "main": [
         [
           {
-            "node": "Есть ошибка?",
+            "node": "Это ошибка авто-генератора?",
             "type": "main",
             "index": 0
           }
@@ -531,6 +627,68 @@
           {
             "node": "Уведомляем о новой задаче",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Это ошибка авто-генератора?": {
+      "main": [
+        [
+          {
+            "node": "Формируем контекст для ИМ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Есть ошибка?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Формируем контекст для ИМ": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (Итоговое мнение)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (Итоговое мнение)": {
+      "main": [
+        [
+          {
+            "node": "Формируем результат ИМ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Формируем результат ИМ": {
+      "main": [
+        [
+          {
+            "node": "Есть ошибка?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model (Итоговое мнение)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (Итоговое мнение)",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
