@@ -751,7 +751,11 @@ recover_existing_configuration() {
   ensure_env_default TZ UTC
   ensure_env_boolean_default ENABLE_CADDY_PROXY false
   ensure_env_default N8N_PORT 5678
-  ensure_env_default N8N_VERSION 2.21.7
+  ensure_env_default N8N_VERSION 2.28.5
+  if [ "${N8N_VERSION}" = "2.21.7" ]; then
+    upsert_env_value N8N_VERSION 2.28.5
+    log_ok 'N8N_VERSION обновлён с 2.21.7 до 2.28.5'
+  fi
   ensure_env_default N8N_PROXY_HOPS 1
   ensure_env_default N8N_CONCURRENCY_PRODUCTION_LIMIT 4
   ensure_env_default N8N_WORKER_CONCURRENCY 2
