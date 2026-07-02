@@ -188,7 +188,7 @@ while IFS= read -r repo; do
   fi
 
   git -C "${repo_dir}" remote set-url origin "${repo_url}"
-  git -C "${repo_dir}" fetch "${auth_url}" --all --prune || true
+  git -C "${repo_dir}" fetch "${auth_url}" --prune || true
   git -C "${repo_dir}" checkout "${repo_ref}" || true
   git -C "${repo_dir}" pull --ff-only "${auth_url}" "${repo_ref}" || true
 
