@@ -63,7 +63,7 @@
       "typeVersion": 1.1,
       "position": [
         224,
-        320
+        288
       ]
     },
     {
@@ -140,7 +140,7 @@
       "typeVersion": 3.4,
       "position": [
         448,
-        320
+        288
       ]
     },
     {
@@ -154,7 +154,7 @@
       "typeVersion": 2,
       "position": [
         672,
-        320
+        288
       ]
     },
     {
@@ -191,7 +191,7 @@
       "typeVersion": 4.2,
       "position": [
         896,
-        320
+        288
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -207,13 +207,13 @@
       "typeVersion": 2,
       "position": [
         1120,
-        320
+        288
       ]
     },
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Формируем промпт верификации для OpenCode с защитой от переполнения.\n\nconst MAX_SECTION = 5000\nconst trunc = (s) => {\n  const str = String(s || '').trim()\n  return str.length > MAX_SECTION ? str.slice(0, MAX_SECTION) + '\\n... [TRUNCATED]' : str\n}\n\nconst input = $('Нормализуем ответ сессии').item.json\n\nconst verifyPrompt = `VERIFICATION TASK — you MUST perform a THOROUGH, REAL verification. You CANNOT skip steps. You CANNOT guess. You MUST produce actual evidence.\n\nORIGINAL TASK:\n${trunc(input.originalPrompt)}\n\nACCEPTANCE CRITERIA (verify EVERY point — no exceptions):\n${trunc(input.acceptanceCriteria)}\n\nWHAT WAS DONE (result of execution):\n${trunc(input.resultText)}\n\n═══════════════════════════════════════\nMANDATORY VERIFICATION CHECKLIST\n═══════════════════════════════════════\n\nYou MUST complete EVERY checkpoint below. After each checkpoint, include the ACTUAL output/evidence in your response. If you skip a checkpoint, the verdict is automatically FAILED. If any tool returns an error, report it honestly \u2014 do NOT fabricate success.\n\n\u250c\u2500 CHECKPOINT 1: CODE & BUILD HEALTH \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u2502\n\u2502 1a. Use bash to run the project\u0027s lint command (npm run lint, ruff, etc).\n\u2502     \u2192 Paste the ACTUAL lint output.\n\u2502\n\u2502 1b. Use bash to run typecheck (tsc --noEmit, npm run typecheck, mypy, etc).\n\u2502     \u2192 Paste the ACTUAL typecheck output.\n\u2502\n\u2502 1c. Use bash to run the test suite (npm test, pytest, cargo test, etc).\n\u2502     \u2192 Paste the ACTUAL test results (pass/fail counts, any failures).\n\u2502\n\u2502 1d. Use bash to run: git diff HEAD~1 --stat\n\u2502     \u2192 List the files that were changed.\n\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n\u250c\u2500 CHECKPOINT 2: APPLICATION LOGS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u2502\n\u2502 2a. Run: docker ps --format \u0022table {{.Names}}\\\\t{{.Status}}\u0022\n\u2502     \u2192 List ALL running containers.\n\u2502\n\u2502 2b. For EVERY running container:\n\u2502     docker logs --tail 100 <container-name> 2>&1\n\u2502     \u2192 Paste the logs. Look for: errors, exceptions, warnings,\n\u2502       stack traces, segfaults, OOM, connection refused, timeouts.\n\u2502\n\u2502 2c. If the project has log files (logs/*.log, *.log, etc):\n\u2502     Read the last 50 lines of each log file.\n\u2502     \u2192 Paste the log content. Flag any ERROR or WARN lines.\n\u2502\n\u2502 2d. If the project is NOT running in Docker:\n\u2502     Check for running processes (ps aux | grep <project>),\n\u2502     check system logs (journalctl, /var/log, etc).\n\u2502     \u2192 Paste relevant output.\n\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n\u250c\u2500 CHECKPOINT 3: RUNTIME BEHAVIOR (if criteria mention URL/browser/API)\n\u2502\n\u2502 3a. Ensure the project is running (docker compose up -d or equivalent).\n\u2502     \u2192 Confirm containers/services are up.\n\u2502\n\u2502 3b. Use curl to hit the relevant API endpoints.\n\u2502     \u2192 Paste the HTTP status code and response body.\n\u2502\n\u2502 3c. If browser interaction is required:\n\u2502     Use Playwright MCP to:\n\u2502     - Navigate to the specified URL\n\u2502     - Perform ALL user actions described in criteria (click, type, submit)\n\u2502     - Verify the expected UI elements appear\n\u2502     - Capture browser CONSOLE LOGS (errors, warnings, console.error)\n\u2502     - Capture NETWORK errors (failed requests, 4xx, 5xx)\n\u2502     \u2192 Paste the console log output.\n\u2502     \u2192 Paste the page text content at each verification point.\n\u2502\n\u2502 3d. After browser/API interaction, RE-CHECK docker logs again\n\u2502     for any NEW errors that appeared during the session.\n\u2502     \u2192 Paste any new errors found.\n\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n\u250c\u2500 CHECKPOINT 4: CRITERIA-BY-CRITERIA VERIFICATION \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u2502\n\u2502 Go through EACH acceptance criterion ONE BY ONE:\n\u2502\n\u2502   Criterion: \u0022<paste the exact criterion>\u0022\n\u2502   Evidence:  \u0022<what you observed, with specific values/URLs/output>\u0022\n\u2502   Verdict:   PASS or FAIL\n\u2502   Reason:    \u0022<why it passed or failed, be specific>\u0022\n\u2502\n\u2502 Do this for EVERY criterion. Leave none unchecked.\n\u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n═══════════════════════════════════════\nFINAL VERDICT\n═══════════════════════════════════════\n\nBased on ALL evidence collected above, output EXACTLY:\n\nVERIFICATION: PASSED\n\nISSUES: none\n\nOR\n\nVERIFICATION: FAILED\n\nISSUES:\n- <specific issue 1 \u2014 what failed, where, how to reproduce>\n- <specific issue 2>\n- ...\n\nCRITICAL RULES:\n\u2022 You CANNOT return PASSED if you skipped any checkpoint\n\u2022 You CANNOT return PASSED if lint/typecheck/tests have errors\n\u2022 You CANNOT return PASSED if logs contain errors related to the changes\n\u2022 You CANNOT return PASSED if any acceptance criterion is not met\n\u2022 You MUST include evidence for every claim you make\n\u2022 Do NOT change code \u2014 you are a VERIFIER, not a fixer\n\nBEGIN VERIFICATION NOW. Start with CHECKPOINT 1.`\n\nreturn {\n  json: {\n    sessionId: input.sessionId,\n    taskKey: input.taskKey,\n    chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    workerAlias: input.workerAlias,\n    workerBaseUrl: input.workerBaseUrl,\n    authorizationHeader: input.authorizationHeader,\n    sessionStatusPath: input.sessionStatusPath,\n    messageListPath: input.messageListPath,\n    promptAsyncPath: input.promptAsyncPath,\n    verifyPrompt,\n  },\n}"
+        "jsCode": "// Формируем промпт верификации для OpenCode с защитой от переполнения.\n\nconst MAX_SECTION = 5000\nconst trunc = (s) => {\n  const str = String(s || '').trim()\n  return str.length > MAX_SECTION ? str.slice(0, MAX_SECTION) + '\\n... [TRUNCATED]' : str\n}\n\nconst input = $('Нормализуем ответ сессии').item.json\n\nconst verifyPrompt = `VERIFICATION TASK — you MUST perform a THOROUGH, REAL verification. You CANNOT skip steps. You CANNOT guess. You MUST produce actual evidence.\n\nORIGINAL TASK:\n${trunc(input.originalPrompt)}\n\nACCEPTANCE CRITERIA (verify EVERY point — no exceptions):\n${trunc(input.acceptanceCriteria)}\n\nWHAT WAS DONE (result of execution):\n${trunc(input.resultText)}\n\n═══════════════════════════════════════\nMANDATORY VERIFICATION CHECKLIST\n═══════════════════════════════════════\n\nYou MUST complete EVERY checkpoint below. After each checkpoint, include the ACTUAL output/evidence in your response. If you skip a checkpoint, the verdict is automatically FAILED. If any tool returns an error, report it honestly — do NOT fabricate success.\n\n┌─ CHECKPOINT 1: CODE & BUILD HEALTH ───────────────────────────────\n│\n│ 1a. Use bash to run the project's lint command (npm run lint, ruff, etc).\n│     → Paste the ACTUAL lint output.\n│\n│ 1b. Use bash to run typecheck (tsc --noEmit, npm run typecheck, mypy, etc).\n│     → Paste the ACTUAL typecheck output.\n│\n│ 1c. Use bash to run the test suite (npm test, pytest, cargo test, etc).\n│     → Paste the ACTUAL test results (pass/fail counts, any failures).\n│\n│ 1d. Use bash to run: git diff HEAD~1 --stat\n│     → List the files that were changed.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 2: APPLICATION LOGS ────────────────────────────────────\n│\n│ 2a. Run: docker ps --format \"table {{.Names}}\\\\t{{.Status}}\"\n│     → List ALL running containers.\n│\n│ 2b. For EVERY running container:\n│     docker logs --tail 100 <container-name> 2>&1\n│     → Paste the logs. Look for: errors, exceptions, warnings,\n│       stack traces, segfaults, OOM, connection refused, timeouts.\n│\n│ 2c. If the project has log files (logs/*.log, *.log, etc):\n│     Read the last 50 lines of each log file.\n│     → Paste the log content. Flag any ERROR or WARN lines.\n│\n│ 2d. If the project is NOT running in Docker:\n│     Check for running processes (ps aux | grep <project>),\n│     check system logs (journalctl, /var/log, etc).\n│     → Paste relevant output.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 3: RUNTIME BEHAVIOR (if criteria mention URL/browser/API)\n│\n│ 3a. Ensure the project is running (docker compose up -d or equivalent).\n│     → Confirm containers/services are up.\n│\n│ 3b. Use curl to hit the relevant API endpoints.\n│     → Paste the HTTP status code and response body.\n│\n│ 3c. If browser interaction is required:\n│     Use Playwright MCP to:\n│     - Navigate to the specified URL\n│     - Perform ALL user actions described in criteria (click, type, submit)\n│     - Verify the expected UI elements appear\n│     - Capture browser CONSOLE LOGS (errors, warnings, console.error)\n│     - Capture NETWORK errors (failed requests, 4xx, 5xx)\n│     → Paste the console log output.\n│     → Paste the page text content at each verification point.\n│\n│ 3d. After browser/API interaction, RE-CHECK docker logs again\n│     for any NEW errors that appeared during the session.\n│     → Paste any new errors found.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 4: CRITERIA-BY-CRITERIA VERIFICATION ────────\n│\n│ Go through EACH acceptance criterion ONE BY ONE:\n│\n│   Criterion: \"<paste the exact criterion>\"\n│   Evidence:  \"<what you observed, with specific values/URLs/output>\"\n│   Verdict:   PASS or FAIL\n│   Reason:    \"<why it passed or failed, be specific>\"\n│\n│ Do this for EVERY criterion. Leave none unchecked.\n│\n└─────────────────────────────────────────────────────────\n\n═══════════════════════════════════════\nFINAL VERDICT\n═══════════════════════════════════════\n\nBased on ALL evidence collected above, output EXACTLY:\n\nVERIFICATION: PASSED\n\nISSUES: none\n\nOR\n\nVERIFICATION: FAILED\n\nISSUES:\n- <specific issue 1 — what failed, where, how to reproduce>\n- <specific issue 2>\n- ...\n\nCRITICAL RULES:\n• You CANNOT return PASSED if you skipped any checkpoint\n• You CANNOT return PASSED if lint/typecheck/tests have errors\n• You CANNOT return PASSED if logs contain errors related to the changes\n• You CANNOT return PASSED if any acceptance criterion is not met\n• You MUST include evidence for every claim you make\n• Do NOT change code — you are a VERIFIER, not a fixer\n\nBEGIN VERIFICATION NOW. Start with CHECKPOINT 1.`\n\nreturn {\n  json: {\n    sessionId: input.sessionId,\n    taskKey: input.taskKey,\n    chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    workerAlias: input.workerAlias,\n    workerBaseUrl: input.workerBaseUrl,\n    authorizationHeader: input.authorizationHeader,\n    sessionStatusPath: input.sessionStatusPath,\n    messageListPath: input.messageListPath,\n    promptAsyncPath: input.promptAsyncPath,\n    verifyPrompt,\n  },\n}"
       },
       "id": "build-verify-prompt",
       "name": "Формируем промпт верификации",
@@ -221,7 +221,7 @@
       "typeVersion": 2,
       "position": [
         1344,
-        320
+        288
       ]
     },
     {
@@ -258,7 +258,7 @@
       "typeVersion": 4.2,
       "position": [
         1568,
-        320
+        288
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -275,7 +275,7 @@
       "typeVersion": 1.1,
       "position": [
         1792,
-        320
+        288
       ]
     },
     {
@@ -305,7 +305,7 @@
       "typeVersion": 4.2,
       "position": [
         2016,
-        320
+        208
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -321,7 +321,7 @@
       "typeVersion": 2,
       "position": [
         2240,
-        320
+        208
       ]
     },
     {
@@ -363,7 +363,7 @@
       "typeVersion": 2.2,
       "position": [
         2464,
-        320
+        288
       ]
     },
     {
@@ -393,7 +393,7 @@
       "typeVersion": 4.2,
       "position": [
         2688,
-        320
+        288
       ],
       "alwaysOutputData": true,
       "onError": "continueRegularOutput"
@@ -409,7 +409,7 @@
       "typeVersion": 2,
       "position": [
         2912,
-        320
+        288
       ]
     },
     {
@@ -436,7 +436,7 @@
       "typeVersion": 3.4,
       "position": [
         3136,
-        320
+        288
       ]
     },
     {
@@ -449,8 +449,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        3424,
-        544
+        3440,
+        512
       ],
       "credentials": {
         "deepSeekApi": {
@@ -473,7 +473,7 @@
       "typeVersion": 3.1,
       "position": [
         3360,
-        320
+        288
       ]
     },
     {
@@ -486,8 +486,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3584,
-        320
+        3712,
+        288
       ]
     },
     {
@@ -519,8 +519,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3808,
-        320
+        3936,
+        288
       ]
     },
     {
@@ -533,7 +533,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4032,
+        4160,
         208
       ]
     },
@@ -571,7 +571,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        4256,
+        4384,
         208
       ],
       "alwaysOutputData": true
@@ -590,7 +590,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4480,
+        4608,
         208
       ],
       "credentials": {
@@ -610,8 +610,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4480,
-        320
+        4832,
+        288
       ]
     }
   ],
