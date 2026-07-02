@@ -25,6 +25,17 @@
 - `docker-manage` — Manage Docker containers and check logs
 - `code-review` — Review code for bugs and quality (use before committing)
 - `test-workflow` — Run and analyze test suites
+- `ast-grep` — AST-aware code search and rewriting (use instead of grep for code)
+- `git-master` — Atomic commits, surgical rebases, bisect debugging
+- `review-work` — Post-implementation review against plan
+- `remove-ai-slops` — Clean AI-generated code smells from recent changes
+- `frontend` — Design-first UI with a11y, responsive, state handling
+- `api-testing` — Test REST + GraphQL endpoints
+- `security-audit` — OWASP Top 10 + CVE scan + secret detection
+- `dependency-audit` — CVE/vuln/outdated/license check
+- `performance-profile` — CPU/memory/N+1/bundle analysis
+- `deployment-verify` — Pre/deploy/post verification + rollback
+- `schema-migration` — Database migration review and safety checks
 
 ## Project conventions
 - Workspace root is at /workspace

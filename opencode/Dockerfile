@@ -37,6 +37,7 @@ RUN mkdir -p /usr/local/lib/docker/cli-plugins \
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN npm install -g \
+  @ast-grep/cli \
   @biomejs/biome \
   eslint \
   jest \
