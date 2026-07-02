@@ -229,6 +229,9 @@ install -m 0644 "${TEMPLATE_ROOT}/verify.md" "${WORKSPACE_ROOT}/.opencode/comman
 install -m 0644 "${TEMPLATE_ROOT}/docker-up.md" "${WORKSPACE_ROOT}/.opencode/commands/docker-up.md"
 install -m 0644 "${TEMPLATE_ROOT}/repair.md" "${WORKSPACE_ROOT}/.opencode/commands/repair.md"
 install -m 0644 "${TEMPLATE_ROOT}/bootstrap-repo.md" "${WORKSPACE_ROOT}/.opencode/commands/bootstrap-repo.md"
+install -m 0644 "${TEMPLATE_ROOT}/review.md" "${WORKSPACE_ROOT}/.opencode/commands/review.md"
+install -m 0644 "${TEMPLATE_ROOT}/debug.md" "${WORKSPACE_ROOT}/.opencode/commands/debug.md"
+install -m 0644 "${TEMPLATE_ROOT}/deploy.md" "${WORKSPACE_ROOT}/.opencode/commands/deploy.md"
 
 # Skills — on-demand reusable instructions for agents
 mkdir -p "${CONFIG_DIR}/skills"
@@ -268,6 +271,10 @@ fi
 
 if [ ! -f "${CONFIG_DIR}/agents/reviewer.md" ]; then
   install -m 0644 "${TEMPLATE_ROOT}/reviewer.md" "${CONFIG_DIR}/agents/reviewer.md"
+fi
+
+if [ ! -f "${CONFIG_DIR}/agents/security-auditor.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/security-auditor.md" "${CONFIG_DIR}/agents/security-auditor.md"
 fi
 
 if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
