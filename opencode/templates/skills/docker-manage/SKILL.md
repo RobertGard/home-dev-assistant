@@ -46,6 +46,12 @@ docker compose restart <service-name>
 # Rebuild and restart
 docker compose up -d --build <service-name>
 
+# Lint Dockerfile
+hadolint Dockerfile
+
+# Lint all Dockerfiles in project
+find . -name 'Dockerfile*' -exec hadolint {} \; 2>&1
+
 # Check resource usage
 docker stats --no-stream
 

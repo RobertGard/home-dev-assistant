@@ -36,7 +36,10 @@ metadata:
 npm audit --audit-level=high
 # or: pip-audit, cargo audit, bundle audit
 
-# Check for secrets in code
+# Secret detection (preferred: gitleaks)
+gitleaks detect --source . --verbose 2>&1
+
+# Fallback if gitleaks unavailable: grep patterns
 git log --all -p | grep -iE '(password|secret|token|api[_-]?key|private[_-]?key)'
 
 # Check git history for committed secrets

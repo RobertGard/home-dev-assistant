@@ -95,6 +95,14 @@ git reset --soft HEAD~1
 
 # Undo last commit, discard changes
 git reset --hard HEAD~1
+
+# Structural diff (use delta for readable output)
+git diff | delta
+git diff HEAD~3..HEAD | delta
+git show HEAD | delta
+
+# Side-by-side diff
+delta --side-by-side <(git diff HEAD~1)
 ```
 
 ## PR cleanup checklist
