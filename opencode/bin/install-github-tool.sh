@@ -48,10 +48,7 @@ install_one() {
     *.tar.gz|*.tgz|*.tar.bz2|*.tar.xz|*.tar)
       local tmp_dir
       tmp_dir="$(mktemp -d)"
-      curl -fsSL "${url}" | tar x${url##*.tar} -C "${tmp_dir}" 2>/dev/null || {
-        curl -fsSL "${url}" | tar x -C "${tmp_dir}" 2>/dev/null
-      }
-      # find the binary in the extracted files
+      curl -fsSL "${url}" | tar x -C "${tmp_dir}" 2>/dev/null
       local found
       found="$(find "${tmp_dir}" -type f -name "${bin}" | head -1)"
       [ -n "${found}" ] && install -m 0755 "${found}" "${dest}"
