@@ -1,13 +1,14 @@
 ---
-description: Deployment verification — check health, logs, endpoints, and rollback plan
-agent: build
+description: Deployment management — deploy to cloud platforms, verify health, rollback if needed
+agent: release-manager
 subtask: true
 ---
 
-Use the deployment-verify skill:
-1. PRE: verify tests pass, build succeeds, no pending migrations
-2. DEPLOY: rebuild containers, check health, verify startup logs
-3. POST: smoke test endpoints, watch logs for errors
-4. ROLLBACK: confirm rollback plan and commands
+Use the cloud-deploy skill:
+1. TARGET: identify deployment target (Docker Compose primary)
+2. PRE-FLIGHT: verify build passes, tests green, migration safety
+3. DEPLOY: execute platform-specific deploy command
+4. VERIFY: health checks, smoke tests, SSL, environment variables
+5. MONITOR: watch logs for 2 minutes post-deploy, detect error spikes
 
-Report: deployment status, any errors found, rollback readiness.
+Report: deployment URL, verification results, rollback availability, post-deploy health.

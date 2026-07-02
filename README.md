@@ -15,6 +15,13 @@ Self-hosted AI development assistant: submit a task in Telegram, n8n dispatches 
 - **Natural language commands** — type requests in plain language; an AI translator converts them to structured commands with proper flags
 - **Fully self-hosted** — no cloud services, all data under your control
 - **Batteries included** — PostgreSQL, Redis, n8n, Caddy (HTTPS) — one `bash setup-stack.sh` and you're ready
+- **CI/CD integration** — trigger pipelines, check build status, diagnose failures, manage releases from Telegram (`/ci`, `/release`)
+- **Database tools** — explore schemas, analyze queries, review migrations, generate seed data (`/db`)
+- **Observability** — log analysis, error pattern detection, incident reports, health monitoring
+- **Smart testing** — run only affected tests by changed files, detect flaky tests
+- **Docker deployment** — deploy, verify health, check logs, rollback via `/deploy`
+- **9 specialist agents** — planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent
+- **16 built-in skills** — from code review and performance profiling to CI/CD automation and Docker deployment
 
 ## Requirements
 
@@ -123,6 +130,40 @@ Telegram → n8n ingress → Data Table → n8n dispatcher → OpenCode worker �
 
 **n8n Workflows (8):** ingress, dispatcher, session-manager, task-launcher, pending-interaction, task-finalizer, auto-task-generator, acceptance-verifier
 
+## Specialist agents
+
+8 specialized agents, each with role-based permissions and domain-specific system prompts:
+
+| Agent | Role | Permissions |
+|-------|------|-------------|
+| `build` | General-purpose coder | Full read/write/bash |
+| `planner` | Design & architecture | Read-only, no edits |
+| `reviewer` | Code review | Read-only, no edits |
+| `verifier` | Acceptance verification | Read-only, bash allowed |
+| `security-auditor` | OWASP + CVE scan | Read-only, limited bash |
+| `ci-cd-agent` | Pipeline management | Read-only, `gh` CLI allowed |
+| `db-analyst` | Database analysis | Read-only, DB introspection allowed |
+| `observability-agent` | Log analysis & monitoring | Read-only, log inspection allowed |
+| `release-manager` | Versioning & deployment | Version files only |
+
+## CI/CD & Deployment
+
+| Command | Description |
+|---------|-------------|
+| `/ci` | Check CI runs for current branch. Trigger workflow, diagnose failures |
+| `/release` | Version bump, changelog generation, deployment coordination |
+| `/deploy` | Deploy to target platform. Verify health, prepare rollback |
+
+Supported deployment: Docker Compose. For cloud platforms — install via `npx skills add`.
+
+## Database management
+
+| Command | Description |
+|---------|-------------|
+| `/db` | Explore schema, analyze slow queries, review migration safety, generate seed data |
+
+Supports PostgreSQL, MySQL, SQLite, MongoDB. Integrated with Prisma, TypeORM, Knex, Alembic, Django ORM.
+
 ## Worker configuration
 
 Created by the setup script at `workers/<name>/config.json`:
@@ -171,6 +212,7 @@ Created from `.env.example`. Key sections:
 | API keys | `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `GITHUB_TOKEN` |
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
 | OpenCode | `OPENCODE_AGENT`, `OPENCODE_MODEL`, `OPENCODE_PROVIDER_TIMEOUT_MS` |
+| CI/CD | `GITHUB_REPOSITORY`, `GITLAB_TOKEN` |
 
 ## Operations
 

@@ -11,6 +11,6 @@ Review recent changes focusing on:
 4. Performance — N+1, memory, unnecessary ops
 5. Style — conventions, types, dead code
 
-Use the code-review skill for the full checklist.
+Use the grill-me skill (from skills.sh) and requesting-code-review skill (from skills.sh) for the full checklist.
 Report issues by severity: CRITICAL, WARNING, INFO.
 Do NOT modify code — review only.

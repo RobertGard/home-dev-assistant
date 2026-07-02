@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
   bat \
   bash \
+  bc \
   build-essential \
   ca-certificates \
   curl \
@@ -14,13 +15,16 @@ RUN apt-get update && apt-get install -y \
   fzf \
   git \
   gh \
+  gnupg \
   gosu \
   hyperfine \
   jq \
   just \
   make \
+  mysql-client \
   openssh-client \
   passwd \
+  postgresql-client \
   procps \
   python3 \
   python3-pip \
@@ -32,11 +36,20 @@ RUN apt-get update && apt-get install -y \
   tree \
   unzip \
   vim-tiny \
+  wget \
   yamllint \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /usr/local/lib/docker/cli-plugins \
   && ln -sf /usr/bin/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
+
+COPY bin/install-github-tool.sh /opt/opencode/bin/
+RUN bash /opt/opencode/bin/install-github-tool.sh \
+    'hadolint/hadolint|hadolint|hadolint-Linux-x86_64' \
+    'dandavison/delta|delta|git-delta_amd64.deb' \
+    'xo/usql|usql|usql-linux-amd64' \
+    'rhysd/actionlint|actionlint|actionlint_linux_amd64.tar.gz' \
+    'gitleaks/gitleaks|gitleaks|gitleaks_linux_amd64.tar.gz'
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN npm install -g \

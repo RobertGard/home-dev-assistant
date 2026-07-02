@@ -24,11 +24,15 @@ export const InjectEnvPlugin = async () => {
         "GITHUB_TOKEN",
         "NPM_TOKEN",
         "CI",
-        "TZ"
+        "TZ",
+        "FIRECRAWL_API_KEY",
+        "BRAVE_API_KEY",
+        "DATABASE_URL"
       ]
 
       for (const key of allowlist) {
-        if (process.env[key]) output.env[key] = process.env[key]
+        const val = process.env[key]
+        if (val && val.length > 0) output.env[key] = val
       }
     },
   }
@@ -239,6 +243,12 @@ install -m 0644 "${TEMPLATE_ROOT}/deploy.md" "${WORKSPACE_ROOT}/.opencode/comman
 install -m 0644 "${TEMPLATE_ROOT}/security.md" "${WORKSPACE_ROOT}/.opencode/commands/security.md"
 install -m 0644 "${TEMPLATE_ROOT}/perf.md" "${WORKSPACE_ROOT}/.opencode/commands/perf.md"
 install -m 0644 "${TEMPLATE_ROOT}/deps.md" "${WORKSPACE_ROOT}/.opencode/commands/deps.md"
+install -m 0644 "${TEMPLATE_ROOT}/ci.md" "${WORKSPACE_ROOT}/.opencode/commands/ci.md"
+install -m 0644 "${TEMPLATE_ROOT}/db.md" "${WORKSPACE_ROOT}/.opencode/commands/db.md"
+install -m 0644 "${TEMPLATE_ROOT}/release.md" "${WORKSPACE_ROOT}/.opencode/commands/release.md"
+install -m 0644 "${TEMPLATE_ROOT}/ship.md" "${WORKSPACE_ROOT}/.opencode/commands/ship.md"
+install -m 0644 "${TEMPLATE_ROOT}/brainstorm.md" "${WORKSPACE_ROOT}/.opencode/commands/brainstorm.md"
+install -m 0644 "${TEMPLATE_ROOT}/skills.md" "${WORKSPACE_ROOT}/.opencode/commands/skills.md"
 
 # Skills — on-demand reusable instructions for agents
 mkdir -p "${CONFIG_DIR}/skills"
@@ -265,6 +275,26 @@ if [ ! -f "${CONFIG_DIR}/agents/security-auditor.md" ]; then
   install -m 0644 "${TEMPLATE_ROOT}/security-auditor.md" "${CONFIG_DIR}/agents/security-auditor.md"
 fi
 
+if [ ! -f "${CONFIG_DIR}/agents/ci-cd-agent.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/ci-cd-agent.md" "${CONFIG_DIR}/agents/ci-cd-agent.md"
+fi
+
+if [ ! -f "${CONFIG_DIR}/agents/db-analyst.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/db-analyst.md" "${CONFIG_DIR}/agents/db-analyst.md"
+fi
+
+if [ ! -f "${CONFIG_DIR}/agents/observability-agent.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/observability-agent.md" "${CONFIG_DIR}/agents/observability-agent.md"
+fi
+
+if [ ! -f "${CONFIG_DIR}/agents/release-manager.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/release-manager.md" "${CONFIG_DIR}/agents/release-manager.md"
+fi
+
+if [ ! -f "${CONFIG_DIR}/agents/ralph-loop-agent.md" ]; then
+  install -m 0644 "${TEMPLATE_ROOT}/ralph-loop-agent.md" "${CONFIG_DIR}/agents/ralph-loop-agent.md"
+fi
+
 if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
   cat > "${WORKSPACE_ROOT}/AGENTS.md" <<EOF
 # ${INSTANCE_NAME}
@@ -275,6 +305,10 @@ if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
 - Docker access is provided through the mounted host socket.
 - Do not read .env files unless the operator explicitly asks for it.
 - Prefer .opencode/commands for repeatable verification, bootstrap, and Docker workflows.
+- Specialized agents available: planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent
+- Ship workflow: use /ship to run quality gates → commit → push → PR in one command
+- Dynamic skills: use /skills to discover and install skills from skills.sh at runtime
+- Code quality: follow the mandatory Code Quality Standards in global rules — professional, flexible, DRY, no hardcoding, documented, pattern-based
 EOF
 fi
 
