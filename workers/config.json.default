@@ -43,8 +43,7 @@
     // после установки всех пакетов
     "post_install": [
       "serena init",
-      "npx playwright install chromium",
-      "docker pull ghcr.io/github/github-mcp-server:latest 2>/dev/null || true"
+      "npx playwright install chromium"
     ]
   }
 }
