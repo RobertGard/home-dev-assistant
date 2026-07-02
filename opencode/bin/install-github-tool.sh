@@ -8,26 +8,27 @@ set -euo pipefail
 #   install-github-tool.sh 'hadolint/hadolint|hadolint|hadolint-Linux-x86_64'
 #   install-github-tool.sh 'dandavison/delta|delta|git-delta_.*_amd64\.deb'
 #   install-github-tool.sh 'direct|mytool|mytool|https://cdn.example.com/mytool'
+#
+# Format: <repo>|<binary>|<asset-pattern>
+#   repo:               owner/repo (GitHub default)
+#   repo prefix:         github:owner/repo, gitlab:owner/repo, direct:URL
 
 install_one() {
   local spec="$1"
-  local source repo bin pattern direct_url url
+  local repo bin pattern url
 
-  IFS='|' read -r source repo bin pattern direct_url <<< "${spec}"
+  IFS='|' read -r repo bin pattern <<< "${spec}"
   local dest="/usr/local/bin/${bin}"
 
-  # --- resolve download URL ---
-  if [ -n "${direct_url}" ]; then
-    url="${direct_url}"
-  elif [[ "${source}" == gitlab:* ]]; then
-    repo="${source#gitlab:}"
+  # --- resolve source and download URL ---
+  if [[ "${repo}" == gitlab:* ]]; then
+    repo="${repo#gitlab:}"
     url="https://gitlab.com/${repo}/-/releases/permalink/latest/downloads/${pattern}"
-  elif [[ "${source}" == direct:* ]]; then
-    url="${source#direct:}"
+  elif [[ "${repo}" == direct:* ]]; then
+    url="${repo#direct:}"
   else
-    # default: github — resolve via API to handle versioned asset names
-    repo="${source#github:}"
-    [ "${repo}" = "${source}" ] && repo="${source}"
+    # default: GitHub — resolve via API to handle versioned asset names
+    repo="${repo#github:}"  # strip optional github: prefix
     printf '→ resolving %s from %s (pattern: %s)\n' "${bin}" "${repo}" "${pattern}"
 
     local api_url="https://api.github.com/repos/${repo}/releases/latest"
