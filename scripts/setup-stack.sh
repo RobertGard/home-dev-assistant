@@ -557,41 +557,38 @@ ask_model_id() {
 }
 
 write_routing_file() {
-  local i
-  {
-    printf '{\n'
-    printf '  "defaultAgent": "%s",\n' "$(json_escape "$OPENCODE_AGENT")"
-    printf '  "defaultModel": "%s",\n' "$(json_escape "$OPENCODE_MODEL")"
-    printf '  "defaultWorker": "%s",\n' "$(json_escape "${WORKER_ALIASES[0]}")"
-    printf '  "defaultVariant": "%s",\n' "$(json_escape "${OPENCODE_VARIANT:-max}")"
-    printf '  "workers": {\n'
-    for ((i = 0; i < ${#WORKER_NAMES[@]}; i++)); do
-      alias="${WORKER_ALIASES[$i]}"
-      service="${WORKER_SERVICES[$i]}"
-      printf '    "%s": {\n' "$(json_escape "$alias")"
-      printf '      "service": "%s",\n' "$(json_escape "$service")"
-      printf '      "alias": "%s",\n' "$(json_escape "$alias")"
-      printf '      "baseUrl": "http://%s:4096",\n' "$(json_escape "$service")"
-      printf '      "healthUrl": "http://%s:4096/global/health",\n' "$(json_escape "$service")"
-      printf '      "username": "opencode",\n'
-      printf '      "variant": "%s",\n' "$(json_escape "${OPENCODE_VARIANT:-max}")"
-      printf '      "passwordEnv": "%s"\n' "$(json_escape "OPENCODE_WORKER_${service##opencode-worker-}_PASSWORD")"
-      if [ "$i" -lt $((${#WORKER_NAMES[@]} - 1)) ]; then
-        printf '    },\n'
-      else
-        printf '    }\n'
-      fi
-    done
-    printf '  },\n'
-    printf '  "endpoints": '
-    if [ -f "$ENDPOINTS_JSON" ]; then
-      jq '.' "$ENDPOINTS_JSON"
-    else
-      printf '{}\n'
-      printf 'warn: endpoints file not found: %s\n' "$ENDPOINTS_JSON" >&2
-    fi
-    printf '\n'
-  } >"$ROUTING_JSON"
+  local i workers_json endpoints_json
+  workers_json="{}"
+  for ((i = 0; i < ${#WORKER_NAMES[@]}; i++)); do
+    local alias="${WORKER_ALIASES[$i]}"
+    local service="${WORKER_SERVICES[$i]}"
+    local pwd_env="OPENCODE_WORKER_${service##opencode-worker-}_PASSWORD"
+    workers_json="$(printf '%s' "$workers_json" | jq --arg alias "$alias" --arg service "$service" --arg pwd_env "$pwd_env" --arg variant "${OPENCODE_VARIANT:-max}" \
+      '.[$alias] = {service: $service, alias: $alias, baseUrl: "http://\($service):4096", healthUrl: "http://\($service):4096/global/health", username: "opencode", variant: $variant, passwordEnv: $pwd_env}')"
+  done
+
+  if [ -f "$ENDPOINTS_JSON" ]; then
+    endpoints_json="$(jq '.' "$ENDPOINTS_JSON")"
+  else
+    endpoints_json="{}"
+    printf 'warn: endpoints file not found: %s\n' "$ENDPOINTS_JSON" >&2
+  fi
+
+  jq -n \
+    --arg agent "${OPENCODE_AGENT:-build}" \
+    --arg model "${OPENCODE_MODEL:-}" \
+    --arg variant "${OPENCODE_VARIANT:-max}" \
+    --arg default_worker "${WORKER_ALIASES[0]}" \
+    --argjson workers "$workers_json" \
+    --argjson endpoints "$endpoints_json" \
+    '{
+      defaultAgent: $agent,
+      defaultModel: $model,
+      defaultWorker: $default_worker,
+      defaultVariant: $variant,
+      workers: $workers,
+      endpoints: $endpoints
+    }' >"$ROUTING_JSON"
 }
 
 configure_worker_repo() {
