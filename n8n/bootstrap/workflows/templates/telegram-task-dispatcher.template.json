@@ -113,7 +113,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Берём пакет данных текущего worker-а, который уже содержит только queued задачи\n// и количество активных задач этого worker-а.\nconst workerPackage = $('Готовим пакеты обработчиков').item.json\nconst queuedTasks = Array.isArray(workerPackage.queuedTasks) ? workerPackage.queuedTasks : []\nconst workerTasks = Array.isArray(workerPackage.workerTasks) ? workerPackage.workerTasks : []\n\n// Приоритет всегда у зависимых задач.\n// Если зависимых задач нет, берём самую раннюю обычную queued-задачу.\n// Зависимые задачи — только если родитель УЖЕ не в очереди (запущен/завершён)\nconst dependentTasks = queuedTasks.filter((task) => {\n  const parentKey = String(task.parent_task_key || '').trim()\n  if (!parentKey) return false\n  return !queuedTasks.some((t) => String(t.task_key || '').trim() === parentKey)\n})\nconst regularTasks = queuedTasks.filter((task) => !String(task.parent_task_key || '').trim())\nconst selectedTask = dependentTasks[0] || regularTasks[0] || null\n\nlet context = {}\ntry {\n  context = JSON.parse(String(selectedTask?.context_json || '{}'))\n} catch {\n  context = {}\n}\n\nconst chatId = String(selectedTask?.chat_id || '').trim()\nconst sessionHistory = workerTasks\n  .filter((task) => String(task.chat_id || '').trim() === chatId)\n  .filter((task) => String(task.session_id || '').trim())\n  .filter((task) => ['running', 'needs_input', 'done'].includes(String(task.status || '').trim()))\n\nconst latestSessionTask = sessionHistory[sessionHistory.length - 1] || null\nconst latestSessionId = String(latestSessionTask?.session_id || '').trim()\nconst newSessionRequested = Boolean(\n  context.newSessionRequested ||\n  context.flags?.['new-session'] ||\n  context.flags?.['new_session'] ||\n  context.flags?.['fresh-session'] ||\n  context.flags?.['fresh_session']\n)\n\nreturn {\n  json: {\n    task: selectedTask,\n    parentTaskKey: String(selectedTask?.parent_task_key || '').trim(),\n    parentMatchText: String(selectedTask?.parent_match_text || '').trim(),\n    promptText: String(selectedTask?.prompt || '').trim(),\n    latestSessionId,\n    createNewSession: newSessionRequested || !latestSessionId,\n  },\n}"
+        "jsCode": "// Берём пакет данных текущего worker-а, который уже содержит только queued задачи\n// и количество активных задач этого worker-а.\nconst workerPackage = $('Готовим пакеты обработчиков').item.json\nconst queuedTasks = Array.isArray(workerPackage.queuedTasks) ? workerPackage.queuedTasks : []\nconst workerTasks = Array.isArray(workerPackage.workerTasks) ? workerPackage.workerTasks : []\n\n// Приоритет всегда у зависимых задач.\n// Если зависимых задач нет, берём самую раннюю обычную queued-задачу.\n// Зависимые задачи — только если родитель УЖЕ не в очереди (запущен/завершён)\nconst dependentTasks = queuedTasks.filter((task) => {\n  const parentKey = String(task.parent_task_key || '').trim()\n  if (!parentKey) return false\n  return !queuedTasks.some((t) => String(t.task_key || '').trim() === parentKey)\n})\nconst regularTasks = queuedTasks.filter((task) => !String(task.parent_task_key || '').trim())\nconst selectedTask = dependentTasks[0] || regularTasks[0] || null\n\nlet context = {}\ntry {\n  context = JSON.parse(String(selectedTask?.context_json || '{}'))\n} catch {\n  context = {}\n}\n\nconst chatId = String(selectedTask?.chat_id || '').trim()\nconst sessionHistory = workerTasks\n  .filter((task) => String(task.chat_id || '').trim() === chatId)\n  .filter((task) => String(task.session_id || '').trim())\n  .filter((task) => ['running', 'needs_input', 'done'].includes(String(task.status || '').trim()))\n\nconst latestSessionTask = sessionHistory[sessionHistory.length - 1] || null\nconst latestSessionId = String(latestSessionTask?.session_id || '').trim()\nconst newSessionRequested = Boolean(\n  context.newSessionRequested ||\n  context.flags?.['new-session'] ||\n  context.flags?.['new_session'] ||\n  context.flags?.['fresh-session'] ||\n  context.flags?.['fresh_session']\n)\n\nreturn {\n  json: {\n    task: selectedTask,\n    parentTaskKey: String(selectedTask?.parent_task_key || '').trim(),\n    parentMatchText: String(selectedTask?.parent_match_text || '').trim(),\n    promptText: String(selectedTask?.prompt || '').trim(),\n    latestSessionId,\n    createNewSession: newSessionRequested || !latestSessionId,\n    acceptanceCriteria: String(context.acceptanceCriteria || '').trim(),\n    originalPrompt: String(context.originalPrompt || selectedTask?.prompt || '').trim(),\n  },\n}"
       },
       "id": "pick-task",
       "name": "Выбираем кандидатную задачу",
@@ -743,7 +743,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Выбираем первую активную задачу для текущего worker-а.\n// Из её context_json извлекаем:\n//   abortRequested — пользователь запросил прерывание\n//   latestSentId   — id последнего отправленного в Telegram сообщения (для дельты)\n\nconst workerPackage = $('Готовим пакеты обработчиков').item.json\nconst activeTasks = Array.isArray(workerPackage.activeTasks) ? workerPackage.activeTasks : []\nconst selectedTask = activeTasks[0] || null\n\nlet contextJson = {}\nlet abortRequested = false\nlet latestSentId = ''\nif (selectedTask) {\n  try {\n    contextJson = JSON.parse(String(selectedTask.context_json || '{}'))\n  } catch {}\n  abortRequested = contextJson.abortRequested === true\n  latestSentId = String(contextJson.latestSentId || '').trim()\n}\n\nreturn {\n  json: {\n    task: selectedTask,\n    taskStatus: String(selectedTask?.status || '').trim(),\n    sessionId: String(selectedTask?.session_id || '').trim(),\n    pendingQuestion: String(selectedTask?.pending_question || '').trim(),\n    pendingOptionsJson: String(selectedTask?.pending_options_json || '[]'),\n    abortRequested,\n    contextJson,\n    latestSentId,\n  },\n}"
+        "jsCode": "// Выбираем первую активную задачу для текущего worker-а.\n// Из её context_json извлекаем:\n//   abortRequested — пользователь запросил прерывание\n//   latestSentId   — id последнего отправленного в Telegram сообщения (для дельты)\n\nconst workerPackage = $('Готовим пакеты обработчиков').item.json\nconst activeTasks = Array.isArray(workerPackage.activeTasks) ? workerPackage.activeTasks : []\nconst selectedTask = activeTasks[0] || null\n\nlet contextJson = {}\nlet abortRequested = false\nlet latestSentId = ''\nif (selectedTask) {\n  try {\n    contextJson = JSON.parse(String(selectedTask.context_json || '{}'))\n  } catch {}\n  abortRequested = contextJson.abortRequested === true\n  latestSentId = String(contextJson.latestSentId || '').trim()\n}\n\nreturn {\n  json: {\n    task: selectedTask,\n    taskStatus: String(selectedTask?.status || '').trim(),\n    sessionId: String(selectedTask?.session_id || '').trim(),\n    pendingQuestion: String(selectedTask?.pending_question || '').trim(),\n    pendingOptionsJson: String(selectedTask?.pending_options_json || '[]'),\n    abortRequested,\n    contextJson,\n    latestSentId,\n    acceptanceCriteria: String(contextJson.acceptanceCriteria || '').trim(),\n    originalPrompt: String(contextJson.originalPrompt || '').trim(),\n  },\n}"
       },
       "id": "pick-active-task",
       "name": "Выбираем активную задачу",
@@ -1704,6 +1704,82 @@
         1272
       ],
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Завершение задачи').first().json.taskCompleted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $('Выбираем активную задачу').first().json.acceptanceCriteria }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-verify-needed",
+      "name": "Нужна верификация?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4256,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "__VERIFIER_WORKFLOW_ID__",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_key": "={{ $('Выбираем активную задачу').first().json.task.task_key }}",
+            "chat_id": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
+            "original_prompt": "={{ $('Выбираем активную задачу').first().json.originalPrompt || $('Выбираем активную задачу').first().json.task.prompt }}",
+            "acceptance_criteria": "={{ $('Выбираем активную задачу').first().json.acceptanceCriteria }}",
+            "result_text": "={{ $('Завершение задачи').first().json.replyText }}",
+            "worker_alias": "={{ $('Выбираем активную задачу').first().json.task.worker_alias || 'primary' }}",
+            "worker_base_url": "={{ $('Готовим пакеты обработчиков').item.json.workerBaseUrl }}",
+            "authorization_header": "={{ $('Готовим пакеты обработчиков').item.json.authorizationHeader }}",
+            "session_create_path": "={{ $('Готовим пакеты обработчиков').item.json.sessionCreatePath }}",
+            "session_status_path": "={{ $('Готовим пакеты обработчиков').item.json.sessionStatusPath }}",
+            "message_list_path": "={{ $('Готовим пакеты обработчиков').item.json.messageListPath }}",
+            "prompt_async_path": "={{ $('Готовим пакеты обработчиков').item.json.promptAsyncPath }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "exec-acceptance-verifier",
+      "name": "Верификатор приёмки",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4480,
+        1104
+      ],
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -2095,6 +2171,11 @@
             "node": "Читаем настройки чата",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Нужна верификация?",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -2159,6 +2240,23 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Нужна верификация?": {
+      "main": [
+        [
+          {
+            "node": "Верификатор приёмки",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Верификатор приёмки": {
+      "main": [
+        []
       ]
     }
   },

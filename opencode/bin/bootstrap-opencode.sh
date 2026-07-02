@@ -61,7 +61,7 @@ generate_mcp_section() {
       else . end |
       {
         key: $m.name,
-        value: ({
+        value: (({
           type: ($m.type // "local"),
           enabled: ($m.enabled // false),
           timeout: ($timeout | tonumber)
@@ -72,7 +72,8 @@ generate_mcp_section() {
           { command: $m.command }
         else
           { command: (["npx", "-y", .package] + ($m.args // [])) }
-        end)
+        end) +
+        if $m.env then { env: $m.env } else {} end)
       };
 
     [ ($cfg.tooling.npm[]? // empty | select(.mcp) | mcp_entry) ] +
@@ -225,6 +226,34 @@ install -m 0644 "${TEMPLATE_ROOT}/verify.md" "${WORKSPACE_ROOT}/.opencode/comman
 install -m 0644 "${TEMPLATE_ROOT}/docker-up.md" "${WORKSPACE_ROOT}/.opencode/commands/docker-up.md"
 install -m 0644 "${TEMPLATE_ROOT}/repair.md" "${WORKSPACE_ROOT}/.opencode/commands/repair.md"
 install -m 0644 "${TEMPLATE_ROOT}/bootstrap-repo.md" "${WORKSPACE_ROOT}/.opencode/commands/bootstrap-repo.md"
+
+mkdir -p "${CONFIG_DIR}/agents"
+if [ ! -f "${CONFIG_DIR}/agents/verifier.md" ]; then
+  cat > "${CONFIG_DIR}/agents/verifier.md" <<'VERIFIER_EOF'
+---
+description: Verification agent — read, inspect, and verify only. Never edits code.
+mode: subagent
+permission:
+  edit:
+    "*": deny
+  bash:
+    "*": allow
+  read:
+    "*": allow
+---
+
+You are a VERIFICATION agent. Your sole job is to inspect and verify — NEVER change anything.
+
+Your tool restrictions:
+- edit: DENIED — you cannot modify any files
+- bash: ALLOWED — you can run lint, tests, docker, git, curl, etc.
+- read: ALLOWED — you can read all files
+
+Be thorough: check code, run tests, inspect logs, verify behavior.
+ALWAYS include the actual output of every command as evidence.
+If something fails, report it honestly — do NOT fabricate success.
+VERIFIER_EOF
+fi
 
 if [ ! -f "${WORKSPACE_ROOT}/AGENTS.md" ]; then
   cat > "${WORKSPACE_ROOT}/AGENTS.md" <<EOF

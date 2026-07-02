@@ -24,7 +24,7 @@
       { "package": "@upstash/context7-mcp", "mcp": { "name": "context7", "type": "remote", "url": "https://mcp.context7.com/mcp", "enabled": true } },
       { "package": "@modelcontextprotocol/server-brave-search", "mcp": { "name": "brave-search", "enabled": true } },
       { "package": "@modelcontextprotocol/server-sequential-thinking", "mcp": { "name": "sequential-thinking", "enabled": true } },
-      { "package": "@playwright/mcp", "mcp": { "name": "playwright", "enabled": true } },
+      { "package": "@playwright/mcp", "mcp": { "name": "playwright", "enabled": true, "env": { "BROWSER": "chromium" } } },
       { "package": "@modelcontextprotocol/server-postgres", "mcp": { "name": "postgres", "args": ["{env:DATABASE_URL}"], "enabled": true } }
     ],
 
