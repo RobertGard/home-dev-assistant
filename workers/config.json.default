@@ -35,6 +35,7 @@
     "uv": [
       { "package": "serena-agent@latest", "python": "3.13", "args": "--prerelease=allow", "mcp": { "name": "serena", "command": ["serena", "start-mcp-server", "--context", "ide", "--project-from-cwd"], "enabled": true } },
       { "package": "mcp-server-git", "python": "3.13", "mcp": { "name": "git", "command": ["mcp-server-git", "--repository", "/workspace"], "enabled": true } },
+      { "package": "mcp-server-time", "python": "3.13", "mcp": { "name": "time", "command": ["mcp-server-time"], "enabled": true } },
       { "package": "browser-use", "python": "3.13" }
     ],
 

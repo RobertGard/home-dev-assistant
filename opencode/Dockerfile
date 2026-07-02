@@ -11,10 +11,13 @@ RUN apt-get update && apt-get install -y \
   docker-compose \
   docker.io \
   fd-find \
+  fzf \
   git \
   gh \
   gosu \
+  hyperfine \
   jq \
+  just \
   make \
   openssh-client \
   passwd \
