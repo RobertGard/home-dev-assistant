@@ -441,9 +441,9 @@ for wf_name in "$INGRESS_WORKFLOW_NAME" "$DISPATCH_WORKFLOW_NAME" \
                "$SESSION_MGR_WORKFLOW_NAME" "$TASK_LAUNCHER_WORKFLOW_NAME" \
                "$PENDING_INTERACTION_WORKFLOW_NAME" "$TASK_FINALIZER_WORKFLOW_NAME" \
                "$AUTO_GENERATOR_WORKFLOW_NAME" "$ACCEPTANCE_VERIFIER_WORKFLOW_NAME"; do
-  existing_ids="$(curl -fsS \
+  existing_ids="$(curl -fsS --retry 3 --retry-delay 2 \
     -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
-    "${N8N_URL}/api/v1/workflows" | jq -r --arg name "$wf_name" '.data // . // [] | map(select(.name == $name)) | .[].id')"
+    "${N8N_URL}/api/v1/workflows" 2>/dev/null | jq -r --arg name "$wf_name" '.data // . // [] | map(select(.name == $name)) | .[].id' 2>/dev/null || true)"
   for old_id in $existing_ids; do
     if [ -n "$old_id" ] && [ "$old_id" != "null" ]; then
       log_info "Удаляю старый workflow '${wf_name}' (id=${old_id})"
