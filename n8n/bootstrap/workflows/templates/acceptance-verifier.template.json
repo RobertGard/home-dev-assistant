@@ -145,6 +145,30 @@
     },
     {
       "parameters": {
+        "chatId": "={{ $('Триггер: вызов из диспетчера').item.json.chat_id }}",
+        "text": "={{ `🔍 Начата верификация задачи <code>${$('Триггер: вызов из диспетчера').item.json.task_key}</code> [${$('Триггер: вызов из диспетчера').item.json.worker_alias || 'primary'}]. Ожидайте результат.` }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "notify-verify-start",
+      "name": "Уведомляем о начале верификации",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        288
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "__TELEGRAM_CREDENTIAL_ID__",
+          "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "language": "javaScript",
         "jsCode": "const input = $('Триггер: вызов из диспетчера').item.json\n\nreturn {\n  json: {\n    taskKey: String(input.task_key || '').trim(),\n    chatId: String(input.chat_id || '').trim(),\n    originalPrompt: String(input.original_prompt || '').trim(),\n    acceptanceCriteria: String(input.acceptance_criteria || '').trim(),\n    resultText: String(input.result_text || '').trim(),\n    workerAlias: String(input.worker_alias || '').trim(),\n    workerBaseUrl: String(input.worker_base_url || '').trim(),\n    authorizationHeader: String(input.authorization_header || '').trim(),\n    sessionCreatePath: String(input.session_create_path || '').trim(),\n    sessionStatusPath: String(input.session_status_path || '').trim(),\n    messageListPath: String(input.message_list_path || '').trim(),\n    promptAsyncPath: String(input.prompt_async_path || '').trim(),\n  },\n}"
       },
@@ -628,6 +652,17 @@
       ]
     },
     "Фиксируем входные данные": {
+      "main": [
+        [
+          {
+            "node": "Уведомляем о начале верификации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Уведомляем о начале верификации": {
       "main": [
         [
           {
