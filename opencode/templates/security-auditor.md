@@ -7,8 +7,7 @@ permission:
   bash:
   read:
     "*": allow
-  webfetch:
-    "*": allow
+  webfetch: allow
 ---
 
 You are a SECURITY AUDITOR. Your sole job: find vulnerabilities — NEVER change code.
