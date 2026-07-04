@@ -934,7 +934,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Определяем какую задачу прерывать.\n//   явный task-key      → указанная задача\n//   без task-key         → если одна — авто-выбор, несколько — уточнение у пользователя\n\nconst abortRequest = $('Готовим запрос прерывания').first().json\nconst activeRunning = $('Получаем работающие задачи').all().map((item) => item.json)\nconst inputTaskKey = String(abortRequest.targetTaskKey || '').trim()\n\nif (activeRunning.length === 0) {\n  return [{ json: { mode: 'parse_error', replyText: 'Нет работающих задач, которые можно прервать.' } }]\n}\n\nif (inputTaskKey) {\n  const task = activeRunning.find((item) => String(item.task_key || '').trim() === inputTaskKey)\n  if (!task) {\n    return [{ json: { mode: 'parse_error', replyText: `Не удалось найти работающую задачу <code>${inputTaskKey || 'неизвестно'}</code>.` } }]\n  }\n  return [{ json: { mode: 'answer', targetTaskKey: inputTaskKey, replyText: `Задача <code>${inputTaskKey}</code> будет прервана.` } }]\n}\n\nif (activeRunning.length === 1) {\n  const taskKey = String(activeRunning[0].task_key || '').trim()\n  return [{ json: { mode: 'answer', targetTaskKey: taskKey, replyText: `Задача <code>${taskKey}</code> будет прервана.` } }]\n}\n\nconst taskList = activeRunning.map((item) => `- <code>${item.task_key || 'неизвестно'}</code>`).join('\\n')\nreturn [{ json: { mode: 'parse_error', replyText: `Работает несколько задач:\\n${taskList}\\n\\nУточните: /abort --task_key=\"task-key\"` } }]"
+        "jsCode": "// Определяем какую задачу прерывать.\n//   явный task-key      → указанная задача\n//   без task-key         → если одна — авто-выбор, несколько — уточнение у пользователя\n\nconst abortRequest = $('Готовим запрос прерывания').first().json\nconst activeRunning = $('Получаем работающие задачи').all().map((item) => item.json)\nconst inputTaskKey = String(abortRequest.targetTaskKey || '').trim()\n\n// Если нет работающих — проверяем queued (повторяющиеся с --interval)\nlet queuedRecurring = []\ntry { queuedRecurring = $('Получаем все задачи').all().map(i => i.json).filter(t => String(t.status || '').trim() === 'queued') } catch(_) {}\n\nif (activeRunning.length === 0 && queuedRecurring.length === 0) {\n  return [{ json: { mode: 'parse_error', replyText: 'Нет ни работающих, ни ожидающих задач.' } }]\n}\n\n// Если только queued — отменяем их напрямую (без сессии)\nif (activeRunning.length === 0) {\n  if (inputTaskKey) {\n    const t = queuedRecurring.find(item => String(item.task_key || '').trim() === inputTaskKey)\n    if (!t) return [{ json: { mode: 'parse_error', replyText: `Задача <code>${inputTaskKey}</code> не найдена в очереди.` } }]\n    return [{ json: { mode: 'cancel_queued', targetTaskKey: inputTaskKey, replyText: `Повторяющаяся задача <code>${inputTaskKey}</code> отменена.` } }]\n  }\n  if (queuedRecurring.length === 1) {\n    const tk = String(queuedRecurring[0].task_key || '').trim()\n    return [{ json: { mode: 'cancel_queued', targetTaskKey: tk, replyText: `Повторяющаяся задача <code>${tk}</code> отменена.` } }]\n  }\n  const list = queuedRecurring.map(t => `- <code>${t.task_key || '?'}</code>`).join('\\n')\n  return [{ json: { mode: 'parse_error', replyText: `В очереди несколько задач:\\n${list}\\n\\nУточните: /abort --task_key=\"task-key\"` } }]\n}\n\nif (inputTaskKey) {\n  const task = activeRunning.find((item) => String(item.task_key || '').trim() === inputTaskKey)\n  if (!task) {\n    return [{ json: { mode: 'parse_error', replyText: `Не удалось найти работающую задачу <code>${inputTaskKey || 'неизвестно'}</code>.` } }]\n  }\n  return [{ json: { mode: 'answer', targetTaskKey: inputTaskKey, replyText: `Задача <code>${inputTaskKey}</code> будет прервана.` } }]\n}\n\nif (activeRunning.length === 1) {\n  const taskKey = String(activeRunning[0].task_key || '').trim()\n  return [{ json: { mode: 'answer', targetTaskKey: taskKey, replyText: `Задача <code>${taskKey}</code> будет прервана.` } }]\n}\n\nconst taskList = activeRunning.map((item) => `- <code>${item.task_key || 'неизвестно'}</code>`).join('\\n')\nreturn [{ json: { mode: 'parse_error', replyText: `Работает несколько задач:\\n${taskList}\\n\\nУточните: /abort --task_key=\"task-key\"` } }]"
       },
       "id": "resolve-abort-target",
       "name": "Определяем цель прерывания",
@@ -1232,6 +1232,54 @@
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "mode": "id",
+          "value": "__TASKS_TABLE_ID__"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "task_key",
+              "keyValue": "={{ $('Определяем цель прерывания').first().json.targetTaskKey }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "aborted",
+            "result_text": "={{ $('Определяем цель прерывания').first().json.replyText }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "cancel-queued-update",
+      "name": "Отменяем queued задачу",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        480
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Маршрутизируем: answer → прерывание сессии, cancel_queued → прямая отмена\nconst input = $input.first().json\nif (input.mode === 'cancel_queued') {\n  return [{ json: { ...input, route: 'cancel' } }, { json: {} }]\n}\nreturn [{ json: {} }, { json: { ...input, route: 'abort' } }]"
+      },
+      "id": "route-abort-mode",
+      "name": "Маршрут отмены",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        480
+      ]
     }
   ],
   "connections": {
@@ -1290,7 +1338,7 @@
       "main": [
         [
           {
-            "node": "Сохраняем флаг прерывания",
+            "node": "Маршрут отмены",
             "type": "main",
             "index": 0
           }
@@ -1623,6 +1671,35 @@
         [
           {
             "node": "Разбираем базовое сообщение Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрут отмены": {
+      "main": [
+        [
+          {
+            "node": "Сохраняем флаг прерывания",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Отменяем queued задачу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отменяем queued задачу": {
+      "main": [
+        [
+          {
+            "node": "Отправляем: Задача будет прервана",
             "type": "main",
             "index": 0
           }
