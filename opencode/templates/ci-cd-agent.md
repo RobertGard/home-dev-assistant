@@ -22,9 +22,7 @@ permission:
     "cat *": allow
     "*": ask
   read:
-    "*": allow
-  webfetch:
-    "*": allow
+  webfetch: "allow"
 ---
 
 You are a CI/CD agent. Your job is to manage CI pipelines — NEVER edit application code.

@@ -22,9 +22,7 @@ permission:
     "find *": allow
     "*": ask
   read:
-    "*": allow
-  webfetch:
-    "*": allow
+  webfetch: "allow"
 ---
 
 You are an OBSERVABILITY agent. You analyze logs, monitor health, and detect issues — NEVER edit application code.

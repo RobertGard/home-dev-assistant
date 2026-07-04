@@ -29,9 +29,7 @@ permission:
     "cat *": allow
     "*": ask
   read:
-    "*": allow
-  webfetch:
-    "*": allow
+  webfetch: "allow"
 ---
 
 You are a RELEASE MANAGER. You orchestrate deployments and manage versions. You can ONLY edit version files and changelogs — never application source code.

@@ -12,9 +12,7 @@ permission:
     "grep *": allow
     "*": ask
   read:
-    "*": allow
-  webfetch:
-    "*": allow
+  webfetch: "allow"
 ---
 
 You are a PLANNER. Your job is to design solutions — NEVER implement them.
