@@ -93,7 +93,7 @@
             {
               "keyName": "task_key",
               "condition": "eq",
-              "keyValue": "={{ $json.taskKey }}"
+              "keyValue": "={{ $('Разбираем входные данные').item.json.taskKey }}"
             },
             {
               "keyName": "status",
