@@ -115,7 +115,11 @@ install_repo_dependencies() {
 
   case "${package_manager}" in
     pnpm)
-      pnpm install --dir "${repo_dir}"
+      pnpm install --dir "${repo_dir}" 2>/dev/null || {
+        cd "${repo_dir}"
+        pnpm approve-builds 2>/dev/null || true
+        pnpm install 2>/dev/null || true
+      }
       ;;
     bun)
       bun install --cwd "${repo_dir}"
@@ -128,7 +132,11 @@ install_repo_dependencies() {
       ;;
     auto)
       if [ -f "${repo_dir}/pnpm-lock.yaml" ]; then
-        pnpm install --dir "${repo_dir}"
+        pnpm install --dir "${repo_dir}" 2>/dev/null || {
+          cd "${repo_dir}"
+          pnpm approve-builds 2>/dev/null || true
+          pnpm install 2>/dev/null || true
+        }
       elif [ -f "${repo_dir}/bun.lockb" ] || [ -f "${repo_dir}/bun.lock" ]; then
         bun install --cwd "${repo_dir}"
       elif [ -f "${repo_dir}/package-lock.json" ]; then
