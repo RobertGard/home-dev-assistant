@@ -11,7 +11,7 @@ Self-hosted AI development assistant: submit a task in Telegram, n8n dispatches 
 - **Interactive OpenCode** — workers can ask clarifying questions directly in chat; you answer, they continue
 - **Auto-mode** — after task completion, the bot analyzes results and suggests the next step: GSD cycle, quality checks, tests, documentation
 - **Task chains** — a task can wait for its parent to complete and execute only if the result contains specified text (e.g. tests passed → deploy)
-- **Acceptance verification** — pass `--verify="criteria"` with a task; after completion, a read-only verifier agent checks code health, application logs, browser console (via Playwright), API responses, and per-criterion evidence. Failed verification auto-generates a fix task with the same criteria
+- **Acceptance verification** — pass `--verify="criteria"` with a task; after completion, a verification task is queued for the agent (in a fresh session, independent of the original). The agent checks code health, logs, browser console (Playwright), API responses, and per-criterion evidence. Result goes to DeepSeek Judge — on FAILED, a fix task is auto-created with the original session and criteria
 - **Recurring tasks** — `--interval="4h"` flag runs a task on a schedule (30m, 4h, 1d). Stops with `/abort`. Saves DB space — reuses the same row
 - **Natural language commands** — type requests in plain language; an AI translator converts them to structured commands with proper flags
 - **OpenCode slash commands** — use `/gsd-ship`, `/deploy`, `/brainstorm` etc. in Telegram — they're automatically wrapped as `/task --prompt="/command"` for the worker
