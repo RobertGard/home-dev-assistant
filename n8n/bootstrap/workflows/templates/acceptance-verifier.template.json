@@ -6,54 +6,14 @@
       "parameters": {
         "workflowInputs": {
           "values": [
-            {
-              "name": "task_key",
-              "type": "string"
-            },
-            {
-              "name": "chat_id",
-              "type": "string"
-            },
-            {
-              "name": "original_prompt",
-              "type": "string"
-            },
-            {
-              "name": "acceptance_criteria",
-              "type": "string"
-            },
-            {
-              "name": "result_text",
-              "type": "string"
-            },
-            {
-              "name": "worker_alias",
-              "type": "string"
-            },
-            {
-              "name": "worker_base_url",
-              "type": "string"
-            },
-            {
-              "name": "authorization_header",
-              "type": "string"
-            },
-            {
-              "name": "session_create_path",
-              "type": "string"
-            },
-            {
-              "name": "session_status_path",
-              "type": "string"
-            },
-            {
-              "name": "message_list_path",
-              "type": "string"
-            },
-            {
-              "name": "prompt_async_path",
-              "type": "string"
-            }
+            {"name": "task_key", "type": "string"},
+            {"name": "chat_id", "type": "string"},
+            {"name": "original_prompt", "type": "string"},
+            {"name": "acceptance_criteria", "type": "string"},
+            {"name": "result_text", "type": "string"},
+            {"name": "worker_alias", "type": "string"},
+            {"name": "session_id", "type": "string"},
+            {"name": "context_json", "type": "string"}
           ]
         }
       },
@@ -61,380 +21,105 @@
       "name": "Триггер: вызов из диспетчера",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
-      "position": [
-        224,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "name": "task_key",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.task_key }}",
-              "type": "string"
-            },
-            {
-              "name": "chat_id",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.chat_id }}",
-              "type": "string"
-            },
-            {
-              "name": "original_prompt",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.original_prompt }}",
-              "type": "string"
-            },
-            {
-              "name": "acceptance_criteria",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.acceptance_criteria }}",
-              "type": "string"
-            },
-            {
-              "name": "result_text",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.result_text }}",
-              "type": "string"
-            },
-            {
-              "name": "worker_alias",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.worker_alias }}",
-              "type": "string"
-            },
-            {
-              "name": "worker_base_url",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.worker_base_url }}",
-              "type": "string"
-            },
-            {
-              "name": "authorization_header",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.authorization_header }}",
-              "type": "string"
-            },
-            {
-              "name": "session_create_path",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.session_create_path }}",
-              "type": "string"
-            },
-            {
-              "name": "session_status_path",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.session_status_path }}",
-              "type": "string"
-            },
-            {
-              "name": "message_list_path",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.message_list_path }}",
-              "type": "string"
-            },
-            {
-              "name": "prompt_async_path",
-              "value": "={{ $('Триггер: вызов из диспетчера').item.json.prompt_async_path }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "print-input-vars",
-      "name": "Фиксируем входные данные",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        448,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Триггер: вызов из диспетчера').item.json.chat_id }}",
-        "text": "={{ `🔍 Начата верификация задачи <code>${$('Триггер: вызов из диспетчера').item.json.task_key}</code> [${$('Триггер: вызов из диспетчера').item.json.worker_alias || 'primary'}]. Ожидайте результат.` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-verify-start",
-      "name": "Уведомляем о начале верификации",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        560,
-        288
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      }
+      "position": [224, 288]
     },
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const input = $('Триггер: вызов из диспетчера').item.json\n\nreturn {\n  json: {\n    taskKey: String(input.task_key || '').trim(),\n    chatId: String(input.chat_id || '').trim(),\n    originalPrompt: String(input.original_prompt || '').trim(),\n    acceptanceCriteria: String(input.acceptance_criteria || '').trim(),\n    resultText: String(input.result_text || '').trim(),\n    workerAlias: String(input.worker_alias || '').trim(),\n    workerBaseUrl: String(input.worker_base_url || '').trim(),\n    authorizationHeader: String(input.authorization_header || '').trim(),\n    sessionCreatePath: String(input.session_create_path || '').trim(),\n    sessionStatusPath: String(input.session_status_path || '').trim(),\n    messageListPath: String(input.message_list_path || '').trim(),\n    promptAsyncPath: String(input.prompt_async_path || '').trim(),\n  },\n}"
+        "jsCode": "const input = $('Триггер: вызов из диспетчера').item.json\n\nlet context = {}\ntry { context = JSON.parse(String(input.context_json || '{}')) } catch (_) {}\n\nconst isVerification = String(context.source || '').trim() === 'verification'\n\nreturn {\n  json: {\n    taskKey: String(input.task_key || '').trim(),\n    chatId: String(input.chat_id || '').trim(),\n    originalPrompt: String(input.original_prompt || '').trim(),\n    acceptanceCriteria: String(input.acceptance_criteria || '').trim(),\n    resultText: String(input.result_text || '').trim(),\n    workerAlias: String(input.worker_alias || '').trim(),\n    sessionId: String(input.session_id || '').trim(),\n    isVerification,\n    context,\n    parentTaskKey: String(context.original_parent_task_key || '').trim(),\n    parentSessionId: String(context.original_parent_session_id || '').trim(),\n    parentOriginalPrompt: String(context.original_parent_prompt || '').trim(),\n  },\n}"
       },
       "id": "parse-input",
       "name": "Разбираем входные данные",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        672,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Разбираем входные данные').item.json.workerBaseUrl + $('Разбираем входные данные').item.json.sessionCreatePath }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ $('Разбираем входные данные').item.json.authorizationHeader }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { title: 'verify-' + $('Разбираем входные данные').item.json.taskKey } }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "create-session",
-      "name": "Создаём сессию верификации",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        896,
-        288
-      ],
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "language": "javaScript",
-        "jsCode": "const sessionResponse = $input.first().json\nconst sessionId = String(\n  sessionResponse.sessionId || sessionResponse.id || sessionResponse.data?.id || ''\n).trim()\n\nconst launchError = sessionResponse.error\n  ? String(sessionResponse.error.message || sessionResponse.error)\n  : sessionId\n    ? ''\n    : 'OpenCode не вернул session id.'\n\nconst input = $('Разбираем входные данные').item.json\n\nreturn {\n  json: {\n    sessionId,\n    launchError,\n    taskKey: input.taskKey,\n    chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    resultText: input.resultText,\n    workerAlias: input.workerAlias,\n    workerBaseUrl: input.workerBaseUrl,\n    authorizationHeader: input.authorizationHeader,\n    sessionStatusPath: input.sessionStatusPath,\n    messageListPath: input.messageListPath,\n    promptAsyncPath: input.promptAsyncPath,\n  },\n}"
-      },
-      "id": "normalize-session",
-      "name": "Нормализуем ответ сессии",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1120,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "language": "javaScript",
-        "jsCode": "// Формируем промпт верификации для OpenCode с защитой от переполнения.\n\nconst MAX_SECTION = 5000\nconst trunc = (s) => {\n  const str = String(s || '').trim()\n  return str.length > MAX_SECTION ? str.slice(0, MAX_SECTION) + '\\n... [TRUNCATED]' : str\n}\n\nconst input = $('Нормализуем ответ сессии').item.json\n\nconst verifyPrompt = `VERIFICATION TASK — you MUST perform a THOROUGH, REAL verification. You CANNOT skip steps. You CANNOT guess. You MUST produce actual evidence.\n\nORIGINAL TASK:\n${trunc(input.originalPrompt)}\n\nACCEPTANCE CRITERIA (verify EVERY point — no exceptions):\n${trunc(input.acceptanceCriteria)}\n\nWHAT WAS DONE (result of execution):\n${trunc(input.resultText)}\n\n═══════════════════════════════════════\nMANDATORY VERIFICATION CHECKLIST\n═══════════════════════════════════════\n\nYou MUST complete EVERY checkpoint below. After each checkpoint, include the ACTUAL output/evidence in your response. If you skip a checkpoint, the verdict is automatically FAILED. If any tool returns an error, report it honestly — do NOT fabricate success.\n\n┌─ CHECKPOINT 1: CODE & BUILD HEALTH ───────────────────────────────\n│\n│ 1a. Use bash to run the project's lint command (npm run lint, ruff, etc).\n│     → Paste the ACTUAL lint output.\n│\n│ 1b. Use bash to run typecheck (tsc --noEmit, npm run typecheck, mypy, etc).\n│     → Paste the ACTUAL typecheck output.\n│\n│ 1c. Use bash to run the test suite (npm test, pytest, cargo test, etc).\n│     → Paste the ACTUAL test results (pass/fail counts, any failures).\n│\n│ 1d. Use bash to run: git diff HEAD~1 --stat\n│     → List the files that were changed.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 2: APPLICATION LOGS ────────────────────────────────────\n│\n│ 2a. Run: docker ps --format \"table {{.Names}}\\\\t{{.Status}}\"\n│     → List ALL running containers.\n│\n│ 2b. For EVERY running container:\n│     docker logs --tail 100 <container-name> 2>&1\n│     → Paste the logs. Look for: errors, exceptions, warnings,\n│       stack traces, segfaults, OOM, connection refused, timeouts.\n│\n│ 2c. If the project has log files (logs/*.log, *.log, etc):\n│     Read the last 50 lines of each log file.\n│     → Paste the log content. Flag any ERROR or WARN lines.\n│\n│ 2d. If the project is NOT running in Docker:\n│     Check for running processes (ps aux | grep <project>),\n│     check system logs (journalctl, /var/log, etc).\n│     → Paste relevant output.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 3: RUNTIME BEHAVIOR (if criteria mention URL/browser/API)\n│\n│ 3a. Ensure the project is running (docker compose up -d or equivalent).\n│     → Confirm containers/services are up.\n│\n│ 3b. Use curl to hit the relevant API endpoints.\n│     → Paste the HTTP status code and response body.\n│\n│ 3c. If browser interaction is required:\n│     Use Playwright MCP to:\n│     - Navigate to the specified URL\n│     - Perform ALL user actions described in criteria (click, type, submit)\n│     - Verify the expected UI elements appear\n│     - Capture browser CONSOLE LOGS (errors, warnings, console.error)\n│     - Capture NETWORK errors (failed requests, 4xx, 5xx)\n│     → Paste the console log output.\n│     → Paste the page text content at each verification point.\n│\n│ 3d. After browser/API interaction, RE-CHECK docker logs again\n│     for any NEW errors that appeared during the session.\n│     → Paste any new errors found.\n│\n└─────────────────────────────────────────────────────────\n\n┌─ CHECKPOINT 4: CRITERIA-BY-CRITERIA VERIFICATION ────────\n│\n│ Go through EACH acceptance criterion ONE BY ONE:\n│\n│   Criterion: \"<paste the exact criterion>\"\n│   Evidence:  \"<what you observed, with specific values/URLs/output>\"\n│   Verdict:   PASS or FAIL\n│   Reason:    \"<why it passed or failed, be specific>\"\n│\n│ Do this for EVERY criterion. Leave none unchecked.\n│\n└─────────────────────────────────────────────────────────\n\n═══════════════════════════════════════\nFINAL VERDICT\n═══════════════════════════════════════\n\nBased on ALL evidence collected above, output EXACTLY:\n\nVERIFICATION: PASSED\n\nISSUES: none\n\nOR\n\nVERIFICATION: FAILED\n\nISSUES:\n- <specific issue 1 — what failed, where, how to reproduce>\n- <specific issue 2>\n- ...\n\nCRITICAL RULES:\n• You CANNOT return PASSED if you skipped any checkpoint\n• You CANNOT return PASSED if lint/typecheck/tests have errors\n• You CANNOT return PASSED if logs contain errors related to the changes\n• You CANNOT return PASSED if any acceptance criterion is not met\n• You MUST include evidence for every claim you make\n• Do NOT change code — you are a VERIFIER, not a fixer\n\nBEGIN VERIFICATION NOW. Start with CHECKPOINT 1.`\n\nreturn {\n  json: {\n    sessionId: input.sessionId,\n    taskKey: input.taskKey,\n    chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    workerAlias: input.workerAlias,\n    workerBaseUrl: input.workerBaseUrl,\n    authorizationHeader: input.authorizationHeader,\n    sessionStatusPath: input.sessionStatusPath,\n    messageListPath: input.messageListPath,\n    promptAsyncPath: input.promptAsyncPath,\n    verifyPrompt,\n  },\n}"
-      },
-      "id": "build-verify-prompt",
-      "name": "Формируем промпт верификации",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1344,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Формируем промпт верификации').item.json.workerBaseUrl + $('Формируем промпт верификации').item.json.promptAsyncPath.replace(':id', $('Формируем промпт верификации').item.json.sessionId) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ $('Формируем промпт верификации').item.json.authorizationHeader }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { agent: 'verifier', parts: [{ type: 'text', text: $('Формируем промпт верификации').item.json.verifyPrompt }] } }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "id": "send-verify-prompt",
-      "name": "Отправляем промпт верификации",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1568,
-        288
-      ],
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "resume": "timeInterval",
-        "waitAmount": 15,
-        "unit": "seconds"
-      },
-      "id": "wait-for-verify",
-      "name": "Ждём 15 секунд",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1792,
-        288
-      ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $('Разбираем входные данные').item.json.workerBaseUrl + $('Разбираем входные данные').item.json.sessionStatusPath }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ $('Разбираем входные данные').item.json.authorizationHeader }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "check-session-status",
-      "name": "Проверяем статус сессии",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2016,
-        208
-      ],
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "language": "javaScript",
-        "jsCode": "// Проверяем статус сессии: idle = завершена.\n// Если сессия не найдена в statusMap — она могла завершиться и OpenCode её убрал.\n\nconst input = $('Формируем промпт верификации').item.json\nconst sessionId = String(input.sessionId || '').trim()\n\nconst statusMap = $('Проверяем статус сессии').item.json || {}\nconst sessionStatus = statusMap[sessionId]\n\nif (!sessionStatus || Object.keys(sessionStatus).length === 0) {\n  return {\n    json: { isIdle: false, sessionMissingHint: true },\n  }\n}\n\nconst statusType = String(sessionStatus.type || '').trim()\nreturn {\n  json: { isIdle: statusType === 'idle' },\n}"
-      },
-      "id": "read-status",
-      "name": "Читаем статус сессии",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2240,
-        208
-      ]
+      "position": [448, 288]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $('Читаем статус сессии').item.json.isIdle }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            },
-            {
-              "leftValue": "={{ $('Читаем статус сессии').item.json.sessionMissingHint }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "or"
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+          "conditions": [{
+            "leftValue": "={{ $('Разбираем входные данные').item.json.isVerification }}",
+            "rightValue": true,
+            "operator": {"type": "boolean", "operation": "true", "singleValue": true}
+          }],
+          "combinator": "and"
         },
         "options": {}
       },
-      "id": "if-session-idle",
-      "name": "Сессия завершена?",
+      "id": "if-is-verification",
+      "name": "Это задача проверки?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        2464,
-        288
-      ]
+      "position": [672, 288]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $('Разбираем входные данные').item.json.workerBaseUrl + $('Разбираем входные данные').item.json.messageListPath.replace(':id', $('Нормализуем ответ сессии').item.json.sessionId) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ $('Разбираем входные данные').item.json.authorizationHeader }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
+        "text": "={{ `🔍 Начата верификация задачи <code>${$('Разбираем входные данные').item.json.taskKey}</code> [${$('Разбираем входные данные').item.json.workerAlias || 'primary'}].` }}",
+        "additionalFields": {"appendAttribution": false, "parse_mode": "HTML"}
       },
-      "id": "get-messages",
-      "name": "Получаем сообщения верификации",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2688,
-        288
-      ],
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput"
+      "id": "notify-verify-start",
+      "name": "Уведомляем о начале верификации",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [896, 128],
+      "credentials": {"telegramApi": {"id": "__TELEGRAM_CREDENTIAL_ID__", "name": "__TELEGRAM_CREDENTIAL_NAME__"}}
     },
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Извлекаем текст верификации из ответа OpenCode.\n// API формат: message.info.role, message.info.id, message.parts\n\nif ($itemIndex > 0) return null\n\nconst input = $('Формируем промпт верификации').item.json\nconst messages = $('Получаем сообщения верификации').all().map(({ json }) => json)\n\nconst assistantMessages = messages\n  .filter((m) => String(m.info?.role || '') === 'assistant')\n  .sort((left, right) => Number(left.info?.time?.created || 0) - Number(right.info?.time?.created || 0))\n\nconst verificationText = assistantMessages.length > 0\n  ? assistantMessages.map((m) => {\n      const parts = Array.isArray(m.parts) ? m.parts : []\n      return parts\n        .filter((p) => String(p.type || '') === 'text')\n        .map((p) => String(p.text || p.content || '').trim())\n        .join('\\n')\n    }).join('\\n\\n')\n  : 'VERIFICATION: FAILED\n\nISSUES:\n- OpenCode не вернул сообщений верификации.'\n\nreturn {\n  json: {\n    taskKey: input.taskKey,\n    chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    workerAlias: input.workerAlias,\n    verificationText,\n  },\n}"
+        "jsCode": "const input = $('Разбираем входные данные').item.json\nconst verifyTaskKey = `verify-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\n\nconst verifyPrompt = `VERIFICATION TASK — verify that the implementation meets acceptance criteria.\\n\\nORIGINAL TASK:\\n${input.originalPrompt}\\n\\nACCEPTANCE CRITERIA:\\n${input.acceptanceCriteria}\\n\\nRESULT OF EXECUTION:\\n${input.resultText}\\n\\nGo through EACH acceptance criterion ONE BY ONE. For each:\\n- Criterion: restate the exact criterion\\n- Evidence: what you observed\\n- Verdict: PASS or FAIL\\n- Reason: why\\n\\nThen output:\\nVERIFICATION: PASSED | FAILED\\nISSUES: (list if any)\\n\\nDo NOT change code. You are a verifier, not a fixer.`\n\nconst contextJson = JSON.stringify({\n  source: 'verification',\n  original_parent_task_key: input.taskKey,\n  original_parent_session_id: input.sessionId,\n  original_parent_prompt: input.originalPrompt,\n  acceptanceCriteria: input.acceptanceCriteria,\n  originalPrompt: input.originalPrompt,\n})\n\nreturn { json: { verifyTaskKey, verifyPrompt, contextJson, chatId: input.chatId, workerAlias: input.workerAlias, taskKey: input.taskKey } }"
       },
-      "id": "extract-verification-text",
-      "name": "Извлекаем текст верификации",
+      "id": "prepare-verify-task",
+      "name": "Готовим задачу проверки",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2912,
-        288
-      ]
+      "position": [1120, 128]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {"mode": "id", "value": "__TASKS_TABLE_ID__"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_key": "={{ $('Готовим задачу проверки').first().json.verifyTaskKey }}",
+            "source": "verification",
+            "chat_id": "={{ $('Готовим задачу проверки').first().json.chatId }}",
+            "worker_alias": "={{ $('Готовим задачу проверки').first().json.workerAlias }}",
+            "command_name": "task",
+            "prompt": "={{ $('Готовим задачу проверки').first().json.verifyPrompt }}",
+            "parent_task_key": "={{ $('Готовим задачу проверки').first().json.taskKey }}",
+            "parent_match_text": "",
+            "context_json": "={{ $('Готовим задачу проверки').first().json.contextJson }}",
+            "pending_question": "",
+            "pending_options_json": "[]",
+            "status": "queued",
+            "queued_at": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {"optimizeBulk": true}
+      },
+      "id": "insert-verify-task",
+      "name": "Создаём задачу проверки",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [1344, 128],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Готовим задачу проверки').first().json.chatId }}",
+        "text": "={{ `📋 Задача проверки <code>${$('Готовим задачу проверки').first().json.verifyTaskKey}</code> поставлена в очередь [${$('Готовим задачу проверки').first().json.workerAlias || 'primary'}].` }}",
+        "additionalFields": {"appendAttribution": false, "parse_mode": "HTML"}
+      },
+      "id": "notify-verify-queued",
+      "name": "Сообщаем о задаче проверки",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1568, 128],
+      "credentials": {"telegramApi": {"id": "__TELEGRAM_CREDENTIAL_ID__", "name": "__TELEGRAM_CREDENTIAL_NAME__"}}
     },
     {
       "parameters": {
@@ -442,98 +127,65 @@
           "assignments": [
             {
               "name": "systemPrompt",
-              "value": "={{ `Ты — агент-судья. Прочитай результат верификации от OpenCode и определи: приёмка пройдена или нет.\n\nПравила:\n- Если написано VERIFICATION: PASSED и нет ошибок → PASSED\n- Если написано VERIFICATION: FAILED или есть перечисленные ошибки → FAILED\n- Не выдумывай ошибки, которых нет в тексте отчёта.\n- Отвечай ТОЛЬКО чистым JSON объектом (без markdown, без \\`\\`\\`, без пояснений):\n\n{\"verdict\": \"PASSED\"|\"FAILED\", \"reason\": \"краткая причина — что именно не так или почему всё хорошо\"}\n\nНЕ добавляй markdown. НЕ оборачивай в \\`\\`\\`json. Только одна строка JSON.` }}",
+              "value": "={{ `Ты — агент-судья. Прочитай результат верификации от OpenCode и определи: приёмка пройдена или нет.\\n\\nПравила:\\n- Если написано VERIFICATION: PASSED и нет ошибок → PASSED\\n- Если написано VERIFICATION: FAILED или есть перечисленные ошибки → FAILED\\n- Не выдумывай ошибки, которых нет в тексте отчёта.\\n- Отвечай ТОЛЬКО чистым JSON объектом (без markdown, без \\`\\`\\`, без пояснений):\\n\\n{\\\"verdict\\\": \\\"PASSED\\\"|\\\"FAILED\\\", \\\"reason\\\": \\\"краткая причина — что именно не так или почему всё хорошо\\\"}\\n\\nНЕ добавляй markdown. НЕ оборачивай в \\`\\`\\`json. Только одна строка JSON.` }}",
               "type": "string"
             },
             {
               "name": "userPrompt",
-              "value": "={{ `Результат верификации задачи ${$('Извлекаем текст верификации').first().json.taskKey}:\\n\\n${$('Извлекаем текст верификации').first().json.verificationText}` }}",
+              "value": "={{ `Результат верификации задачи ${$('Разбираем входные данные').item.json.parentTaskKey || $('Разбираем входные данные').item.json.taskKey}:\\n\\n${$('Разбираем входные данные').item.json.resultText}` }}",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "prepare-deepseek-judge",
+      "id": "prepare-judge",
       "name": "Готовим запрос к DeepSeek",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        3136,
-        288
-      ]
+      "position": [896, 416]
     },
     {
-      "parameters": {
-        "model": "deepseek-v4-pro",
-        "options": {}
-      },
-      "id": "ds-model-verify",
+      "parameters": {"model": "deepseek-v4-pro", "options": {}},
+      "id": "ds-model",
       "name": "DeepSeek Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
-      "position": [
-        3440,
-        512
-      ],
-      "credentials": {
-        "deepSeekApi": {
-          "id": "__DEEPSEEK_CREDENTIAL_ID__",
-          "name": "__DEEPSEEK_CREDENTIAL_NAME__"
-        }
-      }
+      "position": [1200, 544],
+      "credentials": {"deepSeekApi": {"id": "__DEEPSEEK_CREDENTIAL_ID__", "name": "__DEEPSEEK_CREDENTIAL_NAME__"}}
     },
     {
       "parameters": {
         "promptType": "define",
         "text": "={{ $json.userPrompt }}",
-        "options": {
-          "systemMessage": "={{ $json.systemPrompt }}"
-        }
+        "options": {"systemMessage": "={{ $json.systemPrompt }}"}
       },
       "id": "deepseek-judge",
       "name": "DeepSeek Judge",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [
-        3360,
-        288
-      ]
+      "position": [1120, 416]
     },
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Извлекаем вердикт из ответа DeepSeek.\n\nconst toText = (v) => String(v ?? '').trim()\n\nlet rawOutput = {}\ntry { rawOutput = $('DeepSeek Judge').first().json } catch (_) {}\nconst content = toText(rawOutput.output ?? rawOutput.text ?? '')\n\nif (!content) {\n  return { json: { verdict: 'FAILED', reason: 'DeepSeek вернул пустой ответ', fixNeeded: true } }\n}\n\nfunction extractJson(text) {\n  const stripped = text.replace(/```(?:json)?\\n?/g, '').replace(/```/g, '').trim()\n  try { return JSON.parse(stripped) } catch (_) {}\n  const start = text.indexOf('{')\n  if (start === -1) return null\n  let depth = 0, inString = false, escape = false\n  for (let i = start; i < text.length; i++) {\n    const ch = text[i]\n    if (escape) { escape = false; continue }\n    if (ch === '\\\\') { escape = true; continue }\n    if (ch === '\"') { inString = !inString; continue }\n    if (inString) continue\n    if (ch === '{') depth++\n    if (ch === '}') {\n      depth--\n      if (depth === 0) {\n        try { return JSON.parse(text.slice(start, i + 1)) } catch (_) { return null }\n      }\n    }\n  }\n  return null\n}\n\nconst parsed = extractJson(content)\nif (!parsed) {\n  const looksPassed = content.toLowerCase().includes('passed') && !content.toLowerCase().includes('failed')\n  return {\n    json: {\n      verdict: looksPassed ? 'PASSED' : 'FAILED',\n      reason: content.slice(0, 300),\n      fixNeeded: !looksPassed\n    }\n  }\n}\n\nconst parentInput = $('Извлекаем текст верификации').first().json\n\nreturn {\n  json: {\n    verdict: String(parsed.verdict || '').toUpperCase(),\n    reason: String(parsed.reason || ''),\n    taskKey: parentInput.taskKey,\n    chatId: parentInput.chatId,\n    originalPrompt: parentInput.originalPrompt,\n    acceptanceCriteria: parentInput.acceptanceCriteria,\n    workerAlias: parentInput.workerAlias,\n    fixNeeded: String(parsed.verdict || '').toUpperCase() !== 'PASSED',\n  },\n}"
+        "jsCode": "const toText = (v) => String(v ?? '').trim()\n\nlet rawOutput = {}\ntry { rawOutput = $('DeepSeek Judge').first().json } catch (_) {}\nconst content = toText(rawOutput.output ?? rawOutput.text ?? '')\n\nif (!content) {\n  return { json: { verdict: 'FAILED', reason: 'DeepSeek вернул пустой ответ', fixNeeded: true } }\n}\n\nfunction extractJson(text) {\n  const stripped = text.replace(/```(?:json)?/g, '').replace(/```/g, '').trim()\n  try { return JSON.parse(stripped) } catch (_) {}\n  const start = text.indexOf('{')\n  if (start === -1) return null\n  let depth = 0, inString = false, escape = false\n  for (let i = start; i < text.length; i++) {\n    const ch = text[i]\n    if (escape) { escape = false; continue }\n    if (ch === '\\\\') { escape = true; continue }\n    if (ch === '\"') { inString = !inString; continue }\n    if (inString) continue\n    if (ch === '{') depth++\n    if (ch === '}') { depth--; if (depth === 0) { try { return JSON.parse(text.slice(start, i + 1)) } catch (_) { return null } } }\n  }\n  return null\n}\n\nconst parsed = extractJson(content)\nif (!parsed) {\n  const looksPassed = content.toLowerCase().includes('passed') && !content.toLowerCase().includes('failed')\n  return { json: { verdict: looksPassed ? 'PASSED' : 'FAILED', reason: content.slice(0, 300), fixNeeded: !looksPassed } }\n}\n\nconst input = $('Разбираем входные данные').item.json\n\nreturn {\n  json: {\n    verdict: String(parsed.verdict || '').toUpperCase(),\n    reason: String(parsed.reason || ''),\n    fixNeeded: String(parsed.verdict || '').toUpperCase() !== 'PASSED',\n    taskKey: input.taskKey, chatId: input.chatId,\n    originalPrompt: input.originalPrompt,\n    acceptanceCriteria: input.acceptanceCriteria,\n    workerAlias: input.workerAlias,\n    parentTaskKey: input.parentTaskKey || input.taskKey,\n    parentSessionId: input.parentSessionId || input.sessionId,\n    parentOriginalPrompt: input.parentOriginalPrompt || input.originalPrompt,\n  },\n}"
       },
       "id": "parse-verdict",
       "name": "Извлекаем вердикт",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        3712,
-        288
-      ]
+      "position": [1344, 416]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $('Извлекаем вердикт').first().json.fixNeeded }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+          "conditions": [{
+            "leftValue": "={{ $('Извлекаем вердикт').first().json.fixNeeded }}",
+            "rightValue": true,
+            "operator": {"type": "boolean", "operation": "true", "singleValue": true}
+          }],
           "combinator": "and"
         },
         "options": {}
@@ -542,39 +194,31 @@
       "name": "Верификация провалена?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        3936,
-        288
-      ]
+      "position": [1568, 416]
     },
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Готовим fix-задачу при FAILED верификации.\n\nconst parent = $('Извлекаем вердикт').first().json\nconst fixTaskKey = `fix-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\nconst fixPrompt = `FIX TASK — previous implementation failed acceptance verification.\n\nORIGINAL TASK:\n${parent.originalPrompt}\n\nVERIFICATION FAILED:\n${parent.reason}\n\nPlease fix ALL the issues found in the verification. When you're done, the implementation will be re-verified against the original acceptance criteria.\n\nACCEPTANCE CRITERIA (same as original):\n${parent.acceptanceCriteria}`\n\nconst contextJson = JSON.stringify({\n  acceptanceCriteria: parent.acceptanceCriteria,\n  originalPrompt: parent.originalPrompt,\n  source: 'verification',\n  parentTaskKey: parent.taskKey,\n})\n\nreturn {\n  json: {\n    fixTaskKey,\n    fixPrompt,\n    contextJson,\n    parentTaskKey: parent.taskKey,\n    chatId: parent.chatId,\n    workerAlias: parent.workerAlias,\n    originalTaskKey: parent.taskKey,\n    acceptanceCriteria: parent.acceptanceCriteria,\n    verdict: parent.verdict,\n    reason: parent.reason,\n  },\n}"
+        "jsCode": "const v = $('Извлекаем вердикт').first().json\nconst fixTaskKey = `fix-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`\n\nconst fixPrompt = `FIX TASK — previous implementation failed acceptance verification.\\n\\nORIGINAL TASK:\\n${v.parentOriginalPrompt}\\n\\nVERIFICATION FAILED:\\n${v.reason}\\n\\nPlease fix ALL the issues found in the verification.\\n\\nACCEPTANCE CRITERIA:\\n${v.acceptanceCriteria}`\n\nconst contextJson = JSON.stringify({\n  source: 'fix',\n  acceptanceCriteria: v.acceptanceCriteria,\n  originalPrompt: v.parentOriginalPrompt,\n  original_parent_task_key: v.parentTaskKey,\n  original_parent_session_id: v.parentSessionId,\n})\n\nreturn { json: { fixTaskKey, fixPrompt, contextJson, chatId: v.chatId, workerAlias: v.workerAlias, parentTaskKey: v.parentTaskKey, parentSessionId: v.parentSessionId, taskKey: v.taskKey, reason: v.reason } }"
       },
       "id": "prepare-fix-task",
       "name": "Готовим задачу-фикс",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4160,
-        208
-      ]
+      "position": [1792, 320]
     },
     {
       "parameters": {
         "operation": "insert",
-        "dataTableId": {
-          "mode": "id",
-          "value": "__TASKS_TABLE_ID__"
-        },
+        "dataTableId": {"mode": "id", "value": "__TASKS_TABLE_ID__"},
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
             "task_key": "={{ $('Готовим задачу-фикс').first().json.fixTaskKey }}",
-            "source": "verification",
+            "source": "fix",
             "chat_id": "={{ $('Готовим задачу-фикс').first().json.chatId }}",
             "worker_alias": "={{ $('Готовим задачу-фикс').first().json.workerAlias }}",
+            "session_id": "={{ $('Готовим задачу-фикс').first().json.parentSessionId }}",
             "command_name": "task",
             "prompt": "={{ $('Готовим задачу-фикс').first().json.fixPrompt }}",
             "parent_task_key": "={{ $('Готовим задачу-фикс').first().json.parentTaskKey }}",
@@ -586,321 +230,100 @@
             "queued_at": "={{ new Date().toISOString() }}"
           }
         },
-        "options": {
-          "optimizeBulk": true
-        }
+        "options": {"optimizeBulk": true}
       },
       "id": "insert-fix-task",
       "name": "Создаём задачу-фикс",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
-      "position": [
-        4384,
-        208
-      ],
+      "position": [2016, 320],
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "chatId": "={{ $('Извлекаем вердикт').first().json.chatId }}",
-        "text": "={{ `🔄 Задача <code>${$('Готовим задачу-фикс').first().json.originalTaskKey}</code> не прошла приёмку.\n\nПричина: ${$('Готовим задачу-фикс').first().json.reason}\n\nСоздана задача исправления: <code>${$('Готовим задачу-фикс').first().json.fixTaskKey}</code>` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
+        "chatId": "={{ $('Готовим задачу-фикс').first().json.chatId }}",
+        "text": "={{ `🔄 Задача <code>${$('Готовим задачу-фикс').first().json.parentTaskKey}</code> не прошла приёмку.\\n\\nПричина: ${$('Готовим задачу-фикс').first().json.reason}\\n\\nСоздана задача исправления: <code>${$('Готовим задачу-фикс').first().json.fixTaskKey}</code>` }}",
+        "additionalFields": {"appendAttribution": false, "parse_mode": "HTML"}
       },
-      "id": "notify-fix-task",
-      "name": "Уведомляем о fix-задаче",
+      "id": "notify-fix",
+      "name": "Сообщаем о fix-задаче",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        4608,
-        208
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      }
+      "position": [2240, 320],
+      "credentials": {"telegramApi": {"id": "__TELEGRAM_CREDENTIAL_ID__", "name": "__TELEGRAM_CREDENTIAL_NAME__"}}
     },
     {
       "parameters": {
-        "language": "javaScript",
-        "jsCode": "// Возвращаем финальный результат верификации.\n\nconst verifierOutput = $('Извлекаем вердикт').first().json\n\nif (verifierOutput.fixNeeded) {\n  const fixData = $('Готовим задачу-фикс').first().json\n  return {\n    json: {\n      verdict: 'FAILED',\n      reason: verifierOutput.reason,\n      fixTaskKey: fixData.fixTaskKey,\n      parentTaskKey: verifierOutput.taskKey,\n    }\n  }\n}\n\nreturn {\n  json: {\n    verdict: 'PASSED',\n    reason: verifierOutput.reason,\n    parentTaskKey: verifierOutput.taskKey,\n  }\n}"
+        "chatId": "={{ $('Извлекаем вердикт').first().json.chatId }}",
+        "text": "={{ `✅ Задача <code>${$('Извлекаем вердикт').first().json.parentTaskKey || $('Извлекаем вердикт').first().json.taskKey}</code> прошла приёмку. Функционал реализован успешно.` }}",
+        "additionalFields": {"appendAttribution": false, "parse_mode": "HTML"}
       },
-      "id": "return-result",
-      "name": "Возвращаем результат",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        4832,
-        288
-      ]
+      "id": "notify-passed",
+      "name": "Сообщаем об успешной приёмке",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1792, 544],
+      "credentials": {"telegramApi": {"id": "__TELEGRAM_CREDENTIAL_ID__", "name": "__TELEGRAM_CREDENTIAL_NAME__"}}
     }
   ],
   "connections": {
     "Триггер: вызов из диспетчера": {
-      "main": [
-        [
-          {
-            "node": "Фиксируем входные данные",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Разбираем входные данные", "type": "main", "index": 0}]]
     },
-    "Фиксируем входные данные": {
+    "Разбираем входные данные": {
+      "main": [[{"node": "Это задача проверки?", "type": "main", "index": 0}]]
+    },
+    "Это задача проверки?": {
       "main": [
-        [
-          {
-            "node": "Уведомляем о начале верификации",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{"node": "Готовим запрос к DeepSeek", "type": "main", "index": 0}],
+        [{"node": "Уведомляем о начале верификации", "type": "main", "index": 0}]
       ]
     },
     "Уведомляем о начале верификации": {
-      "main": [
-        [
-          {
-            "node": "Разбираем входные данные",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Готовим задачу проверки", "type": "main", "index": 0}]]
     },
-    "Разбираем входные данные": {
-      "main": [
-        [
-          {
-            "node": "Создаём сессию верификации",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Готовим задачу проверки": {
+      "main": [[{"node": "Создаём задачу проверки", "type": "main", "index": 0}]]
     },
-    "Создаём сессию верификации": {
-      "main": [
-        [
-          {
-            "node": "Нормализуем ответ сессии",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Создаём задачу проверки": {
+      "main": [[{"node": "Сообщаем о задаче проверки", "type": "main", "index": 0}]]
     },
-    "Нормализуем ответ сессии": {
-      "main": [
-        [
-          {
-            "node": "Формируем промпт верификации",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Формируем промпт верификации": {
-      "main": [
-        [
-          {
-            "node": "Отправляем промпт верификации",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Отправляем промпт верификации": {
-      "main": [
-        [
-          {
-            "node": "Ждём 15 секунд",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ждём 15 секунд": {
-      "main": [
-        [
-          {
-            "node": "Проверяем статус сессии",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Проверяем статус сессии": {
-      "main": [
-        [
-          {
-            "node": "Читаем статус сессии",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Читаем статус сессии": {
-      "main": [
-        [
-          {
-            "node": "Сессия завершена?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сессия завершена?": {
-      "main": [
-        [
-          {
-            "node": "Получаем сообщения верификации",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Ждём 15 секунд",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Получаем сообщения верификации": {
-      "main": [
-        [
-          {
-            "node": "Извлекаем текст верификации",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Извлекаем текст верификации": {
-      "main": [
-        [
-          {
-            "node": "Готовим запрос к DeepSeek",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Сообщаем о задаче проверки": {
+      "main": [[]]
     },
     "Готовим запрос к DeepSeek": {
-      "main": [
-        [
-          {
-            "node": "DeepSeek Judge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "DeepSeek Judge", "type": "main", "index": 0}]]
     },
     "DeepSeek Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "DeepSeek Judge",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
+      "ai_languageModel": [[{"node": "DeepSeek Judge", "type": "ai_languageModel", "index": 0}]]
     },
     "DeepSeek Judge": {
-      "main": [
-        [
-          {
-            "node": "Извлекаем вердикт",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Извлекаем вердикт", "type": "main", "index": 0}]]
     },
     "Извлекаем вердикт": {
-      "main": [
-        [
-          {
-            "node": "Верификация провалена?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Верификация провалена?", "type": "main", "index": 0}]]
     },
     "Верификация провалена?": {
       "main": [
-        [
-          {
-            "node": "Готовим задачу-фикс",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Возвращаем результат",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{"node": "Готовим задачу-фикс", "type": "main", "index": 0}],
+        [{"node": "Сообщаем об успешной приёмке", "type": "main", "index": 0}]
       ]
     },
     "Готовим задачу-фикс": {
-      "main": [
-        [
-          {
-            "node": "Создаём задачу-фикс",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Создаём задачу-фикс", "type": "main", "index": 0}]]
     },
     "Создаём задачу-фикс": {
-      "main": [
-        [
-          {
-            "node": "Уведомляем о fix-задаче",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Сообщаем о fix-задаче", "type": "main", "index": 0}]]
     },
-    "Уведомляем о fix-задаче": {
-      "main": [
-        [
-          {
-            "node": "Возвращаем результат",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Сообщаем о fix-задаче": {
+      "main": [[]]
+    },
+    "Сообщаем об успешной приёмке": {
+      "main": [[]]
     }
   },
   "pinData": {},
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": {"executionOrder": "v1"},
   "tags": []
 }

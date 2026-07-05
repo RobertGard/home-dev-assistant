@@ -1766,7 +1766,9 @@
             "session_create_path": "={{ $('Готовим пакеты обработчиков').item.json.sessionCreatePath }}",
             "session_status_path": "={{ $('Готовим пакеты обработчиков').item.json.sessionStatusPath }}",
             "message_list_path": "={{ $('Готовим пакеты обработчиков').item.json.messageListPath }}",
-            "prompt_async_path": "={{ $('Готовим пакеты обработчиков').item.json.promptAsyncPath }}"
+            "prompt_async_path": "={{ $('Готовим пакеты обработчиков').item.json.promptAsyncPath }}",
+            "session_id": "={{ $('Выбираем активную задачу').first().json.task.session_id }}",
+            "context_json": "={{ $('Выбираем активную задачу').first().json.task.context_json }}"
           }
         },
         "options": {}
