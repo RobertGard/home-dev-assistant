@@ -144,16 +144,13 @@ Use `--interval="4h"` to create a task that re-executes on a schedule:
 When you include `--verify="criteria"` with a task:
 
 1. OpenCode completes the primary task
-2. The dispatcher spawns a **separate OpenCode session** using a **read-only verifier agent** (`edit: deny, bash: allow`)
-3. The verifier runs 4 mandatory checkpoints:
-   - **Code & build health**: lint, typecheck, tests, `git diff`
-   - **Application logs**: `docker logs --tail 100` for every container, log files
-   - **Runtime behavior**: curl API checks, Playwright browser interaction (console logs, network errors, page content)
-   - **Per-criterion verification**: each acceptance criterion matched against evidence
-4. Every checkpoint **requires actual output as evidence** — the agent cannot skip or fabricate
-5. A **DeepSeek AI judge** evaluates the verification report and returns a PASSED/FAILED verdict
-6. If FAILED → a fix task is auto-created with the **same `--verify` criteria** (criteria are copied to fix tasks)
-7. If the fix task also fails → another fix task is created, and so on until verification passes
+2. The verifier workflow creates a **verification task** in the queue (fresh session, independent of the original)
+3. The agent executes the verification — checking code health, logs, browser console (Playwright), API responses, and each criterion against evidence
+4. Verification task completes → verifier is triggered again
+5. A **DeepSeek AI judge** evaluates the verification result and returns a PASSED/FAILED verdict
+6. If FAILED → a **fix task** is auto-created with the **original session** and same `--verify` criteria
+7. Fix task → verify → fix → ... cycle repeats until verification passes
+8. If PASSED → notification sent, no further tasks
 
 ## Architecture
 
@@ -167,7 +164,7 @@ Telegram → n8n ingress → Data Table → n8n dispatcher → OpenCode worker �
 
 ## Specialist agents
 
-9 specialized agents, each with role-based permissions:
+9 specialized subagents + 2 primary agents (build, plan), each with role-based permissions:
 
 | Agent | Role | Permissions |
 |-------|------|-------------|
