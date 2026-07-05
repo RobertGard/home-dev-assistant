@@ -21,7 +21,7 @@ Self-hosted AI development assistant: submit a task in Telegram, n8n dispatches 
 - **Database tools** — explore schemas, analyze queries, review migrations, generate seed data (`/db`)
 - **Observability** — log analysis, error pattern detection, incident reports, health monitoring
 - **Docker deployment** — deploy, verify health, check logs, rollback via `/deploy`
-- **9 specialist agents** — planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent (GSD Execute+Verify)
+- **9 specialist subagents + 2 primary agents (build, plan)** — planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent (GSD Execute+Verify)
 - **16 built-in skills** — from code review and performance profiling to CI/CD automation and Docker deployment
 - **skills.sh integration** — agents auto-discover and install skills from skills.sh via pre-flight check
 - **Code quality enforcement** — mandatory verification gate, anti-hardcoding rules, professional-grade standards
@@ -79,7 +79,7 @@ System commands (handled by the bot directly):
 |---|---|
 | `--worker="alias"` | Assign task to a specific worker |
 | `--new_session` / `--fresh_session` | Force a new OpenCode session |
-| `--verify="criteria"` | Acceptance criteria — after task completion, a read-only verifier agent checks code health (lint, typecheck, tests), application logs, browser console (Playwright), API responses. Failed verification auto-creates a fix task with the same criteria |
+| `--verify="criteria"` | Acceptance criteria — after task completion, a verification task is queued (fresh session). The agent checks code health, logs, browser (Playwright), API responses. DeepSeek Judge evaluates the result; on FAILED auto-creates a fix task with the original session and criteria |
 | `--interval="4h"` | Recurring task — re-executes every N hours/days. Format: number + m/h/d (30m, 4h, 1d). Cancel with `/abort --task_key="xxx"` |
 
 ### OpenCode worker commands

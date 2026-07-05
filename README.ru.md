@@ -21,7 +21,7 @@ Self-hosted AI-ассистент для разработки: ставите з
 - **Инструменты для БД** — исследование схем, анализ запросов, ревью миграций, генерация seed-данных (`/db`)
 - **Наблюдаемость** — анализ логов, детектирование ошибок, инцидент-репорты, мониторинг здоровья
 - **Деплой** — Docker Compose, проверка здоровья, откат (`/deploy`)
-- **9 специалистов-агентов** — planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent (GSD Execute+Verify)
+- **9 специализированных субагентов + 2 основных (build, plan)** — planner, reviewer, verifier, security-auditor, ci-cd-agent, db-analyst, observability-agent, release-manager, ralph-loop-agent (GSD Execute+Verify)
 - **16 встроенных скиллов** — от ревью кода и профилирования до CI/CD и Docker-деплоя
 - **Интеграция skills.sh** — агенты авто-обнаруживают и устанавливают скиллы из skills.sh через pre-flight проверку
 - **Стандарты качества кода** — обязательный verification gate, запрет хардкода, профессиональные стандарты
@@ -79,7 +79,7 @@ bash ./scripts/setup-stack.sh
 |---|---|
 | `--worker="alias"` | Назначить задачу конкретному worker-у |
 | `--new_session` / `--fresh_session` | Принудительно создать новую сессию OpenCode |
-| `--verify="критерии"` | Критерии приёмки — после выполнения задачи read-only verifier-агент проверяет здоровье кода (lint, typecheck, тесты), логи приложения, консоль браузера (Playwright), ответы API. При FAILED авто-создаётся задача-фикс с теми же критериями |
+| `--verify="критерии"` | Критерии приёмки — после выполнения задачи в очередь ставится задача проверки (новая сессия). Агент проверяет здоровье кода, логи, браузер (Playwright), ответы API. DeepSeek Judge оценивает результат; при FAILED авто-создаётся задача-фикс с исходной сессией и критериями |
 | `--interval="4h"` | Повторяющаяся задача — перезапуск каждые N часов/дней. Формат: число + m/h/d (30m, 4h, 1d). Отмена через `/abort --task_key="xxx"` |
 
 ### OpenCode-команды (для воркера)
