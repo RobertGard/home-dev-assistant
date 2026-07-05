@@ -1270,12 +1270,31 @@
     },
     {
       "parameters": {
-        "jsCode": "// Маршрутизируем: answer → прерывание сессии, cancel_queued → прямая отмена\nconst input = $input.first().json\nif (input.mode === 'cancel_queued') {\n  return [{ json: { ...input, route: 'cancel' } }, { json: {} }]\n}\nreturn [{ json: {} }, { json: { ...input, route: 'abort' } }]"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.mode }}",
+              "rightValue": "cancel_queued",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
       "id": "route-abort-mode",
       "name": "Маршрут отмены",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
         1900,
         480
