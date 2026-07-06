@@ -36,11 +36,11 @@
           "conditions": [
             {
               "id": "chat-id-allowed",
-              "leftValue": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
-              "rightValue": "={{ Number($('Задаём переменные').first().json.telegram_chat_id) }}",
+              "leftValue": "={{ ',' + String($('Триггер Telegram').first().json.message.chat.id) + ',' }}",
+              "rightValue": "={{ ',' + String($('Задаём переменные').first().json.telegram_chat_id).replace(/\\s/g, '') + ',' }}",
               "operator": {
-                "type": "number",
-                "operation": "equals"
+                "type": "string",
+                "operation": "contains"
               }
             }
           ],
@@ -104,7 +104,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "chatId": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
         "text": "={{ (() => { try { if ($json.replyText) return $json.replyText } catch {} try { return $('Готовим ожидающую интеракцию').first().json.replyText } catch {} return $input.first().json.replyText })() }}",
         "additionalFields": {
           "appendAttribution": false,
@@ -128,7 +128,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "chatId": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
         "text": "Недопустимый чат",
         "additionalFields": {
           "appendAttribution": false,
@@ -230,7 +230,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "chatId": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
         "text": "={{ $('Готовим новую задачу').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
@@ -263,7 +263,7 @@
           "value": {
             "task_key": "={{ $('Готовим новую задачу').first().json.taskKey }}",
             "source": "telegram",
-            "chat_id": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+            "chat_id": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
             "username": "={{ $('Триггер Telegram').first().json.message.chat.username }}",
             "worker_alias": "={{ $('Готовим новую задачу').first().json.flags.worker || $('Задаём конфигурацию OpenCode').first().json.defaultWorker }}",
             "command_name": "={{ $('Готовим новую задачу').first().json.commandType || 'task' }}",
@@ -483,7 +483,7 @@
             {
               "id": "a1",
               "name": "chatId",
-              "value": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+              "value": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
               "type": "string"
             }
           ]
@@ -772,7 +772,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "chatId": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
         "text": "={{ $('Ответ распознан?').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
@@ -909,7 +909,7 @@
           "conditions": [
             {
               "keyName": "chat_id",
-              "keyValue": "={{ $('Задаём переменные').first().json.telegram_chat_id }}"
+              "keyValue": "={{ $('Триггер Telegram').first().json.message.chat.id }}"
             },
             {
               "keyName": "status",
@@ -987,7 +987,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Задаём переменные').first().json.telegram_chat_id }}",
+        "chatId": "={{ $('Триггер Telegram').first().json.message.chat.id }}",
         "text": "={{ $('Определяем цель прерывания').first().json.replyText }}",
         "additionalFields": {
           "appendAttribution": false,
