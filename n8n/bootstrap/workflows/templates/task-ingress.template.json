@@ -36,7 +36,7 @@
           "conditions": [
             {
               "id": "chat-id-allowed",
-              "leftValue": "={{ ',' + String($('Задаём переменные').first().json.telegram_chat_id).replace(/\\s/g, '') + ',' }}",
+              "leftValue": "={{ ',' + String($('Задаём переменные').first().json.telegram_chat_ids).replace(/\\s/g, '') + ',' }}",
               "rightValue": "={{ ',' + String($('Триггер Telegram').isExecuted ? $('Триггер Telegram').first().json.message.chat.id : $('Нормализуем голосовую команду').first().json.message.chat.id) + ',' }}",
               "operator": {
                 "type": "string",
@@ -64,7 +64,7 @@
           "assignments": [
             {
               "id": "telegram-chat-id",
-              "name": "telegram_chat_id",
+              "name": "telegram_chat_ids",
               "value": "__TELEGRAM_CHAT_IDS__",
               "type": "string"
             },
@@ -628,7 +628,7 @@
             {
               "id": "a1",
               "name": "chatId",
-              "value": "={{ $json.source === 'voice' ? $('Задаём переменные').first().json.telegram_chat_id.replace(/\\s/g,'').split(',')[0].trim() : $('Триггер Telegram').first().json.message.chat.id }}",
+              "value": "={{ $json.source === 'voice' ? $('Задаём переменные').first().json.telegram_chat_ids.replace(/\\s/g,'').split(',')[0].trim() : $('Триггер Telegram').first().json.message.chat.id }}",
               "type": "string"
             }
           ]
