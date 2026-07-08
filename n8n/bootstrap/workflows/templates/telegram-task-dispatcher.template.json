@@ -435,6 +435,33 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-launch-success",
+      "name": "Уведомление HA: задача запущена",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        -3200,
+        400
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
         "text": "={{ `Асинхронный запуск задачи [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}] <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> не удался: ${$('Запуск задачи').item.json.launchError || 'OpenCode не принял запрос.'}` }}",
         "additionalFields": {
@@ -708,6 +735,33 @@
         }
       },
       "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-final-result",
+      "name": "Уведомление HA: результат задачи",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        -3200,
+        800
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
     },
     {
       "parameters": {
@@ -2233,14 +2287,20 @@
     },
     "Сообщаем: задача запущена": {
       "main": [
-        []
+        [
+          {
+            "node": "Уведомление HA: задача запущена",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Отправляем результат в Telegram": {
       "main": [
         [
           {
-            "node": "Нужна верификация?",
+            "node": "Уведомление HA: результат задачи",
             "type": "main",
             "index": 0
           }
@@ -2366,6 +2426,22 @@
         [
           {
             "node": "Есть активная задача?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Уведомление HA: задача запущена": {
+      "main": [
+        []
+      ]
+    },
+    "Уведомление HA: результат задачи": {
+      "main": [
+        [
+          {
+            "node": "Нужна верификация?",
             "type": "main",
             "index": 0
           }

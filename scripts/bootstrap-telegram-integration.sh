@@ -163,6 +163,8 @@ render_template() {
   local chat_settings_table_id="${8:-}"
   local deepseek_cred_id="${9:-}"
   local verifier_wf_id="${10:-900017}"
+  local ha_cred_id="${11:-}"
+  local ha_cred_name="${12:-}"
   local cred_id_escaped="${cred_id//|/\\|}"
   local cred_name_escaped="${cred_name//|/\\|}"
   local table_id_escaped="${table_id//|/\\|}"
@@ -171,6 +173,8 @@ render_template() {
   local chat_settings_table_escaped="${chat_settings_table_id//|/\\|}"
   local deepseek_cred_escaped="${deepseek_cred_id//|/\\|}"
   local verifier_wf_id_escaped="${verifier_wf_id//|/\\|}"
+  local ha_cred_id_escaped="${ha_cred_id//|/\\|}"
+  local ha_cred_name_escaped="${ha_cred_name//|/\\|}"
   local opencode_routing_json_sed_escaped="${opencode_routing_json_escaped//\\/\\\\}"
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//&/\\&}"
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//|/\\|}"
@@ -179,6 +183,8 @@ render_template() {
     -e "s|__TELEGRAM_CREDENTIAL_NAME__|${cred_name_escaped}|g" \
     -e "s|__DEEPSEEK_CREDENTIAL_ID__|${deepseek_cred_escaped}|g" \
     -e "s|__DEEPSEEK_CREDENTIAL_NAME__|${DEEPSEEK_CREDENTIAL_NAME}|g" \
+    -e "s|__HA_CREDENTIAL_ID__|${ha_cred_id_escaped}|g" \
+    -e "s|__HA_CREDENTIAL_NAME__|${ha_cred_name_escaped}|g" \
     -e "s|__TASKS_TABLE_ID__|${table_id_escaped}|g" \
     -e "s|__CHAT_SETTINGS_TABLE_ID__|${chat_settings_table_escaped}|g" \
     -e "s|__AUTO_GENERATOR_WORKFLOW_ID__|${auto_gen_id_escaped}|g" \
@@ -450,14 +456,14 @@ printf '{"telegramCredentialId":"%s","deepseekCredentialId":"%s","haCredentialId
 auto_generator_workflow_id="900016"
 acceptance_verifier_workflow_id="900017"
 
-render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id"
-render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id"
-render_template "$SESSION_MGR_TEMPLATE" "$SESSION_MGR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
-render_template "$TASK_LAUNCHER_TEMPLATE" "$TASK_LAUNCHER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
-render_template "$PENDING_INTERACTION_TEMPLATE" "$PENDING_INTERACTION_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
-render_template "$TASK_FINALIZER_TEMPLATE" "$TASK_FINALIZER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
-render_template "$AUTO_GENERATOR_TEMPLATE" "$AUTO_GENERATOR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "${deepseek_credential_id:-}" "$acceptance_verifier_workflow_id"
-render_template "$ACCEPTANCE_VERIFIER_TEMPLATE" "$ACCEPTANCE_VERIFIER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id"
+render_template "$INGRESS_TEMPLATE" "$INGRESS_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$DISPATCH_TEMPLATE" "$DISPATCH_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$SESSION_MGR_TEMPLATE" "$SESSION_MGR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$TASK_LAUNCHER_TEMPLATE" "$TASK_LAUNCHER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$PENDING_INTERACTION_TEMPLATE" "$PENDING_INTERACTION_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$TASK_FINALIZER_TEMPLATE" "$TASK_FINALIZER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$AUTO_GENERATOR_TEMPLATE" "$AUTO_GENERATOR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "${deepseek_credential_id:-}" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
+render_template "$ACCEPTANCE_VERIFIER_TEMPLATE" "$ACCEPTANCE_VERIFIER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id" "${ha_credential_id:-}" "${HA_CREDENTIAL_NAME}"
 sed -i "s|__DEFAULT_WORKER_ALIAS__|${default_worker_alias}|g" "$AUTO_GENERATOR_WORKFLOW_TEMP"
 
 log_ok 'Временные workflow-файлы подготовлены.'
