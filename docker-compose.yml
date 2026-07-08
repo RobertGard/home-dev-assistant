@@ -242,7 +242,7 @@ services:
     image: rhasspy/wyoming-faster-whisper
     restart: unless-stopped
     network_mode: host
-    command: --model tiny-int8 --language ru --beam-size 1
+    command: --model tiny-int8 --language ru --data-dir /data --download-dir /data
     volumes:
       - ./ha_whisper_data:/data
 
@@ -250,7 +250,7 @@ services:
     image: rhasspy/wyoming-piper
     restart: unless-stopped
     network_mode: host
-    command: --voice ru_RU-irina-medium
+    command: --voice ru_RU-irina-medium --data-dir /data --download-dir /data
     volumes:
       - ./ha_piper_data:/data
 
