@@ -225,6 +225,19 @@ services:
       - edge
     stop_grace_period: 10m
 
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    profiles: ["ha"]
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./ha_config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+
 volumes:
   postgres_data:
   redis_data:
