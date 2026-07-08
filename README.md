@@ -280,7 +280,7 @@ Included in the stack automatically. First launch:
 ## Getting help
 
 - **Installation issues:** run `bash ./scripts/verify-stack.sh` — checks compose, n8n, workers
-- **Telegram not working:** ensure `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` and `N8N_API_KEY` are set in `.env`, then `bash ./scripts/bootstrap-telegram-integration.sh`
+- **Telegram not working:** ensure `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDS` and `N8N_API_KEY` are set in `.env`, then `bash ./scripts/bootstrap-telegram-integration.sh`
 - **Worker not responding:** `docker compose ps` — all services should be healthy; check logs: `docker compose logs opencode-worker-1 --tail 200`
 - **Bugs and suggestions:** [GitHub Issues](https://github.com/RobertGard/n8n-opencode-orchestrator/issues)
 
