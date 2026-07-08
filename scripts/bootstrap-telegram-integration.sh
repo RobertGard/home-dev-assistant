@@ -405,17 +405,16 @@ if [ -z "${HA_API_TOKEN:-}" ]; then
   printf '  4. Нажми "Создать токен", введи имя (например "n8n")\n'
   printf '  5. Скопируй токен и вставь его ниже\n'
   printf '\n'
-  printf '  Токен (или пустая строка чтобы пропустить голос):\n'
+  printf '  Токен:\n'
   printf '  → '
   IFS= read -r ha_token
   ha_token="$(printf '%s' "$ha_token" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  if [ -n "$ha_token" ]; then
-    HA_API_TOKEN="$ha_token"
-    upsert_env_value HA_API_TOKEN "$HA_API_TOKEN"
-    log_ok 'HA_API_TOKEN записан в .env'
-  else
-    log_warn 'HA_API_TOKEN не указан — голосовое управление будет недоступно. HA ноды будут молча пропускаться (onError: continueRegularOutput).'
+  if [ -z "$ha_token" ]; then
+    die 'HA_API_TOKEN обязателен для голосового управления. Прерываю.'
   fi
+  HA_API_TOKEN="$ha_token"
+  upsert_env_value HA_API_TOKEN "$HA_API_TOKEN"
+  log_ok 'HA_API_TOKEN записан в .env'
 fi
 
 if [ -n "${HA_API_TOKEN:-}" ]; then
