@@ -393,6 +393,23 @@ fi
 # Home Assistant credential (для voice ingress)
 ha_credential_id=""
 HA_CREDENTIAL_NAME="Home Assistant"
+
+if [ -z "${HA_API_TOKEN:-}" ]; then
+  printf '\nДля голосового управления через Home Assistant нужен токен.\n'
+  printf '1. Открой http://<IP-сервера>:8123\n'
+  printf '2. Профиль (внизу слева) → Длинные токены доступа → Создать токен\n'
+  printf '3. Вставь токен ниже (оставь пустым чтобы пропустить):\n'
+  IFS= read -r ha_token
+  ha_token="$(printf '%s' "$ha_token" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  if [ -n "$ha_token" ]; then
+    HA_API_TOKEN="$ha_token"
+    upsert_env_value HA_API_TOKEN "$HA_API_TOKEN"
+    log_ok 'HA_API_TOKEN записан в .env'
+  else
+    log_info 'HA_API_TOKEN не указан — голосовое управление будет недоступно.'
+  fi
+fi
+
 if [ -n "${HA_API_TOKEN:-}" ]; then
   if [ -f "$STATE_FILE" ]; then
     ha_credential_id="$(jq -r '.haCredentialId // empty' "$STATE_FILE" 2>/dev/null || true)"
