@@ -227,7 +227,6 @@ services:
 
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:stable
-    profiles: ["ha"]
     restart: unless-stopped
     network_mode: host
     privileged: true
