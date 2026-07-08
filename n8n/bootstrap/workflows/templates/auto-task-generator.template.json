@@ -348,6 +348,60 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-Уведомляем-о-новой-задаче",
+      "name": "Уведомление HA: Уведомляем о новой задаче",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        9999,
+        9999
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-auto-task",
+      "name": "Уведомление HA: Уведомляем о новой задаче",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
         "text": "=🤖 Авто-ответ [<code>{{ $('Валидируем ответ').first().json.taskKey }}</code>] [{{ ($('Конфигурация авто-генератора').first().json.workerAlias) || 'primary' }}]: {{ $('Валидируем ответ').first().json.answer }}",
         "additionalFields": {
@@ -372,6 +426,33 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-auto-answer",
+      "name": "Уведомление HA: Уведомляем об ответе",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
         "text": "=⚠️ {{ $json.error }}",
         "additionalFields": {
@@ -391,6 +472,60 @@
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-Сообщаем-об-ошибке-генерации",
+      "name": "Уведомление HA: Сообщаем об ошибке генерации",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        9999,
+        9999
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-auto-error",
+      "name": "Уведомление HA: Сообщаем об ошибке генерации",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
         }
       }
     },
@@ -695,6 +830,27 @@
       ]
     },
     "Уведомляем об ответе": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: Уведомляем об ответе",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Уведомление HA: Уведомляем об ответе": {
+      "main": [
+        []
+      ]
+    },
+    "Уведомление HA: Уведомляем о новой задаче": {
+      "main": [
+        []
+      ]
+    },
+    "Уведомление HA: Сообщаем об ошибке генерации": {
       "main": [
         []
       ]

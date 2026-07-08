@@ -308,6 +308,60 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-Сообщаем-родитель-неуспешен",
+      "name": "Уведомление HA: Сообщаем: родитель неуспешен",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        9999,
+        9999
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-parent-fail",
+      "name": "Уведомление HA: родитель неуспешен",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -411,6 +465,60 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-Сообщаем-вхождение-не-найдено",
+      "name": "Уведомление HA: Сообщаем: вхождение не найдено",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        9999,
+        9999
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-parent-match",
+      "name": "Уведомление HA: вхождение не найдено",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
         "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}] успешно запущена. Ожидайте результат.` }}",
         "additionalFields": {
@@ -486,6 +594,33 @@
     },
     {
       "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-launch-error",
+      "name": "Уведомление HA: ошибка асинхронного запуска",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
         "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
         "text": "={{ `Ответ на вопрос по задаче [${$('Выбираем активную задачу').first().json.task.worker_alias || 'primary'}] <code>${$('Выбираем активную задачу').first().json.task.task_key}</code> не отправлен: ${String($('Обработка интеракций').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
         "additionalFields": {
@@ -505,6 +640,33 @@
         "telegramApi": {
           "id": "__TELEGRAM_CREDENTIAL_ID__",
           "name": "__TELEGRAM_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-answer-error",
+      "name": "Уведомление HA: ошибка ответа на вопрос",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
         }
       }
     },
@@ -1202,6 +1364,33 @@
         }
       },
       "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "notify",
+        "service": "notify",
+        "serviceAttributes": {
+          "message": "={{ $json.text }}",
+          "title": "n8n Ассистент"
+        }
+      },
+      "id": "ha-stream-progress",
+      "name": "Уведомление HA: промежуточный прогресс в Telegram",
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "__HA_CREDENTIAL_ID__",
+          "name": "__HA_CREDENTIAL_NAME__"
+        }
+      }
     },
     {
       "parameters": {
@@ -2162,7 +2351,7 @@
       "main": [
         [
           {
-            "node": "Помечаем прогресс отправленным",
+            "node": "Уведомление HA: промежуточный прогресс в Telegram",
             "type": "main",
             "index": 0
           }
@@ -2176,14 +2365,20 @@
     },
     "Сообщаем: ошибка асинхронного запуска": {
       "main": [
-        []
+        [
+          {
+            "node": "Уведомление HA: ошибка асинхронного запуска",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Сообщаем: ошибка ответа на вопрос": {
       "main": [
         [
           {
-            "node": "Завершение задачи",
+            "node": "Уведомление HA: ошибка ответа на вопрос",
             "type": "main",
             "index": 0
           }
@@ -2446,6 +2641,43 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Уведомление HA: ошибка асинхронного запуска": {
+      "main": [
+        []
+      ]
+    },
+    "Уведомление HA: промежуточный прогресс в Telegram": {
+      "main": [
+        [
+          {
+            "node": "Помечаем прогресс отправленным",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Уведомление HA: ошибка ответа на вопрос": {
+      "main": [
+        [
+          {
+            "node": "Завершение задачи",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Уведомление HA: Сообщаем: родитель неуспешен": {
+      "main": [
+        []
+      ]
+    },
+    "Уведомление HA: Сообщаем: вхождение не найдено": {
+      "main": [
+        []
       ]
     }
   },
