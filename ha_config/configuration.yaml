@@ -1,18 +1,10 @@
-# Reverse proxy — должно быть ПЕРЕД default_config
-http:
-  use_x_forwarded_for: true
-  use_x_forwarded_host: true
-  trusted_proxies:
-    - 127.0.0.1
+# Home Assistant core config
 
-# Остальной конфиг
 default_config:
 
 conversation:
 api:
-
 mobile_app:
-
 assist_pipeline:
 
 rest_command:

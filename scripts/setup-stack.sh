@@ -450,6 +450,10 @@ run_startup_pipeline() {
     die 'Не удалось собрать или запустить контейнеры через docker compose.'
   fi
   # HA и Caddy чувствительны к изменениям конфигов — принудительно пересоздаём
+  # Чистим кэш .storage чтобы HA перечитал YAML заново
+  if [ -d "${ROOT_DIR}/ha_config/.storage" ]; then
+    rm -rf "${ROOT_DIR}/ha_config/.storage"
+  fi
   "${compose_cmd[@]}" up -d --force-recreate homeassistant 2>/dev/null || true
   if [ "${ENABLE_CADDY_PROXY:-false}" = "true" ]; then
     "${compose_cmd[@]}" --profile proxy up -d --force-recreate caddy 2>/dev/null || true
