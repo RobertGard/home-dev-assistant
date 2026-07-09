@@ -211,33 +211,6 @@
           "title": "n8n Ассистент"
         }
       },
-      "id": "ha-Отправляем-Недопустимый-чат",
-      "name": "Уведомление HA: Отправляем: Недопустимый чат",
-      "type": "n8n-nodes-base.homeAssistant",
-      "typeVersion": 1,
-      "position": [
-        9999,
-        9999
-      ],
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "homeAssistantApi": {
-          "id": "__HA_CREDENTIAL_ID__",
-          "name": "__HA_CREDENTIAL_NAME__"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "service",
-        "operation": "call",
-        "domain": "notify",
-        "service": "notify",
-        "serviceAttributes": {
-          "message": "={{ $json.text }}",
-          "title": "n8n Ассистент"
-        }
-      },
       "id": "ha-invalid-chat",
       "name": "Уведомление HA: Недопустимый чат",
       "type": "n8n-nodes-base.homeAssistant",
@@ -2300,11 +2273,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Уведомление HA: Отправляем: Недопустимый чат": {
-      "main": [
-        []
       ]
     },
     "Отправляем: Недопустимый чат": {
