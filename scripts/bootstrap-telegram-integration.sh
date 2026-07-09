@@ -454,7 +454,7 @@ if [ -n "${HA_API_TOKEN:-}" ]; then
       -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
       -H 'Content-Type: application/json' \
       -X POST \
-      -d "{\"name\":\"${HA_CREDENTIAL_NAME}\",\"type\":\"homeAssistantApi\",\"data\":{\"host\":\"127.0.0.1\",\"port\":8123,\"ssl\":false,\"accessToken\":\"${HA_API_TOKEN}\"}}" \
+      -d "{\"name\":\"${HA_CREDENTIAL_NAME}\",\"type\":\"homeAssistantApi\",\"data\":{\"host\":\"host.docker.internal\",\"port\":8123,\"ssl\":false,\"accessToken\":\"${HA_API_TOKEN}\"}}" \
       "${N8N_URL}/api/v1/credentials" | jq -r '.data.id // .id')"; then
       log_warn 'Не удалось создать HA credential в n8n — голосовой ввод не будет работать.'
     else
