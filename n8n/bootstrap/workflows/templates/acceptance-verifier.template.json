@@ -129,8 +129,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-verify-start",
@@ -234,8 +233,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-verify-queued",
@@ -451,8 +449,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-verify-fix",
@@ -503,8 +500,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-verify-passed",

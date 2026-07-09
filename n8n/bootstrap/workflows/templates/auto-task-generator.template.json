@@ -354,8 +354,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-auto-task",
@@ -406,8 +405,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-auto-answer",
@@ -458,8 +456,7 @@
         "domain": "notify",
         "service": "notify",
         "serviceAttributes": {
-          "message": "={{ $json.replyText || $json.text }}",
-          "title": "n8n Ассистент"
+          "message": "={{ $json.replyText || $json.text }}"
         }
       },
       "id": "ha-auto-error",
