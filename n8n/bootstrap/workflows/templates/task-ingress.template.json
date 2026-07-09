@@ -1573,7 +1573,7 @@
     {
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// Нормализуем голосовую команду в формат Telegram-сообщения\nconst body = $input.first().json\nconst prompt = String(body.prompt || '').trim()\n\n// Используем 0 как placeholder — set-chat-id установит правильный chat_id позже\nreturn {\n  json: {\n    message: {\n      message_id: Date.now(),\n      text: prompt,\n      chat: { id: 0 },\n      from: { id: 0, first_name: 'Voice' },\n    },\n    source: 'voice',\n    rawText: prompt,\n  },\n}"
+        "jsCode": "// Нормализуем голосовую команду в формат Telegram-сообщения\nconst body = $input.first().json\nconst prompt = String(body.body?.prompt || body.prompt || '').trim()\n\n// Используем 0 как placeholder — set-chat-id установит правильный chat_id позже\nreturn {\n  json: {\n    message: {\n      message_id: Date.now(),\n      text: prompt,\n      chat: { id: 0 },\n      from: { id: 0, first_name: 'Voice' },\n    },\n    source: 'voice',\n    rawText: prompt,\n  },\n}"
       },
       "id": "normalize-voice",
       "name": "Нормализуем голосовую команду",
