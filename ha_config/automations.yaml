@@ -1,12 +1,13 @@
-# Голосовой ассистент → n8n
-# HA Companion App → Assist → текст команды → Webhook в n8n
-
 - id: voice_to_n8n
   alias: "Голосовая команда → n8n"
   description: "Передаёт голосовую команду из HA Assist в n8n как задачу"
   trigger:
-    - platform: conversation
+    - platform: event
+      event_type: call_service
+      event_data:
+        domain: conversation
+        service: process
   action:
     - service: rest_command.n8n_voice_task
       data:
-        prompt: "{{ trigger.slots.conversation_command | default(trigger.text) }}"
+        prompt: "{{ trigger.event.data.service_data.text }}"
