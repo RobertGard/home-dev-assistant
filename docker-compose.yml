@@ -239,7 +239,7 @@ services:
 
   # Wyoming voice pipeline — STT (speech-to-text) и TTS (text-to-speech) для Home Assistant
   wyoming-whisper:
-    image: rhasspy/wyoming-faster-whisper
+    image: rhasspy/wyoming-whisper
     restart: unless-stopped
     network_mode: host
     command: --model tiny-int8 --language ru --data-dir /data --download-dir /data
