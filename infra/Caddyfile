@@ -7,3 +7,13 @@
     header_up X-Forwarded-Proto {scheme}
   }
 }
+
+{$PUBLIC_HA_DOMAIN} {
+  tls {$ACME_EMAIL}
+
+  reverse_proxy host.docker.internal:8123 {
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+}

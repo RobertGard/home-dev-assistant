@@ -477,7 +477,11 @@ run_startup_pipeline() {
     local ha_host="${DOCKER_HOST_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
     printf '\n══════════════════════════════════════════\n'
     printf '  🏠 Home Assistant\n'
-    printf '  Открой в браузере: http://%s:8123\n' "$ha_host"
+    if [ "${ENABLE_CADDY_PROXY:-false}" = "true" ] && [ -n "${PUBLIC_HA_DOMAIN:-}" ]; then
+      printf '  Открой в браузере: https://%s\n' "$PUBLIC_HA_DOMAIN"
+    else
+      printf '  Открой в браузере: http://%s:8123\n' "$ha_host"
+    fi
     printf '  1. Пройди первоначальную настройку (создай пользователя)\n'
     printf '  2. После входа: Профиль → Длинные токены доступа → Создать токен\n'
     printf '  3. Добавь в .env: HA_API_TOKEN=<токен>\n'
@@ -730,6 +734,7 @@ recover_existing_configuration() {
     ensure_env_required PUBLIC_N8N_DOMAIN 'Публичный домен для n8n' 'n8n.example.com'
     ensure_env_required ACME_EMAIL "Email для Let's Encrypt" 'admin@example.com'
     ensure_env_default N8N_HOST "$PUBLIC_N8N_DOMAIN"
+    ensure_env_default PUBLIC_HA_DOMAIN "ha.${PUBLIC_N8N_DOMAIN}"
     WEBHOOK_URL="https://${PUBLIC_N8N_DOMAIN}/"
     N8N_EDITOR_BASE_URL="$WEBHOOK_URL"
   else
