@@ -176,7 +176,6 @@ _apply_device_substitution() {
   sudo sed -i "s|notify.mobile_app_YOUR_DEVICE|${service_name}|g" "${ROOT_DIR}/ha_config/scripts.yaml"
   sudo chown -R "$(id -un):$(id -gn)" "${ROOT_DIR}/ha_config/" 2>/dev/null || true
   "${BASE_COMPOSE[@]}" restart homeassistant >/dev/null 2>&1 || true
-  _ha_config_updated=1
 }
 
 render_template() {
