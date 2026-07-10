@@ -70,7 +70,7 @@ cleanup_temp_files() {
 trap cleanup_temp_files EXIT
 
 STEP_COUNTER=0
-TOTAL_STEPS=6
+TOTAL_STEPS=7
 
 step_start() {
   STEP_COUNTER=$((STEP_COUNTER + 1))
