@@ -510,18 +510,35 @@ if [ -n "${HA_API_TOKEN:-}" ]; then
     # HA might be restarting from previous device-substitution step — wait for it
     wait_for_ha 127.0.0.1 || log_warn 'Home Assistant не ответил вовремя, пробую продолжить...'
 
-    set +e
-    "${BASE_COMPOSE[@]}" exec -T homeassistant \
-      python3 - --ha-host 127.0.0.1 --ha-port 8123 --ha-token="${HA_API_TOKEN}" --ha-language="${HA_PIPELINE_LANGUAGE:-ru}" < "$wyoming_script"
-    wyoming_exit_code=$?
-    set -e
-
-    if [ "$wyoming_exit_code" -eq 0 ]; then
-      log_ok 'Wyoming whisper + piper + голосовой pipeline настроены'
+    # Wyoming containers download models on first run — wait for TCP ports
+    log_info 'Ожидаю готовность Wyoming-контейнеров (порты 10300, 10200)...'
+    wyoming_ready=1
+    for attempt in $(seq 1 60); do
+      if nc -z -w1 127.0.0.1 10300 2>/dev/null && nc -z -w1 127.0.0.1 10200 2>/dev/null; then
+        log_ok 'Wyoming whisper + piper готовы'
+        wyoming_ready=0
+        break
+      fi
+      [ "$attempt" -eq 1 ] || [ $((attempt % 10)) -eq 0 ] && log_info "  попытка ${attempt}/60..."
+      sleep 2
+    done
+    if [ "$wyoming_ready" -ne 0 ]; then
+      log_warn 'Wyoming-контейнеры не ответили за 2 минуты. Возможно, ещё скачиваются модели.'
+      log_warn 'Продолжаю без Wyoming — настройте вручную позже.'
     else
-      log_warn 'Не удалось автоматически настроить Wyoming. Добавьте вручную:'
-      log_warn '  HA → Settings → Devices & Services → Add Integration → Wyoming Protocol'
-      log_warn '  whisper: 127.0.0.1:10300 | piper: 127.0.0.1:10200'
+      set +e
+      "${BASE_COMPOSE[@]}" exec -T homeassistant \
+        python3 - --ha-host 127.0.0.1 --ha-port 8123 --ha-token="${HA_API_TOKEN}" --ha-language="${HA_PIPELINE_LANGUAGE:-ru}" < "$wyoming_script"
+      wyoming_exit_code=$?
+      set -e
+
+      if [ "$wyoming_exit_code" -eq 0 ]; then
+        log_ok 'Wyoming whisper + piper + голосовой pipeline настроены'
+      else
+        log_warn 'Не удалось автоматически настроить Wyoming. Добавьте вручную:'
+        log_warn '  HA → Settings → Devices & Services → Add Integration → Wyoming Protocol'
+        log_warn '  whisper: 127.0.0.1:10300 | piper: 127.0.0.1:10200'
+      fi
     fi
   else
     log_warn "Скрипт ${wyoming_script} не найден, пропускаю автонастройку Wyoming"
