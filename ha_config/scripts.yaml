@@ -1,0 +1,23 @@
+# n8n → Home Assistant TTS scripts
+# These scripts are called by n8n workflows to deliver voice notifications
+
+# After initial setup, find your device notification service:
+#   HA → Developer Tools → Services → search "notify.mobile_app"
+# Replace YOUR_DEVICE with the actual device ID (e.g. notify.mobile_app_infinix_x6731b)
+'1720584135122':
+  alias: Say text on phone
+  description: Receives text from n8n and speaks it out
+  fields:
+    text_to_say:
+      description: The text to be spoken
+      example: Hello world
+  sequence:
+  - action: notify.mobile_app_YOUR_DEVICE
+    data:
+      message: TTS
+      data:
+        tts_text: '{{ text_to_say }}'
+        media_stream: alarm_stream
+        ttl: 0
+        priority: high
+        channel: TTS

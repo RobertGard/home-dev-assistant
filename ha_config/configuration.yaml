@@ -16,3 +16,5 @@ rest_command:
     payload: '{"prompt":"{{ prompt }}"}'
 
 automation: !include automations.yaml
+
+script: !include scripts.yaml

@@ -503,6 +503,11 @@ run_startup_pipeline() {
     printf '     → Настройки → Голосовые помощники → Добавить ассистента\n'
     printf '       STT: faster-whisper (tiny-int8), TTS: Piper (ru_RU-irina-medium)\n'
     printf '     → Проверь: скажи "Окей, Ассистент" в приложении\n'
+    printf '  6. Найди имя сервиса уведомлений для телефона:\n'
+    printf '     → В HA: Developer Tools → Services → поиск "notify.mobile_app"\n'
+    printf '     → Скопируй полное имя (например notify.mobile_app_infinix_x6731b)\n'
+    printf '     → Добавь в .env: HA_NOTIFY_SERVICE=<имя_сервиса>\n'
+    printf '     → Или запусти bash ./scripts/bootstrap-telegram-integration.sh — он запросит\n'
     printf '══════════════════════════════════════════\n\n'
   fi
 }

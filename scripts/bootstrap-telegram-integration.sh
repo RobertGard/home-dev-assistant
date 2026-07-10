@@ -461,6 +461,44 @@ if [ -n "${HA_API_TOKEN:-}" ]; then
       log_ok "Home Assistant credential готов: ${ha_credential_id}"
     fi
   fi
+
+  scripts_yaml="${ROOT_DIR}/ha_config/scripts.yaml"
+
+  if [ -f "$scripts_yaml" ] && grep -q 'notify.mobile_app_YOUR_DEVICE' "$scripts_yaml"; then
+    if [[ "${HA_NOTIFY_SERVICE:-}" == notify.mobile_app_* ]] && [[ "${HA_NOTIFY_SERVICE}" != *YOUR_DEVICE* ]]; then
+      log_info "Подставляю HA_NOTIFY_SERVICE=${HA_NOTIFY_SERVICE} в scripts.yaml"
+      sudo sed -i "s|notify.mobile_app_YOUR_DEVICE|${HA_NOTIFY_SERVICE}|g" "$scripts_yaml"
+      sudo chown -R "$(id -un):$(id -gn)" "${ROOT_DIR}/ha_config/" 2>/dev/null || true
+      "${BASE_COMPOSE[@]}" restart homeassistant >/dev/null 2>&1 || true
+      log_ok 'scripts.yaml обновлен, Home Assistant перезапущен'
+    else
+      printf '\n══════════════════════════════════════════════════\n'
+      printf '  📱 Нужно указать имя устройства для TTS-уведомлений\n'
+      printf '══════════════════════════════════════════════════\n'
+      printf '\n'
+      printf '  1. Установи HA Companion App на телефон и подключись\n'
+      printf '  2. В HA: Developer Tools → Services → поиск "notify.mobile_app"\n'
+      printf '  3. Скопируй полное имя сервиса (например notify.mobile_app_infinix_x6731b)\n'
+      printf '  4. Вставь его ниже\n'
+      printf '\n'
+      printf '  Имя сервиса:\n'
+      printf '  → '
+      IFS= read -r notify_service
+      notify_service="$(printf '%s' "$notify_service" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+      if [ -z "$notify_service" ]; then
+        log_warn 'Имя сервиса не указано. Отредактируй notify.mobile_app_YOUR_DEVICE в ha_config/scripts.yaml вручную.'
+      elif [[ "$notify_service" != notify.mobile_app_* ]]; then
+        log_error "Имя сервиса должно начинаться с 'notify.mobile_app_'. Получено: ${notify_service}"
+        log_warn 'Отредактируй notify.mobile_app_YOUR_DEVICE в ha_config/scripts.yaml вручную.'
+      else
+        sudo sed -i "s|notify.mobile_app_YOUR_DEVICE|${notify_service}|g" "$scripts_yaml"
+        upsert_env_value HA_NOTIFY_SERVICE "$notify_service"
+        sudo chown -R "$(id -un):$(id -gn)" "${ROOT_DIR}/ha_config/" 2>/dev/null || true
+        "${BASE_COMPOSE[@]}" restart homeassistant >/dev/null 2>&1 || true
+        log_ok "HA_NOTIFY_SERVICE=${notify_service} записан в .env и scripts.yaml, Home Assistant перезапущен"
+      fi
+    fi
+  fi
 fi
 
 step_start 'Сохраняю bootstrap state и рендерю workflow'

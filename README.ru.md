@@ -277,7 +277,8 @@ bash ./scripts/cleanup-executions.sh
 │   └── workflows/templates/
 ├── ha_config/
 │   ├── configuration.yaml
-│   └── automations.yaml
+│   ├── automations.yaml
+│   └── scripts.yaml
 └── workers/
     └── config.json.default
 ```

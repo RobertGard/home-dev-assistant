@@ -277,7 +277,8 @@ Included in the stack automatically. Wyoming Whisper + Piper for local STT/TTS (
 │   └── workflows/templates/
 ├── ha_config/
 │   ├── configuration.yaml
-│   └── automations.yaml
+│   ├── automations.yaml
+│   └── scripts.yaml
 └── workers/
     └── config.json.default
 ```
