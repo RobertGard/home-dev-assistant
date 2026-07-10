@@ -507,6 +507,9 @@ if [ -n "${HA_API_TOKEN:-}" ]; then
   wyoming_script="${ROOT_DIR}/scripts/setup-wyoming.py"
 
   if [ -f "$wyoming_script" ]; then
+    # HA might be restarting from previous device-substitution step — wait for it
+    wait_for_ha 127.0.0.1 || log_warn 'Home Assistant не ответил вовремя, пробую продолжить...'
+
     set +e
     "${BASE_COMPOSE[@]}" exec -T homeassistant \
       python3 - --ha-host 127.0.0.1 --ha-port 8123 --ha-token="${HA_API_TOKEN}" --ha-language="${HA_PIPELINE_LANGUAGE:-ru}" < "$wyoming_script"
