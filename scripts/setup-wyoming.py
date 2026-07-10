@@ -235,29 +235,48 @@ async def main():
         return 0
 
     import time
-    time.sleep(2)  # Brief pause for HA to register new Wyoming entities
 
     print("\nConnecting to HA WebSocket for pipeline setup...")
-    ws = await ha_connect(ha_host, ha_port, ha_token)
+    ws = None
+    for ws_attempt in range(10):
+        try:
+            ws = await ha_connect(ha_host, ha_port, ha_token)
+            break
+        except Exception as e:
+            if ws_attempt == 9:
+                print(f"  [ERROR] WebSocket connection failed after 10 attempts: {e}")
+                print("  Create pipeline manually: HA → Settings → Voice assistants → Add assistant")
+                return 1
+            print(f"  WebSocket attempt {ws_attempt + 1}/10 failed, retrying...")
+            time.sleep(2)
     print("  [OK] Authenticated")
 
-    print("\n--- Discovering STT/TTS engines ---")
-    stt_engines = await find_wyoming_engine(ws, "stt")
-    tts_engines = await find_wyoming_engine(ws, "tts")
+    # Wait for HA to register newly added Wyoming entities (poll up to 30 sec)
+    print("\n--- Discovering STT/TTS engines (waiting for Wyoming entities)...")
+    stt_engines = []
+    tts_engines = []
+    for attempt in range(30):
+        stt_engines = await find_wyoming_engine(ws, "stt")
+        tts_engines = await find_wyoming_engine(ws, "tts")
+        if stt_engines and tts_engines:
+            break
+        if attempt == 0 or attempt % 5 == 4:
+            print(f"  Waiting for STT/TTS registration (attempt {attempt + 1}/30)...")
+        time.sleep(1)
 
     if not stt_engines:
         all_stt = [s["entity_id"] for s in (await ws_call(ws, 210, "get_states"))
                    if s["entity_id"].startswith("stt.")]
         stt_engines = all_stt
         if not stt_engines:
-            print("  [WARN] No STT engines found at all!")
+            print("  [WARN] No STT engines found after 30 seconds!")
 
     if not tts_engines:
         all_tts = [s["entity_id"] for s in (await ws_call(ws, 211, "get_states"))
                    if s["entity_id"].startswith("tts.")]
         tts_engines = all_tts
         if not tts_engines:
-            print("  [WARN] No TTS engines found at all!")
+            print("  [WARN] No TTS engines found after 30 seconds!")
 
     print(f"  STT candidates: {stt_engines}")
     print(f"  TTS candidates: {tts_engines}")
