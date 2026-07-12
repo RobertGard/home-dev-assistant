@@ -155,8 +155,8 @@
       "id": "ha-verify-start",
       "name": "Уведомление HA: верификация начата",
       "position": [
-        100,
-        100
+        872,
+        288
       ],
       "onError": "continueRegularOutput"
     },
@@ -271,8 +271,8 @@
       "id": "ha-verify-queued",
       "name": "Уведомление HA: задача проверки",
       "position": [
-        100,
-        250
+        1768,
+        160
       ],
       "onError": "continueRegularOutput"
     },
@@ -499,8 +499,8 @@
       "id": "ha-verify-fix",
       "name": "Уведомление HA: нужен фикс",
       "position": [
-        100,
-        400
+        2440,
+        320
       ],
       "onError": "continueRegularOutput"
     },
@@ -562,8 +562,8 @@
       "id": "ha-verify-passed",
       "name": "Уведомление HA: приёмка пройдена",
       "position": [
-        100,
-        550
+        1992,
+        544
       ],
       "onError": "continueRegularOutput"
     }

@@ -165,8 +165,8 @@
       "id": "ha-parse-error",
       "name": "Отвечаем HA: ошибка парсинга",
       "position": [
-        -2100,
-        600
+        -312,
+        32
       ],
       "onError": "continueRegularOutput"
     },
@@ -244,8 +244,8 @@
       "id": "ha-invalid-chat",
       "name": "Уведомление HA: Недопустимый чат",
       "position": [
-        0,
-        0
+        -3352,
+        256
       ],
       "onError": "continueRegularOutput"
     },
@@ -401,8 +401,8 @@
       "id": "ha-queued",
       "name": "Отвечаем HA: задача поставлена",
       "position": [
-        -2100,
-        750
+        -312,
+        704
       ],
       "onError": "continueRegularOutput"
     },
@@ -998,8 +998,8 @@
       "id": "ha-answer",
       "name": "Отвечаем HA: ответ принят",
       "position": [
-        -2100,
-        900
+        136,
+        320
       ],
       "onError": "continueRegularOutput"
     },
@@ -1268,8 +1268,8 @@
       "id": "ha-abort",
       "name": "Отвечаем HA: задача прервана",
       "position": [
-        -2100,
-        1050
+        -88,
+        512
       ],
       "onError": "continueRegularOutput"
     },
@@ -1547,8 +1547,8 @@
       "id": "ha-auto",
       "name": "Отвечаем HA: смена режима",
       "position": [
-        -2100,
-        1200
+        -536,
+        896
       ],
       "onError": "continueRegularOutput"
     },
@@ -1756,8 +1756,8 @@
       "id": "ha-voice-received",
       "name": "Уведомление HA: голосовая команда получена",
       "position": [
-        0,
-        0
+        -2400,
+        240
       ],
       "onError": "continueRegularOutput"
     }

@@ -380,8 +380,8 @@
       "id": "ha-auto-task",
       "name": "Уведомление HA: Уведомляем о новой задаче",
       "position": [
-        0,
-        0
+        1208,
+        432
       ],
       "onError": "continueRegularOutput"
     },
@@ -443,8 +443,8 @@
       "id": "ha-auto-answer",
       "name": "Уведомление HA: Уведомляем об ответе",
       "position": [
-        0,
-        0
+        1208,
+        240
       ],
       "onError": "continueRegularOutput"
     },
@@ -506,8 +506,8 @@
       "id": "ha-auto-error",
       "name": "Уведомление HA: Сообщаем об ошибке генерации",
       "position": [
-        0,
-        0
+        760,
+        144
       ],
       "onError": "continueRegularOutput"
     },

@@ -340,8 +340,8 @@
       "id": "ha-Сообщаем-родитель-неуспешен",
       "name": "Уведомление HA: Сообщаем: родитель неуспешен",
       "position": [
-        9999,
-        9999
+        3336,
+        672
       ],
       "onError": "continueRegularOutput"
     },
@@ -482,8 +482,8 @@
       "id": "ha-Сообщаем-вхождение-не-найдено",
       "name": "Уведомление HA: Сообщаем: вхождение не найдено",
       "position": [
-        9999,
-        9999
+        3336,
+        288
       ],
       "onError": "continueRegularOutput"
     },
@@ -545,8 +545,8 @@
       "id": "ha-launch-success",
       "name": "Уведомление HA: задача запущена",
       "position": [
-        -3200,
-        400
+        4008,
+        416
       ],
       "onError": "continueRegularOutput"
     },
@@ -608,8 +608,8 @@
       "id": "ha-launch-error",
       "name": "Уведомление HA: ошибка асинхронного запуска",
       "position": [
-        0,
-        0
+        4008,
+        656
       ],
       "onError": "continueRegularOutput"
     },
@@ -671,8 +671,8 @@
       "id": "ha-answer-error",
       "name": "Уведомление HA: ошибка ответа на вопрос",
       "position": [
-        0,
-        0
+        2888,
+        1088
       ],
       "onError": "continueRegularOutput"
     },
@@ -938,8 +938,8 @@
       "id": "ha-final-result",
       "name": "Уведомление HA: результат задачи",
       "position": [
-        -3200,
-        800
+        3784,
+        848
       ],
       "onError": "continueRegularOutput"
     },
@@ -1417,8 +1417,8 @@
       "id": "ha-stream-progress",
       "name": "Уведомление HA: промежуточный прогресс в Telegram",
       "position": [
-        0,
-        0
+        3784,
+        1040
       ],
       "onError": "continueRegularOutput"
     },
