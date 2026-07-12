@@ -26,11 +26,13 @@
         "mode": "raw",
         "jsonOutput": "__OPENCODE_ROUTING_JSON__",
         "options": {},
-        "values": {
-          "string": [
+        "assignments": {
+          "assignments": [
             {
+              "id": "9462bc97",
               "name": "haScriptUrl",
-              "value": "__HA_URL__/api/services/script/1720584135122"
+              "value": "__HA_URL__/api/services/script/1720584135122",
+              "type": "string"
             }
           ]
         }

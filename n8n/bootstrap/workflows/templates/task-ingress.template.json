@@ -78,18 +78,16 @@
               "name": "source",
               "value": "={{ $json.source || 'telegram' }}",
               "type": "string"
+            },
+            {
+              "id": "9462bc97",
+              "name": "haScriptUrl",
+              "value": "__HA_URL__/api/services/script/1720584135122",
+              "type": "string"
             }
           ]
         },
-        "options": {},
-        "values": {
-          "string": [
-            {
-              "name": "haScriptUrl",
-              "value": "__HA_URL__/api/services/script/1720584135122"
-            }
-          ]
-        }
+        "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,

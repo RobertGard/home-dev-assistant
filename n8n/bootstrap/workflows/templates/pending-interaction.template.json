@@ -773,15 +773,17 @@
     },
     {
       "parameters": {
-        "values": {
-          "string": [
+        "options": {},
+        "assignments": {
+          "assignments": [
             {
+              "id": "9462bc97",
               "name": "haScriptUrl",
-              "value": "__HA_URL__/api/services/script/1720584135122"
+              "value": "__HA_URL__/api/services/script/1720584135122",
+              "type": "string"
             }
           ]
-        },
-        "options": {}
+        }
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
