@@ -233,12 +233,11 @@ async def create_pipeline(ws, stt_engine, tts_engine, msg_id, language="ru"):
     # Discover available TTS voice for the chosen language
     tts_voice = None
     try:
-        voices = await ws_call(ws, msg_id.next(), "tts/engine/get", engine_id=tts_engine)
-        if voices and "supported_voices" in voices:
-            for v in voices["supported_voices"]:
-                if language in v.get("language", ""):
-                    tts_voice = v.get("voice_id")
-                    break
+        result = await ws_call(ws, msg_id.next(), "tts/engine/voices",
+                               engine_id=tts_engine, language=language)
+        voices = result.get("voices", [])
+        if voices:
+            tts_voice = voices[0].get("voice_id")
     except RuntimeError:
         pass
 
