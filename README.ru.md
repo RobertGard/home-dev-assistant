@@ -218,7 +218,7 @@ OPENCODE_WORKER_MEMORY_LIMIT=4g  # RAM на worker
 | Лимиты worker | `OPENCODE_WORKER_CPU_LIMIT`, `OPENCODE_WORKER_MEMORY_LIMIT` |
 | API ключи | `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `GITHUB_TOKEN` |
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDSS` |
-| Home Assistant | `HA_API_TOKEN` |
+| Home Assistant | `HA_API_TOKEN`, `HA_NOTIFY_SERVICE`, `HA_PIPELINE_LANGUAGE`, `HA_HOST` |
 | OpenCode | `OPENCODE_AGENT`, `OPENCODE_MODEL`, `OPENCODE_PROVIDER_TIMEOUT_MS` |
 | Опционально | `DATABASE_URL`, `GITHUB_REPOSITORY`, `BRAVE_API_KEY` |
 
@@ -249,15 +249,24 @@ bash ./scripts/cleanup-executions.sh
 
 ## Голосовое управление (Home Assistant)
 
-Включено в стек автоматически. Wyoming Whisper + Piper для локального STT/TTS (~300MB RAM, GPU не нужен). Первый запуск:
+Включено в стек автоматически. Wyoming Whisper + Piper для локального STT/TTS (~300MB RAM, GPU не нужен). **Полная автоматизация — ни одного клика в UI:**
 
 1. `bash ./scripts/setup-stack.sh` запускает HA + Wyoming контейнеры на порту 8123
 2. Откройте HA в браузере, создайте пользователя, Профиль → Безопасность → Долгосрочные токены доступа → создайте токен
-3. `bash ./scripts/bootstrap-telegram-integration.sh` запросит токен
-4. В HA: Настройки → Устройства → Добавить Wyoming (авто-найдено)
-5. Настройки → Голосовые помощники → Добавить: Whisper (STT) + Piper (TTS)
-6. Установите HA Companion App на телефон, подключитесь к URL HA
-7. Скажите "Окей, Ассистент" чтобы ставить задачи голосом. Результаты озвучиваются через TTS
+3. Установите HA Companion App на телефон, подключитесь к URL HA
+4. `bash ./scripts/bootstrap-telegram-integration.sh` — **автоматически сделает всё остальное**:
+   - Запросит HA-токен (если не задан в `.env`)
+   - Запросит имя сервиса уведомлений для телефона (`notify.mobile_app_*`)
+   - Добавит Wyoming whisper (STT) и piper (TTS) через REST API
+   - Создаст голосовой pipeline с русским языком через WebSocket API
+   - Настроит accept-уведомления через HTTP Request (без HA credential)
+5. Скажите "Окей, Ассистент" чтобы ставить задачи голосом. Результаты озвучиваются через TTS
+
+**Настраиваемые переменные в `.env`:**
+- `HA_API_TOKEN` — токен для API (запрашивается при первом запуске)
+- `HA_NOTIFY_SERVICE` — полное имя сервиса уведомлений (напр. `notify.mobile_app_infinix_x6731b`)
+- `HA_PIPELINE_LANGUAGE` — язык голосового ассистента (по умолчанию `ru`)
+- `HA_HOST` — хост HA из перспективы n8n (по умолчанию `host.docker.internal`)
 
 ## Файлы проекта
 
@@ -267,6 +276,7 @@ bash ./scripts/cleanup-executions.sh
 ├── scripts/
 │   ├── setup-stack.sh
 │   ├── bootstrap-telegram-integration.sh
+│   ├── setup-wyoming.py
 │   ├── verify-stack.sh
 │   └── cleanup-executions.sh
 ├── opencode/

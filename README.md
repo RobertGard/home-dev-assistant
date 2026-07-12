@@ -218,7 +218,7 @@ Created from `.env.example`. Key sections:
 | Worker limits | `OPENCODE_WORKER_CPU_LIMIT`, `OPENCODE_WORKER_MEMORY_LIMIT` |
 | API keys | `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `GITHUB_TOKEN` |
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_IDS` |
-| Home Assistant | `HA_API_TOKEN` |
+| Home Assistant | `HA_API_TOKEN`, `HA_NOTIFY_SERVICE`, `HA_PIPELINE_LANGUAGE`, `HA_HOST` |
 | OpenCode | `OPENCODE_AGENT`, `OPENCODE_MODEL`, `OPENCODE_PROVIDER_TIMEOUT_MS` |
 | Optional | `DATABASE_URL`, `GITHUB_REPOSITORY`, `BRAVE_API_KEY` |
 
@@ -249,15 +249,24 @@ After `docker compose down -v`, the script detects an expired key and asks for a
 
 ## Voice control (Home Assistant)
 
-Included in the stack automatically. Wyoming Whisper + Piper for local STT/TTS (~300MB RAM, no GPU needed). First launch:
+Included in the stack automatically. Wyoming Whisper + Piper for local STT/TTS (~300MB RAM, no GPU needed). **Fully automated — zero UI clicks:**
 
 1. `bash ./scripts/setup-stack.sh` starts HA + Wyoming containers on port 8123
 2. Open HA in browser, create user, go to Profile → Security → Long-lived access tokens → create token
-3. `bash ./scripts/bootstrap-telegram-integration.sh` asks for the token
-4. In HA: Settings → Devices → Add Wyoming (auto-discovered)
-5. Settings → Voice assistants → Add assistant: Whisper (STT) + Piper (TTS)
-6. Install HA Companion App on phone, connect to HA URL
-7. Say "Окей, Ассистент" to create tasks by voice. Results read back via TTS
+3. Install HA Companion App on phone, connect to HA URL
+4. `bash ./scripts/bootstrap-telegram-integration.sh` — **automatically handles everything else**:
+   - Prompts for HA token (if not set in `.env`)
+   - Prompts for phone notification service name (`notify.mobile_app_*`)
+   - Adds Wyoming whisper (STT) and piper (TTS) via REST API
+   - Creates voice pipeline with Russian language via WebSocket API
+   - Configures accept notifications via HTTP Request (no HA credential needed)
+5. Say "Окей, Ассистент" to create tasks by voice. Results read back via TTS
+
+**Configurable `.env` variables:**
+- `HA_API_TOKEN` — API token (prompted on first run)
+- `HA_NOTIFY_SERVICE` — full notification service name (e.g. `notify.mobile_app_infinix_x6731b`)
+- `HA_PIPELINE_LANGUAGE` — voice assistant language (default `ru`)
+- `HA_HOST` — HA host from n8n's perspective (default `host.docker.internal`)
 
 ## Project files
 
@@ -267,6 +276,7 @@ Included in the stack automatically. Wyoming Whisper + Piper for local STT/TTS (
 ├── scripts/
 │   ├── setup-stack.sh
 │   ├── bootstrap-telegram-integration.sh
+│   ├── setup-wyoming.py
 │   ├── verify-stack.sh
 │   └── cleanup-executions.sh
 ├── opencode/
