@@ -27,7 +27,7 @@ DEFAULT_HA_HOST = "127.0.0.1"
 DEFAULT_HA_PORT = 8123
 WHISPER_PORT = 10300
 PIPER_PORT = 10200
-PIPELINE_NAME = "Home Assistant"
+PIPELINE_NAME = "n8n — Home Assistant"
 CONVERSATION_ENGINE = "conversation.home_assistant"
 
 
