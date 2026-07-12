@@ -27,14 +27,7 @@
         "jsonOutput": "__OPENCODE_ROUTING_JSON__",
         "options": {},
         "assignments": {
-          "assignments": [
-            {
-              "id": "9462bc97",
-              "name": "haScriptUrl",
-              "value": "__HA_URL__/api/services/script/1720584135122",
-              "type": "string"
-            }
-          ]
+          "assignments": []
         }
       },
       "id": "set-routing",
@@ -320,7 +313,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -462,7 +455,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -525,7 +518,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -588,7 +581,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -651,7 +644,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -918,7 +911,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1397,7 +1390,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Задаём конфигурацию OpenCode').item.json.haScriptUrl }}",
+        "url": "={{ $('Задаём переменные').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2146,6 +2139,29 @@
         800
       ],
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ha-script-url",
+              "name": "haScriptUrl",
+              "value": "__HA_URL__/api/services/script/1720584135122",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "id": "set-vars",
+      "name": "Задаём переменные",
+      "position": [
+        424,
+        672
+      ]
     }
   ],
   "connections": {
@@ -2153,7 +2169,7 @@
       "main": [
         [
           {
-            "node": "Задаём конфигурацию OpenCode",
+            "node": "Задаём переменные",
             "type": "main",
             "index": 0
           }
@@ -2736,6 +2752,17 @@
         [
           {
             "node": "Уведомление HA: Сообщаем: вхождение не найдено",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Задаём переменные": {
+      "main": [
+        [
+          {
+            "node": "Задаём конфигурацию OpenCode",
             "type": "main",
             "index": 0
           }
