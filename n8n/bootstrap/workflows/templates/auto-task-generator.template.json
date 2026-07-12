@@ -356,7 +356,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.haScriptUrl }}",
+        "url": "={{ $('Конфигурация авто-генератора').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -419,7 +419,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.haScriptUrl }}",
+        "url": "={{ $('Конфигурация авто-генератора').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -482,7 +482,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.haScriptUrl }}",
+        "url": "={{ $('Конфигурация авто-генератора').item.json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
