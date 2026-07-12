@@ -87,9 +87,14 @@
               "type": "string"
             },
             {
+              "name": "source",
+              "value": "={{ $json.source || 'telegram' }}",
+              "type": "string"
+            },
+            {
               "id": "is-voice",
               "name": "isVoice",
-              "value": "={{ $('Нормализуем голосовую команду').isExecuted }}",
+              "value": "={{ $json.source === 'voice' }}",
               "type": "boolean"
             },
             {
@@ -1702,7 +1707,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $('Задаём переменные').first().json.isVoice }}",
+              "leftValue": "={{ $('Задаём переменные').first().json.source === 'voice' }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
