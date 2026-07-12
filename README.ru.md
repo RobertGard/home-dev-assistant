@@ -1,6 +1,6 @@
 # Home Dev Assistant
 
-Self-hosted AI-ассистент для разработки на базе OpenCode + n8n: ставите задачу в Telegram или голосом (Home Assistant), n8n диспетчеризует её на OpenCode worker-ы, результат приходит обратно в чат или озвучивается через TTS.
+Self-hosted AI-ассистент на базе OpenCode + n8n + Home Assistant: ставьте задачи голосом через HA Companion App или текстом в Telegram — результат озвучивается через TTS на телефон.
 
 > **English version:** [README.md](./README.md)
 
@@ -17,7 +17,7 @@ Self-hosted AI-ассистент для разработки на базе Open
 - **OpenCode-команды из Telegram** — `/gsd-ship`, `/deploy`, `/brainstorm` и др. автоматически заворачиваются в `/task --prompt="/команда"` и отправляются воркеру
 - **Полностью self-hosted** — никаких облачных сервисов, все данные под вашим контролем
 - **Стек из коробки** — PostgreSQL, Redis, n8n, Home Assistant, Caddy (HTTPS) — один `bash setup-stack.sh` и всё готово
-- **Голосовое управление** — Home Assistant + Companion App на телефоне. Wake-word "Окей, Ассистент" → голосовая задача → TTS-ответ на телефон. Работает вместе с Telegram
+- **Голосовое управление** — Home Assistant + Companion App. Wake-word «Окей, Ассистент» → голосовая задача → TTS-ответ. **Полная автонастройка**: Wyoming whisper/piper, voice pipeline, уведомления — ни одного клика в UI. Работает вместе с Telegram
 - **CI/CD интеграция** — запуск пайплайнов, проверка статуса, диагностика падений (`/ci`, `/release`)
 - **Инструменты для БД** — исследование схем, анализ запросов, ревью миграций, генерация seed-данных (`/db`)
 - **Наблюдаемость** — анализ логов, детектирование ошибок, инцидент-репорты, мониторинг здоровья

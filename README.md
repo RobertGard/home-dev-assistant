@@ -1,6 +1,6 @@
 # Home Dev Assistant
 
-Self-hosted AI development assistant powered by OpenCode + n8n: submit a task in Telegram or by voice (Home Assistant), n8n dispatches it to OpenCode workers, results come back to the chat or read aloud via TTS.
+Self-hosted AI development assistant powered by OpenCode + n8n + Home Assistant: submit tasks by voice via HA Companion App or by text in Telegram — results read back through TTS on your phone.
 
 > **Русская версия:** [README.ru.md](./README.ru.md)
 
@@ -17,7 +17,7 @@ Self-hosted AI development assistant powered by OpenCode + n8n: submit a task in
 - **OpenCode slash commands** — use `/gsd-ship`, `/deploy`, `/brainstorm` etc. in Telegram — they're automatically wrapped as `/task --prompt="/command"` for the worker
 - **Fully self-hosted** — no cloud services, all data under your control
 - **Batteries included** — PostgreSQL, Redis, n8n, Home Assistant, Caddy (HTTPS) — one `bash setup-stack.sh` and you're ready
-- **Voice control** — Home Assistant + Companion App on your phone. Wake word "Окей, Ассистент" → voice task → TTS result back to phone. Works alongside Telegram
+- **Voice control** — Home Assistant + Companion App. Wake word «Окей, Ассистент» → voice task → TTS result. **Fully automated setup**: Wyoming whisper/piper, voice pipeline, notifications — zero UI clicks. Works alongside Telegram
 - **CI/CD integration** — trigger pipelines, check build status, diagnose failures, manage releases (`/ci`, `/release`)
 - **Database tools** — explore schemas, analyze queries, review migrations, generate seed data (`/db`)
 - **Observability** — log analysis, error pattern detection, incident reports, health monitoring
