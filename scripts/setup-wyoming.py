@@ -225,28 +225,28 @@ async def get_wyoming_entries_ws(ws, msg_id):
         return []
 
 
-async def ws_is_wyoming_configured(ws, msg_id, host, port):
-    """Check via WebSocket if a Wyoming entry exists for host:port."""
+async def ws_is_wyoming_configured(ws, msg_id, service_name):
+    """Check via WebSocket if a Wyoming entry exists by title (service name)."""
     entries = await get_wyoming_entries_ws(ws, msg_id)
     for entry in entries:
-        data = entry.get("data", {})
-        if data.get("host") == host and data.get("port") == port:
+        if entry.get("title", "").lower() == service_name.lower():
             return True
     return False
 
 
 def ws_cleanup_duplicates(entries):
-    """Given WebSocket Wyoming entries, find duplicate IDs for same host:port."""
+    """Given WebSocket Wyoming entries, find duplicate IDs by title."""
     seen = {}
     to_delete = []
     for entry in entries:
-        data = entry.get("data", {})
-        key = (data.get("host", ""), data.get("port", 0))
+        title = entry.get("title", "").lower()
         eid = entry.get("entry_id", "")
-        if key in seen:
+        if not title or not eid:
+            continue
+        if title in seen:
             to_delete.append(eid)
         else:
-            seen[key] = eid
+            seen[title] = eid
     return to_delete
 
 
@@ -328,8 +328,8 @@ async def main():
     wyoming_entries = await get_wyoming_entries_ws(ws, msg_id)
 
     # Step 3: Add Wyoming whisper + piper if missing (via REST)
-    stt_ok = await ws_is_wyoming_configured(ws, msg_id, ha_host, WHISPER_PORT)
-    tts_ok = await ws_is_wyoming_configured(ws, msg_id, ha_host, PIPER_PORT)
+    stt_ok = await ws_is_wyoming_configured(ws, msg_id, "faster-whisper")
+    tts_ok = await ws_is_wyoming_configured(ws, msg_id, "piper")
 
     if stt_ok:
         print(f"  [OK] Wyoming whisper already configured")
