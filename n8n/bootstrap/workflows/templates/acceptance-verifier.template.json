@@ -581,8 +581,8 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "id": "ha-config-acceptance-verifier",
-      "name": "HA Config",
+      "id": "set-variables",
+      "name": "Задаём переменные",
       "position": [
         424,
         288
@@ -594,7 +594,7 @@
       "main": [
         [
           {
-            "node": "HA Config",
+            "node": "Задаём переменные",
             "type": "main",
             "index": 0
           }
@@ -806,7 +806,7 @@
         []
       ]
     },
-    "HA Config": {
+    "Задаём переменные": {
       "main": [
         [
           {
