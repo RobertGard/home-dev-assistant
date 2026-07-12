@@ -266,7 +266,7 @@ bash ./scripts/cleanup-executions.sh
 - `HA_API_TOKEN` — токен для API (запрашивается при первом запуске)
 - `HA_NOTIFY_SERVICE` — полное имя сервиса уведомлений (напр. `notify.mobile_app_infinix_x6731b`)
 - `HA_PIPELINE_LANGUAGE` — язык голосового ассистента (по умолчанию `ru`)
-- `HA_HOST` — хост HA из перспективы n8n (по умолчанию `host.docker.internal`)
+- `HA_HOST` — хост HA из перспективы n8n (по умолчанию `$PUBLIC_HA_DOMAIN`, затем `host.docker.internal`)
 
 ## Файлы проекта
 

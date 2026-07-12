@@ -201,7 +201,7 @@ render_template() {
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//&/\\&}"
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//|/\\|}"
   local ha_api_token_escaped="${HA_API_TOKEN//|/\\|}"
-  local ha_host="${HA_HOST:-host.docker.internal}"
+  local ha_host="${HA_HOST:-${PUBLIC_HA_DOMAIN:-host.docker.internal}}"
   sed \
     -e "s|__TELEGRAM_CREDENTIAL_ID__|${cred_id_escaped}|g" \
     -e "s|__TELEGRAM_CREDENTIAL_NAME__|${cred_name_escaped}|g" \

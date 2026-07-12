@@ -266,7 +266,7 @@ Included in the stack automatically. Wyoming Whisper + Piper for local STT/TTS (
 - `HA_API_TOKEN` — API token (prompted on first run)
 - `HA_NOTIFY_SERVICE` — full notification service name (e.g. `notify.mobile_app_infinix_x6731b`)
 - `HA_PIPELINE_LANGUAGE` — voice assistant language (default `ru`)
-- `HA_HOST` — HA host from n8n's perspective (default `host.docker.internal`)
+- `HA_HOST` — HA host from n8n's perspective (default `$PUBLIC_HA_DOMAIN`, then `host.docker.internal`)
 
 ## Project files
 
