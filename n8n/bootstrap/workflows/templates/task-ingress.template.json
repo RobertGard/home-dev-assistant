@@ -1689,10 +1689,10 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $json.source }}",
-              "rightValue": "voice",
+              "leftValue": "={{ $('Нормализуем голосовую команду').isExecuted }}",
+              "rightValue": true,
               "operator": {
-                "type": "string",
+                "type": "boolean",
                 "operation": "equals"
               }
             }
