@@ -1752,44 +1752,6 @@
         }
       },
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Задаём переменные').first().json.haScriptUrl }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ 'Bearer ' + $('Задаём переменные').first().json.haApiToken }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "text_to_say",
-              "value": "={{ ($json.replyText || $json.result.text || $json.text || '').replace(/`{1,3}|[*_~]{1,2}|<[^>]+>|https?:\\/\\/\\S+|\\[[^\\]]*\\]\\([^)]*\\)|[\\p{Emoji}]/gu, '').replace(/\\s+/g, ' ').trim() }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "id": "ha-voice-received",
-      "name": "Уведомление HA: голосовая команда получена",
-      "position": [
-        -24384,
-        -18112
-      ],
-      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -2278,7 +2240,7 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: голосовая команда получена",
+            "node": "Получаем задачи с ожиданием ответа",
             "type": "main",
             "index": 0
           }
@@ -2385,17 +2347,6 @@
     "Отвечаем HA webhook: смена режима": {
       "main": [
         []
-      ]
-    },
-    "Уведомление HA: голосовая команда получена": {
-      "main": [
-        [
-          {
-            "node": "Получаем задачи с ожиданием ответа",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Отправляем: Недопустимый чат": {
