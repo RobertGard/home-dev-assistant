@@ -100,13 +100,13 @@
             {
               "id": "chat-id",
               "name": "chatId",
-              "value": "={{ $('Нормализуем голосовую команду').isExecuted ? '__TELEGRAM_CHAT_IDS__'.split(',')[0].trim() : $('Триггер Telegram').first().json.message.chat.id }}",
+              "value": "={{ $if($('Нормализуем голосовую команду').isExecuted, '__TELEGRAM_CHAT_IDS__'.split(',')[0].trim(), $('Триггер Telegram').first().json.message.chat.id) }}",
               "type": "string"
             },
             {
               "id": "username",
               "name": "username",
-              "value": "={{ $('Задаём переменные').first().json.username }}",
+              "value": "={{ $if($('Нормализуем голосовую команду').isExecuted, 'Voice', $('Триггер Telegram').first().json.message.chat.username) }}",
               "type": "string"
             }
           ]
