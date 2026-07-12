@@ -349,28 +349,35 @@ async def main():
 
     # Clean up orphaned STT/TTS entities from deleted duplicate config entries
     print("\n--- Cleaning up orphaned STT/TTS entities...")
-    # Get current Wyoming config entry IDs (after duplicate cleanup)
-    current_entries = _get_wyoming_entries(ha_host, ha_port, ha_token)
-    current_entry_ids = {e["entry_id"] for e in current_entries if e.get("entry_id")}
+    states = await ws_call(ws, msg_id.next(), "get_states")
 
-    # Get all STT/TTS entities and their config_entry_id from entity registry
-    try:
-        registry = await ws_call(ws, msg_id.next(), "config/entity_registry/list")
-    except RuntimeError:
-        registry = []
-    orphaned = [e for e in registry
-                if e.get("platform") == "wyoming"
-                and e.get("config_entry_id")
-                and e["config_entry_id"] not in current_entry_ids]
-    for entity in orphaned:
-        eid = entity["entity_id"]
-        try:
-            await ws_call(ws, msg_id.next(), "config/entity_registry/remove", entity_id=eid)
-            print(f"  Removed orphan entity: {eid}")
-        except RuntimeError:
-            print(f"  [WARN] Could not remove entity: {eid}")
+    # Group Wyoming STT/TTS entities by friendly_name prefix (before _2, _3 etc.)
+    import re
+    groups = {}
+    for s in states:
+        eid = s.get("entity_id", "")
+        if not (eid.startswith("stt.") or eid.startswith("tts.")):
+            continue
+        fn = s.get("attributes", {}).get("friendly_name", "")
+        if not ("whisper" in fn.lower() or "piper" in fn.lower()):
+            continue
+        # Extract base name (strip _2, _3 etc. suffix)
+        base = re.sub(r"_\d+$", "", fn.lower())
+        groups.setdefault(base, []).append(eid)
 
-    if not orphaned:
+    # Keep one entity per group, remove the rest
+    cleaned = 0
+    for base, eids in groups.items():
+        if len(eids) <= 1:
+            continue
+        for eid in eids[1:]:  # skip first, remove extras
+            try:
+                await ws_call(ws, msg_id.next(), "config/entity_registry/remove", entity_id=eid)
+                print(f"  Removed orphan entity: {eid}")
+                cleaned += 1
+            except RuntimeError:
+                pass
+    if not cleaned:
         print("  No orphaned entities found")
 
     # Wait for HA to register newly added Wyoming entities (poll up to 30 sec)
