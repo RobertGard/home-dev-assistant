@@ -54,86 +54,11 @@ def rest_post(url, data, token):
         raise RuntimeError(f"HTTP {e.code} {err_body}") from None
 
 
-def is_wyoming_configured(ha_host, ha_port, token, host, port):
-    """Check if a Wyoming config entry already exists for host:port."""
-    entries = _get_wyoming_entries(ha_host, ha_port, token)
-    if entries is None:
-        return None
-    for entry in entries:
-        data = entry.get("data", {})
-        entry_host = data.get("host", "")
-        entry_port = data.get("port", 0)
-        print(f"  [DEBUG] entry={entry.get('entry_id','?')} host={entry_host} port={entry_port} looking for {host}:{port}")
-        if entry_host == host and entry_port == port:
-            return True
-    print(f"  [DEBUG] No match among {len(entries)} entries for {host}:{port}")
-    return False
-
-
-def _get_wyoming_entries(ha_host, ha_port, token):
-    """Get all Wyoming config entries. Returns None on error, [] if empty."""
-    url = f"http://{ha_host}:{ha_port}/api/config/config_entries/entry?domain=wyoming"
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read())
-    except Exception as e:
-        print(f"  [WARN] Could not query Wyoming config entries: {e}")
-        return None
-
-
-def cleanup_duplicate_wyoming(ha_host, ha_port, token):
-    """Remove duplicate Wyoming config entries for same host:port."""
-    entries = _get_wyoming_entries(ha_host, ha_port, token)
-    if entries is None:
-        print("  [WARN] Skipping Wyoming cleanup — could not query entries")
-        return
-
-    seen = {}  # (host, port) → entry_id
-    to_delete = []
-
-    for entry in entries:
-        data = entry.get("data", {})
-        key = (data.get("host", ""), data.get("port", 0))
-        entry_id = entry.get("entry_id", "")
-        if key in seen:
-            to_delete.append(entry_id)
-        else:
-            seen[key] = entry_id
-
-    if not to_delete:
-        return
-
-    print(f"\n--- Cleaning up {len(to_delete)} duplicate Wyoming entries ---")
-    for entry_id in to_delete:
-        try:
-            url = f"http://{ha_host}:{ha_port}/api/config/config_entries/entry/{entry_id}"
-            req = urllib.request.Request(
-                url,
-                headers={"Authorization": f"Bearer {token}"},
-                method="DELETE",
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                pass
-            print(f"  Removed duplicate entry: {entry_id}")
-        except Exception as e:
-            print(f"  [WARN] Could not remove {entry_id}: {e}")
-
-
 def add_wyoming_via_rest(ha_host, ha_port, token, host, port, service_type):
-    """Add a Wyoming service via the HA REST config flow API."""
-    # Check if already configured before starting a new flow
-    configured = is_wyoming_configured(ha_host, ha_port, token, host, port)
-    if configured is None:
-        print(f"  [WARN] Could not query Wyoming entries — skipping {service_type} to avoid duplicates")
-        return True  # assume it exists, avoid creating duplicates
-    elif configured:
-        print(f"  [OK] Wyoming {service_type} already configured at {host}:{port}")
-        return True
-
+    """Add a Wyoming service via the HA REST config flow API.
+    
+    Caller must check if service already exists before calling this.
+    """
     base = f"http://{ha_host}:{ha_port}/api/config/config_entries"
 
     # Step 1: Start flow
@@ -290,6 +215,53 @@ async def create_pipeline(ws, stt_engine, tts_engine, msg_id, language="ru"):
 
 # ---- Main ----
 
+async def get_wyoming_entries_ws(ws, msg_id):
+    """Get Wyoming config entries with full data via WebSocket config_entries/get."""
+    try:
+        result = await ws_call(ws, msg_id.next(), "config_entries/get",
+                               domain="wyoming")
+        return result if isinstance(result, list) else []
+    except RuntimeError:
+        return []
+
+
+async def ws_is_wyoming_configured(ws, msg_id, host, port):
+    """Check via WebSocket if a Wyoming entry exists for host:port."""
+    entries = await get_wyoming_entries_ws(ws, msg_id)
+    for entry in entries:
+        data = entry.get("data", {})
+        if data.get("host") == host and data.get("port") == port:
+            return True
+    return False
+
+
+def ws_cleanup_duplicates(entries):
+    """Given WebSocket Wyoming entries, find duplicate IDs for same host:port."""
+    seen = {}
+    to_delete = []
+    for entry in entries:
+        data = entry.get("data", {})
+        key = (data.get("host", ""), data.get("port", 0))
+        eid = entry.get("entry_id", "")
+        if key in seen:
+            to_delete.append(eid)
+        else:
+            seen[key] = eid
+    return to_delete
+
+
+def rest_delete_entry(ha_host, ha_port, token, entry_id):
+    """Delete a config entry via REST API."""
+    url = f"http://{ha_host}:{ha_port}/api/config/config_entries/entry/{entry_id}"
+    req = urllib.request.Request(
+        url,
+        headers={"Authorization": f"Bearer {token}"},
+        method="DELETE",
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        pass
+
+
 async def main():
     ha_token = os.environ.get("HA_API_TOKEN", "")
     ha_host = DEFAULT_HA_HOST
@@ -310,35 +282,16 @@ async def main():
         print("ERROR: HA_API_TOKEN not set (use --ha-token=TOKEN)")
         sys.exit(1)
 
-    # Step 0: Clean up duplicate Wyoming entries from previous failed runs
-    cleanup_duplicate_wyoming(ha_host, ha_port, ha_token)
-
-    # Step 1: Add Wyoming via REST API (no websockets dependency needed here)
-    print(f"\nAdding Wyoming integrations via REST API at {ha_host}:{ha_port}...")
-
-    print("\n--- Adding Wyoming whisper (STT) ---")
-    stt_ok = add_wyoming_via_rest(ha_host, ha_port, ha_token, ha_host, WHISPER_PORT, "whisper")
-
-    print("\n--- Adding Wyoming piper (TTS) ---")
-    tts_ok = add_wyoming_via_rest(ha_host, ha_port, ha_token, ha_host, PIPER_PORT, "piper")
-
-    if not stt_ok or not tts_ok:
-        print("\n✗ Wyoming integration failed — cannot create pipeline")
-        print("  Fall back to manual setup: HA → Settings → Devices & Services → Add Integration → Wyoming Protocol")
-        return 1
-
-    # Step 2+3: Connect via WebSocket for pipeline creation
     try:
         import websockets
     except ImportError:
-        print("\n⚠ Wyoming integrations added, but websockets unavailable for pipeline creation.")
-        print("  Create pipeline manually: HA → Settings → Voice assistants → Add assistant")
-        print("  Use STT: faster-whisper | TTS: Piper")
-        return 0
+        print("ERROR: websockets unavailable")
+        sys.exit(1)
 
     import time
 
-    print("\nConnecting to HA WebSocket for pipeline setup...")
+    # Step 0: Connect WebSocket (needed for proper Wyoming data inspection)
+    print(f"\nConnecting to HA WebSocket at {ha_host}:{ha_port}...")
     ws = None
     for ws_attempt in range(10):
         try:
@@ -347,13 +300,54 @@ async def main():
         except Exception as e:
             if ws_attempt == 9:
                 print(f"  [ERROR] WebSocket connection failed after 10 attempts: {e}")
-                print("  Create pipeline manually: HA → Settings → Voice assistants → Add assistant")
+                print("  Fall back to manual setup")
                 return 1
             print(f"  WebSocket attempt {ws_attempt + 1}/10 failed, retrying...")
             time.sleep(2)
     print("  [OK] Authenticated")
 
     msg_id = _MsgId()
+
+    # Step 1: Query Wyoming entries via WebSocket (has full data with host/port)
+    print("\n--- Checking existing Wyoming integrations...")
+    wyoming_entries = await get_wyoming_entries_ws(ws, msg_id)
+    print(f"  Found {len(wyoming_entries)} Wyoming config entries")
+
+    # Step 2: Clean up duplicate entries
+    duplicates = ws_cleanup_duplicates(wyoming_entries)
+    if duplicates:
+        print(f"\n--- Cleaning up {len(duplicates)} duplicate Wyoming entries ---")
+        for eid in duplicates:
+            try:
+                rest_delete_entry(ha_host, ha_port, ha_token, eid)
+                print(f"  Removed duplicate: {eid}")
+            except Exception as e:
+                print(f"  [WARN] Could not remove {eid}: {e}")
+
+    # Refresh entries after cleanup
+    wyoming_entries = await get_wyoming_entries_ws(ws, msg_id)
+
+    # Step 3: Add Wyoming whisper + piper if missing (via REST)
+    stt_ok = await ws_is_wyoming_configured(ws, msg_id, ha_host, WHISPER_PORT)
+    tts_ok = await ws_is_wyoming_configured(ws, msg_id, ha_host, PIPER_PORT)
+
+    if stt_ok:
+        print(f"  [OK] Wyoming whisper already configured")
+    else:
+        print("\n--- Adding Wyoming whisper (STT) ---")
+        stt_ok = add_wyoming_via_rest(ha_host, ha_port, ha_token, ha_host, WHISPER_PORT, "whisper")
+
+    if tts_ok:
+        print(f"  [OK] Wyoming piper already configured")
+    else:
+        print("\n--- Adding Wyoming piper (TTS) ---")
+        tts_ok = add_wyoming_via_rest(ha_host, ha_port, ha_token, ha_host, PIPER_PORT, "piper")
+
+    if not stt_ok or not tts_ok:
+        await ws.close()
+        print("\n✗ Wyoming integration failed — cannot create pipeline")
+        print("  Fall back to manual setup")
+        return 1
 
     # Clean up orphaned STT/TTS entities from deleted duplicate config entries
     print("\n--- Cleaning up orphaned STT/TTS entities...")
