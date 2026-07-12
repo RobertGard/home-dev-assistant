@@ -84,6 +84,12 @@
               "name": "haScriptUrl",
               "value": "__HA_URL__/api/services/script/1720584135122",
               "type": "string"
+            },
+            {
+              "id": "ha-api-token",
+              "name": "haApiToken",
+              "value": "__HA_API_TOKEN__",
+              "type": "string"
             }
           ]
         },
@@ -147,7 +153,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -226,7 +232,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -383,7 +389,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -980,7 +986,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -1250,7 +1256,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -1529,7 +1535,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
@@ -1738,7 +1744,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer __HA_API_TOKEN__"
+              "value": "={{ 'Bearer ' + $('Задаём переменные').item.json.haApiToken }}"
             },
             {
               "name": "Content-Type",
