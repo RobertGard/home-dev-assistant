@@ -166,7 +166,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -245,7 +245,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -402,7 +402,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -999,7 +999,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -1269,7 +1269,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -1548,7 +1548,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
@@ -1757,7 +1757,7 @@
           "parameters": [
             {
               "name": "text_to_say",
-              "value": "={{ $json.replyText || $json.text || '' }}"
+              "value": "={{ $json.replyText || $json.result.text || $json.text || '' }}"
             }
           ]
         },
