@@ -60,11 +60,7 @@ def is_wyoming_configured(ha_host, ha_port, token, host, port):
     try:
         req = urllib.request.Request(
             url,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-            },
-            method="GET",
+            headers={"Authorization": f"Bearer {token}"},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             entries = json.loads(resp.read())
