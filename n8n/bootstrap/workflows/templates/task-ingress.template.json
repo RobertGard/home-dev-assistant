@@ -37,7 +37,7 @@
             {
               "id": "chat-id-allowed",
               "leftValue": "={{ ',' + String($('Задаём переменные').first().json.telegram_chat_ids).replace(/\\s/g, '') + ',' }}",
-              "rightValue": "={{ ',' + String($json.source === 'voice' ? $('Задаём переменные').first().json.telegram_chat_ids.split(',')[0].trim() : ($('Триггер Telegram').isExecuted ? $('Триггер Telegram').first().json.message.chat.id : $('Нормализуем голосовую команду').first().json.message.chat.id)) + ',' }}",
+              "rightValue": "={{ ',' + String($('Нормализуем голосовую команду').isExecuted ? $('Задаём переменные').first().json.telegram_chat_ids.split(',')[0].trim() : $('Триггер Telegram').first().json.message.chat.id) + ',' }}",
               "operator": {
                 "type": "string",
                 "operation": "contains"
