@@ -75,11 +75,6 @@
               "type": "array"
             },
             {
-              "name": "source",
-              "value": "={{ $json.source || 'telegram' }}",
-              "type": "string"
-            },
-            {
               "id": "9462bc97",
               "name": "haScriptUrl",
               "value": "__HA_URL__/api/services/script/1720584135122",
