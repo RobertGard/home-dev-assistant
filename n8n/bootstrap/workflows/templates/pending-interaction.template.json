@@ -274,7 +274,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -770,6 +770,27 @@
         496
       ],
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "haScriptUrl",
+              "value": "__HA_URL__/api/services/script/1720584135122"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "id": "ha-config-pending-interaction",
+      "name": "HA Config",
+      "position": [
+        424,
+        640
+      ]
     }
   ],
   "connections": {
@@ -777,7 +798,7 @@
       "main": [
         [
           {
-            "node": "Разбираем входные данные",
+            "node": "HA Config",
             "type": "main",
             "index": 0
           }
@@ -1084,6 +1105,17 @@
         [
           {
             "node": "Обогащаем: вопрос отправлен",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HA Config": {
+      "main": [
+        [
+          {
+            "node": "Разбираем входные данные",
             "type": "main",
             "index": 0
           }

@@ -125,7 +125,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -241,7 +241,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -469,7 +469,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -532,7 +532,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -566,6 +566,27 @@
         544
       ],
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "haScriptUrl",
+              "value": "__HA_URL__/api/services/script/1720584135122"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "id": "ha-config-acceptance-verifier",
+      "name": "HA Config",
+      "position": [
+        424,
+        288
+      ]
     }
   ],
   "connections": {
@@ -573,7 +594,7 @@
       "main": [
         [
           {
-            "node": "Разбираем входные данные",
+            "node": "HA Config",
             "type": "main",
             "index": 0
           }
@@ -783,6 +804,17 @@
     "Уведомление HA: приёмка пройдена": {
       "main": [
         []
+      ]
+    },
+    "HA Config": {
+      "main": [
+        [
+          {
+            "node": "Разбираем входные данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },

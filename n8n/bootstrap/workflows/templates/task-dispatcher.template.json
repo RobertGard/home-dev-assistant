@@ -25,7 +25,15 @@
       "parameters": {
         "mode": "raw",
         "jsonOutput": "__OPENCODE_ROUTING_JSON__",
-        "options": {}
+        "options": {},
+        "values": {
+          "string": [
+            {
+              "name": "haScriptUrl",
+              "value": "__HA_URL__/api/services/script/1720584135122"
+            }
+          ]
+        }
       },
       "id": "set-routing",
       "name": "Задаём конфигурацию OpenCode",
@@ -310,7 +318,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -452,7 +460,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -515,7 +523,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -578,7 +586,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -641,7 +649,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -908,7 +916,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1387,7 +1395,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "__HA_URL__/api/services/script/1720584135122",
+        "url": "={{ $json.haScriptUrl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
