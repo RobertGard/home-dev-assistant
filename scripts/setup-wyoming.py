@@ -126,6 +126,17 @@ def add_wyoming_via_rest(ha_host, ha_port, token, host, port, service_type):
 
 # ---- WebSocket helpers (used after REST setup) ----
 
+class _MsgId:
+    """Monotonically increasing message ID counter."""
+    def __init__(self):
+        self._id = 1
+
+    def next(self):
+        current = self._id
+        self._id += 1
+        return current
+
+
 async def ws_command(ws, msg_id, msg_type, **kwargs):
     payload = {"type": msg_type, **kwargs}
     if msg_id is not None:
@@ -159,9 +170,9 @@ async def ha_connect(ha_host, ha_port, token):
     return ws
 
 
-async def find_wyoming_engine(ws, domain):
+async def find_wyoming_engine(ws, domain, msg_id):
     """Find Wyoming engine entity IDs by scanning states for whisper/piper."""
-    states = await ws_call(ws, 200, "get_states")
+    states = await ws_call(ws, msg_id.next(), "get_states")
     engines = []
     for s in states:
         eid = s.get("entity_id", "")
@@ -174,9 +185,9 @@ async def find_wyoming_engine(ws, domain):
     return engines
 
 
-async def create_pipeline(ws, stt_engine, tts_engine, language="ru"):
+async def create_pipeline(ws, stt_engine, tts_engine, msg_id, language="ru"):
     """Create or update a voice assistant pipeline via WebSocket."""
-    pipelines_result = await ws_call(ws, 300, "assist_pipeline/pipeline/list")
+    pipelines_result = await ws_call(ws, msg_id.next(), "assist_pipeline/pipeline/list")
     existing = pipelines_result.get("pipelines", [])
     preferred = pipelines_result.get("preferred_pipeline")
 
@@ -203,16 +214,16 @@ async def create_pipeline(ws, stt_engine, tts_engine, language="ru"):
             break
 
     if pipeline_id is None:
-        result = await ws_call(ws, 301, "assist_pipeline/pipeline/create", **pipeline_data)
+        result = await ws_call(ws, msg_id.next(), "assist_pipeline/pipeline/create", **pipeline_data)
         pipeline_id = result.get("id")
         print(f"  [OK] Pipeline created with id={pipeline_id}")
     else:
-        await ws_call(ws, 301, "assist_pipeline/pipeline/update",
+        await ws_call(ws, msg_id.next(), "assist_pipeline/pipeline/update",
                       pipeline_id=pipeline_id, **pipeline_data)
         print(f"  [OK] Pipeline updated: {pipeline_id}")
 
     if preferred != pipeline_id:
-        await ws_call(ws, 302, "assist_pipeline/pipeline/set_preferred",
+        await ws_call(ws, msg_id.next(), "assist_pipeline/pipeline/set_preferred",
                       pipeline_id=pipeline_id)
         print(f"  [OK] Pipeline set as preferred")
 
@@ -281,13 +292,15 @@ async def main():
             time.sleep(2)
     print("  [OK] Authenticated")
 
+    msg_id = _MsgId()
+
     # Wait for HA to register newly added Wyoming entities (poll up to 30 sec)
     print("\n--- Discovering STT/TTS engines (waiting for Wyoming entities)...")
     stt_engines = []
     tts_engines = []
     for attempt in range(30):
-        stt_engines = await find_wyoming_engine(ws, "stt")
-        tts_engines = await find_wyoming_engine(ws, "tts")
+        stt_engines = await find_wyoming_engine(ws, "stt", msg_id)
+        tts_engines = await find_wyoming_engine(ws, "tts", msg_id)
         if stt_engines and tts_engines:
             break
         if attempt == 0 or attempt % 5 == 4:
@@ -295,14 +308,14 @@ async def main():
         time.sleep(1)
 
     if not stt_engines:
-        all_stt = [s["entity_id"] for s in (await ws_call(ws, 210, "get_states"))
+        all_stt = [s["entity_id"] for s in (await ws_call(ws, msg_id.next(), "get_states"))
                    if s["entity_id"].startswith("stt.")]
         stt_engines = all_stt
         if not stt_engines:
             print("  [WARN] No STT engines found after 30 seconds!")
 
     if not tts_engines:
-        all_tts = [s["entity_id"] for s in (await ws_call(ws, 211, "get_states"))
+        all_tts = [s["entity_id"] for s in (await ws_call(ws, msg_id.next(), "get_states"))
                    if s["entity_id"].startswith("tts.")]
         tts_engines = all_tts
         if not tts_engines:
@@ -324,7 +337,7 @@ async def main():
     print(f"  TTS: {tts_engine}")
 
     try:
-        pipeline_id = await create_pipeline(ws, stt_engine, tts_engine, language)
+        pipeline_id = await create_pipeline(ws, stt_engine, tts_engine, msg_id, language)
     except RuntimeError as e:
         await ws.close()
         print(f"\n⚠ Pipeline creation failed: {e}")
