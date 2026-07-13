@@ -248,31 +248,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "text": "={{ $('Разбираем входные данные').item.json.pendingQuestion }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "send-pending-question",
-      "name": "Отправляем ожидающую интеракцию",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21216,
-        -18736
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -889,7 +864,7 @@
       "main": [
         [
           {
-            "node": "Отправляем ожидающую интеракцию",
+            "node": "Уведомление HA: Отправляем ожидающую интеракцию",
             "type": "main",
             "index": 0
           }
@@ -1017,17 +992,6 @@
         [
           {
             "node": "Сохраняем pending в БД (sub-workflow)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Отправляем ожидающую интеракцию": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Отправляем ожидающую интеракцию",
             "type": "main",
             "index": 0
           }

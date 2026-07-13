@@ -336,31 +336,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
-        "text": "=🤖 Авто-задача [<code>{{ $json.task_key }}</code>] [{{ $json.worker_alias || 'primary' }}]: {{ $json.prompt }}\n\n/task --auto_mode=\"false\" — выключить авто-режим",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-task",
-      "name": "Уведомляем о новой задаче",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21408,
-        -18736
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -402,31 +377,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
-        "text": "=🤖 Авто-ответ [<code>{{ $('Валидируем ответ').first().json.taskKey }}</code>] [{{ ($('Конфигурация авто-генератора').first().json.workerAlias) || 'primary' }}]: {{ $('Валидируем ответ').first().json.answer }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-answer",
-      "name": "Уведомляем об ответе",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21408,
-        -18928
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -465,31 +415,6 @@
         -21184,
         -18928
       ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Формируем контекст для агента').first().json.chatId }}",
-        "text": "=⚠️ {{ $json.error }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-err",
-      "name": "Сообщаем об ошибке генерации",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21856,
-        -19120
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -716,7 +641,7 @@
       "main": [
         [
           {
-            "node": "Сообщаем об ошибке генерации",
+            "node": "Уведомление HA: Сообщаем об ошибке генерации",
             "type": "main",
             "index": 0
           }
@@ -752,7 +677,7 @@
       "main": [
         [
           {
-            "node": "Уведомляем об ответе",
+            "node": "Уведомление HA: Уведомляем об ответе",
             "type": "main",
             "index": 0
           }
@@ -763,7 +688,7 @@
       "main": [
         [
           {
-            "node": "Уведомляем о новой задаче",
+            "node": "Уведомление HA: Уведомляем о новой задаче",
             "type": "main",
             "index": 0
           }
@@ -832,17 +757,6 @@
         ]
       ]
     },
-    "Уведомляем об ответе": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Уведомляем об ответе",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Уведомление HA: Уведомляем об ответе": {
       "main": [
         []
@@ -856,28 +770,6 @@
     "Уведомление HA: Сообщаем об ошибке генерации": {
       "main": [
         []
-      ]
-    },
-    "Уведомляем о новой задаче": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Уведомляем о новой задаче",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем об ошибке генерации": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Сообщаем об ошибке генерации",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     }
   },

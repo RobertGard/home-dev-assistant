@@ -99,31 +99,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Разбираем входные данные').item.json.chatId }}",
-        "text": "={{ `🔍 Начата верификация задачи <code>${$('Разбираем входные данные').item.json.taskKey}</code> [${$('Разбираем входные данные').item.json.workerAlias || 'primary'}].` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-verify-start",
-      "name": "Уведомляем о начале верификации",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -23360,
-        -19024
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -215,31 +190,6 @@
         -19168
       ],
       "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Готовим задачу проверки').first().json.chatId }}",
-        "text": "={{ `📋 Задача проверки <code>${$('Готовим задачу проверки').first().json.verifyTaskKey}</code> поставлена в очередь [${$('Готовим задачу проверки').first().json.workerAlias || 'primary'}].` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-verify-queued",
-      "name": "Сообщаем о задаче проверки",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -22112,
-        -19168
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -449,31 +399,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Готовим задачу-фикс').first().json.chatId }}",
-        "text": "={{ `🔄 Задача <code>${$('Готовим задачу-фикс').first().json.parentTaskKey}</code> не прошла приёмку.\\n\\nПричина: ${$('Готовим задачу-фикс').first().json.reason}\\n\\nСоздана задача исправления: <code>${$('Готовим задачу-фикс').first().json.fixTaskKey}</code>` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-fix",
-      "name": "Сообщаем о fix-задаче",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21216,
-        -18960
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -512,31 +437,6 @@
         -20992,
         -18960
       ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Извлекаем вердикт').first().json.chatId }}",
-        "text": "={{ `✅ Задача <code>${$('Извлекаем вердикт').first().json.parentTaskKey || $('Извлекаем вердикт').first().json.taskKey}</code> прошла приёмку. Функционал реализован успешно.` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-passed",
-      "name": "Сообщаем об успешной приёмке",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -21664,
-        -18768
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -625,7 +525,7 @@
       "main": [
         [
           {
-            "node": "Уведомляем о начале верификации",
+            "node": "Уведомление HA: верификация начата",
             "type": "main",
             "index": 0
           }
@@ -650,17 +550,6 @@
         ]
       ]
     },
-    "Уведомляем о начале верификации": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: верификация начата",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Готовим задачу проверки": {
       "main": [
         [
@@ -673,17 +562,6 @@
       ]
     },
     "Создаём задачу проверки": {
-      "main": [
-        [
-          {
-            "node": "Сообщаем о задаче проверки",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем о задаче проверки": {
       "main": [
         [
           {
@@ -749,7 +627,7 @@
         ],
         [
           {
-            "node": "Сообщаем об успешной приёмке",
+            "node": "Уведомление HA: приёмка пройдена",
             "type": "main",
             "index": 0
           }
@@ -771,29 +649,7 @@
       "main": [
         [
           {
-            "node": "Сообщаем о fix-задаче",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем о fix-задаче": {
-      "main": [
-        [
-          {
             "node": "Уведомление HA: нужен фикс",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем об успешной приёмке": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: приёмка пройдена",
             "type": "main",
             "index": 0
           }

@@ -260,31 +260,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}]: родительская задача <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> завершилась со статусом ${$('Получаем родительскую задачу').item.json.status}.` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-parent-unsuccessful",
-      "name": "Сообщаем: родитель неуспешен",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -20720,
-        -18304
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -405,31 +380,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> отменена [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}]: в результате <code>${$('Выбираем кандидатную задачу').item.json.parentTaskKey}</code> не найдено вхождение '${$('Выбираем кандидатную задачу').item.json.parentMatchText}'.` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-parent-match-missing",
-      "name": "Сообщаем: вхождение не найдено",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -20720,
-        -18688
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -468,31 +418,6 @@
         -20496,
         -18688
       ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Задача <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}] успешно запущена. Ожидайте результат.` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-launch-error",
-      "name": "Сообщаем: задача запущена",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -20048,
-        -18560
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -537,31 +462,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Выбираем кандидатную задачу').item.json.task.chat_id }}",
-        "text": "={{ `Асинхронный запуск задачи [${$('Выбираем кандидатную задачу').item.json.task.worker_alias || 'primary'}] <code>${$('Выбираем кандидатную задачу').item.json.task.task_key}</code> не удался: ${$('Запуск задачи').item.json.launchError || 'OpenCode не принял запрос.'}` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-prompt-error",
-      "name": "Сообщаем: ошибка асинхронного запуска",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -20048,
-        -18320
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
         "workflowId": {
           "mode": "name",
           "value": "Уведомление пользователя"
@@ -600,31 +500,6 @@
         -19824,
         -18320
       ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
-        "text": "={{ `Ответ на вопрос по задаче [${$('Выбираем активную задачу').first().json.task.worker_alias || 'primary'}] <code>${$('Выбираем активную задачу').first().json.task.task_key}</code> не отправлен: ${String($('Обработка интеракций').item.json.error || 'OpenCode не вернул корректный ответ.')}` }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "notify-answer-error",
-      "name": "Сообщаем: ошибка ответа на вопрос",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -20944,
-        -17888
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -869,32 +744,6 @@
         -18128
       ],
       "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
-        "text": "={{ (($('Завершение задачи').first().json.replyText) || '').slice(0, 3900) }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "send-final-result",
-      "name": "Отправляем результат в Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -19376,
-        -18032
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "retryOnFail": true,
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1351,32 +1200,6 @@
         -17968
       ],
       "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
-        "text": "={{ (($('Завершение задачи').first().json.streamProgressText) || '').slice(0, 3900) }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "send-stream-progress",
-      "name": "Отправляем промежуточный прогресс в Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -19824,
-        -17840
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "__TELEGRAM_CREDENTIAL_ID__",
-          "name": "__TELEGRAM_CREDENTIAL_NAME__"
-        }
-      },
-      "retryOnFail": true,
-      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -2301,7 +2124,7 @@
       "main": [
         [
           {
-            "node": "Сообщаем: родитель неуспешен",
+            "node": "Уведомление HA: Сообщаем: родитель неуспешен",
             "type": "main",
             "index": 0
           }
@@ -2330,7 +2153,7 @@
       "main": [
         [
           {
-            "node": "Сообщаем: вхождение не найдено",
+            "node": "Уведомление HA: Сообщаем: вхождение не найдено",
             "type": "main",
             "index": 0
           }
@@ -2392,56 +2215,23 @@
         ]
       ]
     },
-    "Отправляем промежуточный прогресс в Telegram": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: промежуточный прогресс в Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Помечаем прогресс отправленным": {
       "main": [
         []
-      ]
-    },
-    "Сообщаем: ошибка асинхронного запуска": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: ошибка асинхронного запуска",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем: ошибка ответа на вопрос": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: ошибка ответа на вопрос",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Есть ошибка запуска?": {
       "main": [
         [
           {
-            "node": "Сообщаем: ошибка асинхронного запуска",
+            "node": "Уведомление HA: задача запущена",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Сообщаем: задача запущена",
+            "node": "Уведомление HA: задача запущена",
             "type": "main",
             "index": 0
           }
@@ -2470,7 +2260,7 @@
       "main": [
         [
           {
-            "node": "Сообщаем: ошибка ответа на вопрос",
+            "node": "Уведомление HA: ошибка ответа на вопрос",
             "type": "main",
             "index": 0
           }
@@ -2499,7 +2289,7 @@
       "main": [
         [
           {
-            "node": "Отправляем промежуточный прогресс в Telegram",
+            "node": "Уведомление HA: промежуточный прогресс в Telegram",
             "type": "main",
             "index": 0
           }
@@ -2523,28 +2313,6 @@
           }
         ],
         []
-      ]
-    },
-    "Сообщаем: задача запущена": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: задача запущена",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Отправляем результат в Telegram": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: результат задачи",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Читаем настройки чата": {
@@ -2654,7 +2422,7 @@
         ],
         [
           {
-            "node": "Отправляем результат в Telegram",
+            "node": "Уведомление HA: результат задачи",
             "type": "main",
             "index": 0
           }
@@ -2723,28 +2491,6 @@
     "Уведомление HA: Сообщаем: вхождение не найдено": {
       "main": [
         []
-      ]
-    },
-    "Сообщаем: родитель неуспешен": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Сообщаем: родитель неуспешен",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Сообщаем: вхождение не найдено": {
-      "main": [
-        [
-          {
-            "node": "Уведомление HA: Сообщаем: вхождение не найдено",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Задаём переменные": {
