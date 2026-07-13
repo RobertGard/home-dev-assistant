@@ -295,14 +295,7 @@ import_workflow_from_host_file() {
     die "Не найден workflow-файл для импорта: ${host_file}"
   fi
 
-  # Use REST API instead of n8n import:workflow (--active flag doesn't persist)
-  local workflow_json
-  workflow_json="$(cat "$host_file")"
-  if ! curl -fsS -X POST \
-    -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
-    -H 'Content-Type: application/json' \
-    -d "$workflow_json" \
-    "${N8N_URL}/api/v1/workflows" >/dev/null 2>&1; then
+  if ! "${BASE_COMPOSE[@]}" exec -T n8n sh -lc "cat > /tmp/${temp_file_name} && n8n import:workflow --input=/tmp/${temp_file_name} && rm -f /tmp/${temp_file_name}" < "$host_file"; then
     die "Не удалось импортировать workflow: ${host_file}"
   fi
 }
