@@ -467,7 +467,7 @@
             {
               "id": "set-verify-task-notify-rt",
               "name": "replyText",
-              "value": "=📋 Задача проверки <code>{{ $('Создаём задачу проверки').first().json.task_key }}</code> [{{ $('Создаём задачу проверки').first().json.worker_alias || 'primary' }}] поставлена в очередь.",
+              "value": "=📋 Задача проверки <code>{{ $('Готовим задачу проверки').first().json.verifyTaskKey }}</code> [{{ $('Готовим задачу проверки').first().json.workerAlias || 'primary' }}] поставлена в очередь.",
               "type": "string"
             }
           ]

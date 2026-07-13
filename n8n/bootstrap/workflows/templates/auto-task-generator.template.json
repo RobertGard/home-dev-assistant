@@ -520,7 +520,7 @@
             {
               "id": "set-auto-task-notify-rt",
               "name": "replyText",
-              "value": "=🤖 Авто-задача <code>{{ $('Записываем задачу в БД').first().json.task_key }}</code> [{{ $('Записываем задачу в БД').first().json.worker_alias || 'primary' }}] создана.",
+              "value": "=🤖 Авто-задача [{{ $('Конфигурация авто-генератора').first().json.workerAlias || 'primary' }}] создана и поставлена в очередь.",
               "type": "string"
             }
           ]
