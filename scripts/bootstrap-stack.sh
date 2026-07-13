@@ -628,101 +628,66 @@ import_workflow_from_host_file "$AUTO_GENERATOR_WORKFLOW_TEMP" 'auto-task-genera
 import_workflow_from_host_file "$ACCEPTANCE_VERIFIER_WORKFLOW_TEMP" 'acceptance-verifier.json'
 import_workflow_from_host_file "$NOTIFY_USER_WORKFLOW_TEMP" 'notify-user.json'
 
-ingress_workflow_id="$(workflow_id_by_name "$INGRESS_WORKFLOW_NAME")"
-dispatch_workflow_id="$(workflow_id_by_name "$DISPATCH_WORKFLOW_NAME")"
-
-if [ -z "$ingress_workflow_id" ]; then
-  die "Не удалось найти workflow по имени: ${INGRESS_WORKFLOW_NAME}"
-fi
-if [ -z "$dispatch_workflow_id" ]; then
-  die "Не удалось найти workflow по имени: ${DISPATCH_WORKFLOW_NAME}"
-fi
-
-activate_workflow_by_id() {
+# Публикация одного workflow через CLI (n8n 2.0 publish-модель, пишет в БД).
+publish_workflow_cli() {
   local wf_id="$1"
   local wf_label="$2"
-  local http_code
-  local response_body
-  response_body="$(curl -sS -w '\n%{http_code}' \
-    -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    "${N8N_URL}/api/v1/workflows/${wf_id}/activate" 2>&1)" || true
-  http_code="${response_body##*$'\n'}"
-  response_body="${response_body%$'\n'*}"
-  if [ "$http_code" != "200" ]; then
-    log_error "Activation failed for ${wf_label} (${wf_id}): HTTP ${http_code}"
-    log_error "Response: ${response_body}"
-    return 1
+  log_info "Публикую ${wf_label} (${wf_id})"
+  if ! "${BASE_COMPOSE[@]}" exec -T n8n sh -lc "n8n publish:workflow --id=${wf_id}" >/dev/null; then
+    die "Не удалось опубликовать workflow ${wf_label} (id=${wf_id})"
   fi
-  return 0
-}
-
-activate_and_verify() {
-  local wf_id="$1"
-  local wf_label="$2"
-  # Retry up to 3 times — n8n needs time to rebuild dependency index after import
-  for attempt in 1 2 3; do
-    if activate_workflow_by_id "$wf_id" "$wf_label"; then
-      # Verify activation via workflow list
-      if curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows" | jq -e --arg id "$wf_id" '[.data // . // [] | map(select(.id == $id and .active == true))] | length > 0' >/dev/null 2>&1; then
-        return 0
-      fi
-    fi
-    [ "$attempt" -lt 3 ] && sleep 3
-  done
-  die "Не удалось активировать workflow ${wf_label} (id=${wf_id})"
 }
 
 log_ok 'Workflow импортированы.'
 
-step_start 'Перезапускаю n8n и n8n-worker'
-log_info 'Перезапуск сервисов может занять до нескольких десятков секунд.'
-if ! "${BASE_COMPOSE[@]}" restart n8n n8n-worker >/dev/null; then
-  die 'Не удалось перезапустить n8n и n8n-worker.'
-fi
+step_start 'Публикую workflow (n8n 2.0 publish-модель)'
+# CLI publish:workflow пишет published-состояние в БД без runtime-валидации,
+# поэтому порядок публикации некритичен. Единственный рестарт ниже перестроит
+# dependency index сразу со всеми published workflow — промежуточный рестарт
+# «для переиндексации» больше не нужен.
+publish_targets=(
+  "$NOTIFY_USER_WORKFLOW_NAME"
+  "$SESSION_MGR_WORKFLOW_NAME"
+  "$TASK_LAUNCHER_WORKFLOW_NAME"
+  "$PENDING_INTERACTION_WORKFLOW_NAME"
+  "$TASK_FINALIZER_WORKFLOW_NAME"
+  "$AUTO_GENERATOR_WORKFLOW_NAME"
+  "$ACCEPTANCE_VERIFIER_WORKFLOW_NAME"
+  "$INGRESS_WORKFLOW_NAME"
+  "$DISPATCH_WORKFLOW_NAME"
+)
 
-# Ждём готовности после рестарта — иначе активация упадёт
-if ! wait_for_n8n; then
-  die 'n8n не поднялся после перезапуска.'
-fi
-
-# Активируем sub-workflow ПЕРВЫМИ — n8n 2.x требует чтобы все зависимые workflow были активны
-log_info 'Активирую sub-workflow (требование n8n 2.x для executeWorkflow)'
-# notify-user активируем ПЕРВЫМ — остальные ссылаются на него
-notify_user_id="$(workflow_id_by_name "$NOTIFY_USER_WORKFLOW_NAME")"
-if [ -z "$notify_user_id" ]; then
-  die "Не удалось найти sub-workflow по имени: ${NOTIFY_USER_WORKFLOW_NAME}"
-fi
-activate_and_verify "$notify_user_id" "$NOTIFY_USER_WORKFLOW_NAME"
-
-# Перезапуск чтобы n8n перестроил индекс с notify-user как published
-log_info 'Перезапускаю n8n для обновления индекса зависимостей...'
-if ! "${BASE_COMPOSE[@]}" restart n8n n8n-worker >/dev/null; then
-  die 'Не удалось перезапустить n8n и n8n-worker.'
-fi
-if ! wait_for_n8n; then
-  die 'n8n не поднялся после перезапуска.'
-fi
-
-for wf_name in "$SESSION_MGR_WORKFLOW_NAME" "$TASK_LAUNCHER_WORKFLOW_NAME" \
-               "$PENDING_INTERACTION_WORKFLOW_NAME" "$TASK_FINALIZER_WORKFLOW_NAME" \
-               "$AUTO_GENERATOR_WORKFLOW_NAME" "$ACCEPTANCE_VERIFIER_WORKFLOW_NAME"; do
-  sub_wf_id="$(workflow_id_by_name "$wf_name")"
-  if [ -z "$sub_wf_id" ]; then
-    die "Не удалось найти sub-workflow по имени: ${wf_name}"
+published_count=0
+for wf_name in "${publish_targets[@]}"; do
+  wf_id="$(workflow_id_by_name "$wf_name")"
+  if [ -z "$wf_id" ]; then
+    die "Не удалось найти workflow по имени: ${wf_name}"
   fi
   if [ "$wf_name" = "$AUTO_GENERATOR_WORKFLOW_NAME" ] && [ -z "${deepseek_credential_id:-}" ]; then
-    log_warn 'Авто-генератор задач активирован, но DeepSeek креды не созданы — авто-режим не будет работать.'
+    log_warn 'Авто-генератор задач публикуется без DeepSeek кредов — авто-режим не будет работать.'
   fi
-  activate_and_verify "$sub_wf_id" "$wf_name"
+  publish_workflow_cli "$wf_id" "$wf_name"
+  published_count=$((published_count + 1))
 done
-log_ok 'Sub-workflow активированы.'
+log_ok "Опубликовано workflow: ${published_count}"
 
-# Теперь активируем основные workflow
-activate_and_verify "$ingress_workflow_id" "$INGRESS_WORKFLOW_NAME"
-activate_and_verify "$dispatch_workflow_id" "$DISPATCH_WORKFLOW_NAME"
+step_start 'Перезапускаю n8n для применения публикаций'
+log_info 'Перезапуск требуется один раз — n8n перестроит индекс со всеми published workflow.'
+if ! "${BASE_COMPOSE[@]}" restart n8n n8n-worker >/dev/null; then
+  die 'Не удалось перезапустить n8n и n8n-worker.'
+fi
+if ! wait_for_n8n; then
+  die 'n8n не поднялся после перезапуска.'
+fi
 
-log_ok 'Workflow активированы после перезапуска.'
+# Верификация через public API: все опубликованные workflow должны быть active.
+active_count="$(curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+  "${N8N_URL}/api/v1/workflows?active=true" 2>/dev/null \
+  | jq '(.data // . // []) | length' 2>/dev/null || echo 0)"
+if [ "${active_count:-0}" -ge "$published_count" ]; then
+  log_ok "Все ${published_count} workflow активны."
+else
+  log_warn "Активно ${active_count} из ${published_count} — проверьте статус в n8n UI."
+fi
 
 log_ok 'Telegram credential и workflow импортированы.'
