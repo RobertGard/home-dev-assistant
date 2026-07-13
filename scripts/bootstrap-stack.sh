@@ -593,7 +593,7 @@ render_template "$PENDING_INTERACTION_TEMPLATE" "$PENDING_INTERACTION_WORKFLOW_T
 render_template "$TASK_FINALIZER_TEMPLATE" "$TASK_FINALIZER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
 render_template "$AUTO_GENERATOR_TEMPLATE" "$AUTO_GENERATOR_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "$auto_generator_workflow_id" "$chat_settings_table_id" "${deepseek_credential_id:-}" "$acceptance_verifier_workflow_id"
 render_template "$ACCEPTANCE_VERIFIER_TEMPLATE" "$ACCEPTANCE_VERIFIER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "$chat_settings_table_id" "" "$acceptance_verifier_workflow_id"
-render_template "$NOTIFY_USER_TEMPLATE" "$NOTIFY_USER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "" "$acceptance_verifier_workflow_id"
+render_template "$NOTIFY_USER_TEMPLATE" "$NOTIFY_USER_WORKFLOW_TEMP" "$credential_id" "$TELEGRAM_CREDENTIAL_NAME" "$tasks_table_id" "$opencode_routing_json_escaped" "" "" "${deepseek_credential_id:-}" "$acceptance_verifier_workflow_id"
 sed -i "s|__DEFAULT_WORKER_ALIAS__|${default_worker_alias}|g" "$AUTO_GENERATOR_WORKFLOW_TEMP"
 
 log_ok 'Временные workflow-файлы подготовлены.'
