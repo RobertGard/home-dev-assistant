@@ -258,7 +258,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Запуск по вызову из другого сценария').first().json.chatId }}",
             "fallbackText": "Требуется ваш ответ"
           }
         },

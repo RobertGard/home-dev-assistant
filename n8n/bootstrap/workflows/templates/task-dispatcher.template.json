@@ -270,7 +270,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем кандидатную задачу').first().json.task.chat_id }}",
             "fallbackText": "Родительская задача не выполнена"
           }
         },
@@ -376,7 +376,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем кандидатную задачу').first().json.task.chat_id }}",
             "fallbackText": "Вхождение не найдено"
           }
         },
@@ -403,7 +403,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем кандидатную задачу').first().json.task.chat_id }}",
             "fallbackText": "Задача запущена"
           }
         },
@@ -430,7 +430,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем кандидатную задачу').first().json.task.chat_id }}",
             "fallbackText": "Ошибка запуска задачи"
           }
         },
@@ -457,7 +457,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
             "fallbackText": "Ошибка отправки ответа"
           }
         },
@@ -687,7 +687,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
             "fallbackText": "Результат задачи получен"
           }
         },
@@ -1129,7 +1129,7 @@
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
             "text": "={{ $json.result.text || $json.text || '' }}",
-            "chatId": "={{ $('Задаём переменные').first().json.chatId }}",
+            "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
             "fallbackText": "Промежуточный результат"
           }
         },
