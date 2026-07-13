@@ -1552,7 +1552,7 @@
             {
               "id": "set-task-created-replyText",
               "name": "replyText",
-              "value": "=Задача поставлена в очередь: <code>{{ $('Вставляем задачу').first().json.task_key }}</code> [{{ $('Вставляем задачу').first().json.worker_alias || 'primary' }}]",
+              "value": "={{ $('Готовим новую задачу').first().json.replyText || 'Задача принята в работу' }}",
               "type": "string"
             }
           ]
