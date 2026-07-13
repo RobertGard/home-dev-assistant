@@ -249,8 +249,9 @@
     {
       "parameters": {
         "workflowId": {
-          "mode": "name",
-          "value": "Уведомление пользователя"
+          "__rl": true,
+          "value": "900018",
+          "mode": "id"
         },
         "mode": "each",
         "inputData": {
