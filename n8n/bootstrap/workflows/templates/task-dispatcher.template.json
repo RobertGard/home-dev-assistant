@@ -18,7 +18,7 @@
       "typeVersion": 1.2,
       "position": [
         -23632,
-        -18304
+        -21200
       ]
     },
     {
@@ -36,7 +36,7 @@
       "typeVersion": 3.4,
       "position": [
         -23184,
-        -18304
+        -21200
       ]
     },
     {
@@ -57,7 +57,7 @@
       "typeVersion": 1.1,
       "position": [
         -22960,
-        -18304
+        -21200
       ],
       "alwaysOutputData": true
     },
@@ -71,7 +71,7 @@
       "typeVersion": 2,
       "position": [
         -22736,
-        -18304
+        -21200
       ]
     },
     {
@@ -111,7 +111,7 @@
       "typeVersion": 2.2,
       "position": [
         -22288,
-        -18560
+        -21456
       ]
     },
     {
@@ -124,7 +124,7 @@
       "typeVersion": 2,
       "position": [
         -22064,
-        -18560
+        -21456
       ]
     },
     {
@@ -156,7 +156,7 @@
       "typeVersion": 2.2,
       "position": [
         -21840,
-        -18560
+        -21456
       ]
     },
     {
@@ -183,7 +183,7 @@
       "typeVersion": 1.1,
       "position": [
         -21616,
-        -18640
+        -21536
       ],
       "alwaysOutputData": true
     },
@@ -216,7 +216,7 @@
       "typeVersion": 2.2,
       "position": [
         -21392,
-        -18640
+        -21536
       ]
     },
     {
@@ -254,7 +254,7 @@
       "typeVersion": 1.1,
       "position": [
         -20944,
-        -18304
+        -21200
       ],
       "alwaysOutputData": true
     },
@@ -282,7 +282,7 @@
       "name": "Уведомление HA: Сообщаем: родитель неуспешен",
       "position": [
         -20496,
-        -18304
+        -21200
       ]
     },
     {
@@ -322,7 +322,7 @@
       "typeVersion": 2.2,
       "position": [
         -21168,
-        -18688
+        -21584
       ]
     },
     {
@@ -360,7 +360,7 @@
       "typeVersion": 1.1,
       "position": [
         -20944,
-        -18688
+        -21584
       ],
       "alwaysOutputData": true
     },
@@ -388,7 +388,7 @@
       "name": "Уведомление HA: Сообщаем: вхождение не найдено",
       "position": [
         -20496,
-        -18688
+        -21584
       ]
     },
     {
@@ -415,7 +415,7 @@
       "name": "Уведомление HA: задача запущена",
       "position": [
         -19824,
-        -18560
+        -21456
       ]
     },
     {
@@ -442,7 +442,7 @@
       "name": "Уведомление HA: ошибка асинхронного запуска",
       "position": [
         -19824,
-        -18320
+        -21216
       ]
     },
     {
@@ -469,7 +469,7 @@
       "name": "Уведомление HA: ошибка ответа на вопрос",
       "position": [
         -20720,
-        -17888
+        -20784
       ]
     },
     {
@@ -671,7 +671,7 @@
       "typeVersion": 1.1,
       "position": [
         -20048,
-        -18128
+        -21024
       ],
       "alwaysOutputData": true
     },
@@ -698,8 +698,8 @@
       "id": "ha-final-result",
       "name": "Уведомление HA: результат задачи",
       "position": [
-        -19152,
-        -18032
+        -19376,
+        -20928
       ]
     },
     {
@@ -731,7 +731,7 @@
       "typeVersion": 2.2,
       "position": [
         -22512,
-        -18304
+        -21200
       ]
     },
     {
@@ -744,7 +744,7 @@
       "typeVersion": 2,
       "position": [
         -22288,
-        -17968
+        -20864
       ]
     },
     {
@@ -773,7 +773,7 @@
       "typeVersion": 1.3,
       "position": [
         -20944,
-        -18496
+        -21392
       ],
       "alwaysOutputData": true
     },
@@ -787,7 +787,7 @@
       "typeVersion": 2,
       "position": [
         -20720,
-        -18496
+        -21392
       ]
     },
     {
@@ -822,7 +822,7 @@
       "typeVersion": 1.3,
       "position": [
         -20496,
-        -18496
+        -21392
       ],
       "alwaysOutputData": true
     },
@@ -1002,7 +1002,7 @@
       "typeVersion": 1.3,
       "position": [
         -21392,
-        -17968
+        -20864
       ],
       "alwaysOutputData": true
     },
@@ -1113,7 +1113,7 @@
       "typeVersion": 1.3,
       "position": [
         -20496,
-        -17968
+        -20864
       ],
       "alwaysOutputData": true
     },
@@ -1140,8 +1140,8 @@
       "id": "ha-stream-progress",
       "name": "Уведомление HA: промежуточный прогресс в Telegram",
       "position": [
-        -19600,
-        -17840
+        -19824,
+        -20832
       ]
     },
     {
@@ -1340,8 +1340,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -19376,
-        -17776
+        -19600,
+        -20768
       ],
       "alwaysOutputData": true
     },
@@ -1374,7 +1374,7 @@
       "typeVersion": 2.2,
       "position": [
         -20272,
-        -18496
+        -21392
       ]
     },
     {
@@ -1407,7 +1407,7 @@
       "typeVersion": 2.2,
       "position": [
         -20272,
-        -17968
+        -20864
       ]
     },
     {
@@ -1439,7 +1439,7 @@
       "typeVersion": 2.2,
       "position": [
         -20048,
-        -17776
+        -20768
       ]
     },
     {
@@ -1471,7 +1471,7 @@
       "typeVersion": 2.2,
       "position": [
         -21168,
-        -17968
+        -20864
       ]
     },
     {
@@ -1505,7 +1505,7 @@
       "typeVersion": 2.2,
       "position": [
         -21168,
-        -18304
+        -21200
       ]
     },
     {
@@ -1531,8 +1531,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -18704,
-        -18128
+        -18928,
+        -21024
       ],
       "alwaysOutputData": true
     },
@@ -1563,8 +1563,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -18480,
-        -18128
+        -18704,
+        -21024
       ]
     },
     {
@@ -1590,8 +1590,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -18256,
-        -18128
+        -18480,
+        -21024
       ],
       "alwaysOutputData": true
     },
@@ -1619,7 +1619,7 @@
       "typeVersion": 1.1,
       "position": [
         -22064,
-        -17968
+        -20864
       ],
       "alwaysOutputData": true
     },
@@ -1667,7 +1667,7 @@
       "typeVersion": 2.2,
       "position": [
         -21840,
-        -17968
+        -20864
       ]
     },
     {
@@ -1696,7 +1696,7 @@
       "typeVersion": 1.3,
       "position": [
         -21616,
-        -17888
+        -20784
       ],
       "alwaysOutputData": true
     },
@@ -1736,8 +1736,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -18928,
-        -18032
+        -19152,
+        -20928
       ]
     },
     {
@@ -1773,8 +1773,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -18704,
-        -17936
+        -18928,
+        -20832
       ],
       "alwaysOutputData": true
     },
@@ -1788,7 +1788,7 @@
       "typeVersion": 2,
       "position": [
         -19824,
-        -18128
+        -21024
       ]
     },
     {
@@ -1820,7 +1820,7 @@
       "typeVersion": 2.2,
       "position": [
         -19600,
-        -18128
+        -21024
       ]
     },
     {
@@ -1855,7 +1855,7 @@
       "typeVersion": 1.1,
       "position": [
         -19376,
-        -18224
+        -21120
       ],
       "alwaysOutputData": true
     },
@@ -1884,8 +1884,8 @@
       "id": "set-vars",
       "name": "Задаём переменные",
       "position": [
-        -23432,
-        -18304
+        -23408,
+        -21200
       ]
     },
     {
@@ -1894,8 +1894,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20944,
-        -20240
+        -20720,
+        -21200
       ],
       "parameters": {
         "assignments": {
@@ -1917,7 +1917,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20944,
+        -20720,
         -21584
       ],
       "parameters": {
@@ -1940,8 +1940,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20944,
-        -16896
+        -20048,
+        -21456
       ],
       "parameters": {
         "assignments": {
@@ -1963,8 +1963,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20944,
-        -16640
+        -20048,
+        -21216
       ],
       "parameters": {
         "assignments": {
@@ -1987,7 +1987,7 @@
       "typeVersion": 3.4,
       "position": [
         -20944,
-        -16256
+        -20784
       ],
       "parameters": {
         "assignments": {

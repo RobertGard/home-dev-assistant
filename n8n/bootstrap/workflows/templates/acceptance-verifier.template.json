@@ -47,7 +47,7 @@
       "typeVersion": 1.1,
       "position": [
         -24032,
-        -19024
+        -23744
       ]
     },
     {
@@ -61,7 +61,7 @@
       "typeVersion": 2,
       "position": [
         -23584,
-        -19024
+        -23744
       ]
     },
     {
@@ -94,7 +94,7 @@
       "typeVersion": 2.2,
       "position": [
         -22912,
-        -19024
+        -23744
       ]
     },
     {
@@ -121,7 +121,7 @@
       "name": "Уведомление HA: верификация начата",
       "position": [
         -23136,
-        -19024
+        -23744
       ]
     },
     {
@@ -135,7 +135,7 @@
       "typeVersion": 2,
       "position": [
         -22688,
-        -19168
+        -23888
       ]
     },
     {
@@ -173,7 +173,7 @@
       "typeVersion": 1.1,
       "position": [
         -22400,
-        -19168
+        -23888
       ],
       "alwaysOutputData": true
     },
@@ -201,7 +201,7 @@
       "name": "Уведомление HA: задача проверки",
       "position": [
         -21888,
-        -19168
+        -23888
       ]
     },
     {
@@ -228,7 +228,7 @@
       "typeVersion": 3.4,
       "position": [
         -22688,
-        -18864
+        -23584
       ]
     },
     {
@@ -242,7 +242,7 @@
       "typeVersion": 1,
       "position": [
         -22384,
-        -18640
+        -23360
       ],
       "credentials": {
         "deepSeekApi": {
@@ -265,7 +265,7 @@
       "typeVersion": 3.1,
       "position": [
         -22464,
-        -18864
+        -23584
       ]
     },
     {
@@ -279,7 +279,7 @@
       "typeVersion": 2,
       "position": [
         -22112,
-        -18864
+        -23584
       ]
     },
     {
@@ -312,7 +312,7 @@
       "typeVersion": 2.2,
       "position": [
         -21888,
-        -18864
+        -23584
       ]
     },
     {
@@ -326,7 +326,7 @@
       "typeVersion": 2,
       "position": [
         -21664,
-        -18960
+        -23488
       ]
     },
     {
@@ -365,7 +365,7 @@
       "typeVersion": 1.1,
       "position": [
         -21440,
-        -18960
+        -23488
       ],
       "alwaysOutputData": true
     },
@@ -393,7 +393,7 @@
       "name": "Уведомление HA: нужен фикс",
       "position": [
         -20992,
-        -18960
+        -23488
       ]
     },
     {
@@ -420,7 +420,7 @@
       "name": "Уведомление HA: приёмка пройдена",
       "position": [
         -21440,
-        -18768
+        -23680
       ]
     },
     {
@@ -448,8 +448,8 @@
       "id": "set-variables",
       "name": "Задаём переменные",
       "position": [
-        424,
-        288
+        -23808,
+        -23744
       ]
     },
     {
@@ -458,8 +458,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -23072,
-        -23376
+        -22112,
+        -23888
       ],
       "parameters": {
         "assignments": {
@@ -481,8 +481,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -23072,
-        -23888
+        -21216,
+        -23488
       ],
       "parameters": {
         "assignments": {
@@ -504,8 +504,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -23072,
-        -21968
+        -23360,
+        -23744
       ],
       "parameters": {
         "assignments": {
@@ -527,8 +527,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -23072,
-        -21504
+        -21664,
+        -23680
       ],
       "parameters": {
         "assignments": {

@@ -15,7 +15,7 @@
       "typeVersion": 1.2,
       "position": [
         -25952,
-        -18032
+        -17792
       ],
       "credentials": {
         "telegramApi": {
@@ -53,7 +53,7 @@
       "typeVersion": 2.3,
       "position": [
         -25280,
-        -18128
+        -17888
       ],
       "id": "if-chat-allowed",
       "name": "Чат разрешён?"
@@ -117,7 +117,7 @@
       "typeVersion": 3.4,
       "position": [
         -25728,
-        -18128
+        -17888
       ],
       "id": "set-vars",
       "name": "Задаём переменные"
@@ -134,7 +134,7 @@
       "typeVersion": 3.4,
       "position": [
         -25504,
-        -18128
+        -17888
       ]
     },
     {
@@ -160,8 +160,8 @@
       "id": "ha-parse-error",
       "name": "Отвечаем HA: ошибка парсинга",
       "position": [
-        -21120,
-        -18544
+        -21344,
+        -18256
       ]
     },
     {
@@ -175,8 +175,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        -20896,
-        -18544
+        -21120,
+        -18256
       ],
       "onError": "continueRegularOutput"
     },
@@ -204,7 +204,7 @@
       "name": "Уведомление HA: Недопустимый чат",
       "position": [
         -24832,
-        -18304
+        -17744
       ]
     },
     {
@@ -219,7 +219,7 @@
       "typeVersion": 1,
       "position": [
         -24608,
-        -18304
+        -17744
       ],
       "onError": "continueRegularOutput"
     },
@@ -233,8 +233,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -23936,
-        -18032
+        -24160,
+        -18272
       ]
     },
     {
@@ -247,8 +247,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -23632,
-        -17808
+        -23856,
+        -18048
       ],
       "credentials": {
         "deepSeekApi": {
@@ -270,8 +270,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -23712,
-        -18032
+        -23936,
+        -18272
       ]
     },
     {
@@ -284,8 +284,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -23360,
-        -18032
+        -23584,
+        -18272
       ]
     },
     {
@@ -297,8 +297,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -23136,
-        -18032
+        -23360,
+        -18272
       ]
     },
     {
@@ -324,7 +324,7 @@
       "id": "ha-queued",
       "name": "Отвечаем HA: задача поставлена",
       "position": [
-        -21120,
+        -21344,
         -17680
       ]
     },
@@ -339,7 +339,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        -20896,
+        -21120,
         -17680
       ],
       "onError": "continueRegularOutput"
@@ -563,8 +563,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21568,
-        -17680
+        -21792,
+        -17776
       ],
       "alwaysOutputData": true
     },
@@ -588,7 +588,7 @@
       "typeVersion": 3.3,
       "position": [
         -25056,
-        -18032
+        -18272
       ]
     },
     {
@@ -621,8 +621,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -24160,
-        -18032
+        -24384,
+        -18272
       ],
       "alwaysOutputData": true
     },
@@ -822,8 +822,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21344,
-        -18256
+        -21568,
+        -18544
       ],
       "alwaysOutputData": true
     },
@@ -857,8 +857,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21120,
-        -18256
+        -21344,
+        -18544
       ],
       "alwaysOutputData": true
     },
@@ -885,8 +885,8 @@
       "id": "ha-answer",
       "name": "Отвечаем HA: ответ принят",
       "position": [
-        -20672,
-        -18256
+        -20896,
+        -18544
       ]
     },
     {
@@ -900,8 +900,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        -20448,
-        -18256
+        -20672,
+        -18544
       ],
       "onError": "continueRegularOutput"
     },
@@ -914,8 +914,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -22240,
-        -18352
+        -22464,
+        -18448
       ]
     },
     {
@@ -946,8 +946,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -21568,
-        -18352
+        -21792,
+        -18448
       ]
     },
     {
@@ -959,8 +959,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -21792,
-        -17680
+        -22016,
+        -17776
       ]
     },
     {
@@ -991,8 +991,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -22240,
-        -17776
+        -22464,
+        -18064
       ]
     },
     {
@@ -1004,8 +1004,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -22016,
-        -17968
+        -22240,
+        -18064
       ]
     },
     {
@@ -1038,8 +1038,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21792,
-        -17968
+        -22016,
+        -18064
       ],
       "alwaysOutputData": true
     },
@@ -1052,8 +1052,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -21568,
-        -17968
+        -21792,
+        -18064
       ]
     },
     {
@@ -1091,7 +1091,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21120,
+        -21344,
         -17872
       ],
       "alwaysOutputData": true
@@ -1119,8 +1119,8 @@
       "id": "ha-abort",
       "name": "Отвечаем HA: задача прервана",
       "position": [
-        -20672,
-        -17968
+        -20896,
+        -18064
       ]
     },
     {
@@ -1134,8 +1134,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        -20448,
-        -17968
+        -20672,
+        -18064
       ],
       "onError": "continueRegularOutput"
     },
@@ -1167,8 +1167,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -22016,
-        -18352
+        -22240,
+        -18448
       ]
     },
     {
@@ -1180,8 +1180,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -21792,
-        -18448
+        -22016,
+        -18544
       ]
     },
     {
@@ -1193,8 +1193,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -21792,
-        -18256
+        -22016,
+        -18352
       ]
     },
     {
@@ -1206,8 +1206,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -22912,
-        -18032
+        -23136,
+        -18272
       ]
     },
     {
@@ -1238,8 +1238,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -22688,
-        -18032
+        -22912,
+        -18272
       ]
     },
     {
@@ -1270,8 +1270,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -22464,
-        -17968
+        -22688,
+        -18352
       ]
     },
     {
@@ -1300,8 +1300,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -22016,
-        -17584
+        -22240,
+        -17680
       ]
     },
     {
@@ -1334,8 +1334,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21792,
-        -17488
+        -22016,
+        -17584
       ],
       "alwaysOutputData": true
     },
@@ -1362,7 +1362,7 @@
       "id": "ha-auto",
       "name": "Отвечаем HA: смена режима",
       "position": [
-        -21344,
+        -21568,
         -17488
       ]
     },
@@ -1377,7 +1377,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        -21120,
+        -21344,
         -17488
       ],
       "onError": "continueRegularOutput"
@@ -1412,7 +1412,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -21120,
+        -21344,
         -18064
       ],
       "alwaysOutputData": true
@@ -1445,8 +1445,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -21344,
-        -17968
+        -21568,
+        -18064
       ]
     },
     {
@@ -1462,7 +1462,7 @@
       "typeVersion": 2,
       "position": [
         -26176,
-        -18224
+        -17984
       ],
       "webhookId": "voice-task-webhook"
     },
@@ -1477,7 +1477,7 @@
       "typeVersion": 2,
       "position": [
         -25952,
-        -18224
+        -17984
       ]
     },
     {
@@ -1509,7 +1509,7 @@
       "typeVersion": 2.2,
       "position": [
         -24832,
-        -18032
+        -18272
       ]
     },
     {
@@ -1527,7 +1527,7 @@
       "typeVersion": 1.2,
       "position": [
         -24608,
-        -18112
+        -18352
       ],
       "credentials": {
         "telegramApi": {
@@ -1543,8 +1543,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -1264
+        -21568,
+        -17680
       ],
       "parameters": {
         "assignments": {
@@ -1566,8 +1566,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -1792
+        -21120,
+        -18544
       ],
       "parameters": {
         "assignments": {
@@ -1589,8 +1589,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -2048
+        -21120,
+        -18064
       ],
       "parameters": {
         "assignments": {
@@ -1612,8 +1612,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -2304
+        -21792,
+        -17584
       ],
       "parameters": {
         "assignments": {
@@ -1635,8 +1635,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -768
+        -21568,
+        -18256
       ],
       "parameters": {
         "assignments": {
@@ -1658,8 +1658,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6144,
-        -512
+        -25056,
+        -17744
       ],
       "parameters": {
         "assignments": {

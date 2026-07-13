@@ -260,7 +260,7 @@
       "typeVersion": 2.2,
       "position": [
         -21856,
-        -18832
+        -19024
       ]
     },
     {
@@ -297,7 +297,7 @@
       "typeVersion": 1.1,
       "position": [
         -21632,
-        -18928
+        -19120
       ],
       "alwaysOutputData": true
     },
@@ -330,7 +330,7 @@
       "typeVersion": 1.1,
       "position": [
         -21632,
-        -18736
+        -18928
       ],
       "alwaysOutputData": true
     },
@@ -358,7 +358,7 @@
       "name": "Уведомление HA: Уведомляем о новой задаче",
       "position": [
         -21184,
-        -18736
+        -18928
       ]
     },
     {
@@ -385,7 +385,7 @@
       "name": "Уведомление HA: Уведомляем об ответе",
       "position": [
         -21184,
-        -18928
+        -19120
       ]
     },
     {
@@ -412,7 +412,7 @@
       "name": "Уведомление HA: Сообщаем об ошибке генерации",
       "position": [
         -21632,
-        -19120
+        -18736
       ]
     },
     {
@@ -511,8 +511,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3808,
-        -10272
+        -21408,
+        -18928
       ],
       "parameters": {
         "assignments": {
@@ -534,8 +534,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3808,
-        -10784
+        -21408,
+        -19120
       ],
       "parameters": {
         "assignments": {
@@ -557,8 +557,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3808,
-        -10508
+        -21856,
+        -18736
       ],
       "parameters": {
         "assignments": {
