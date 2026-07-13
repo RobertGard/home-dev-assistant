@@ -686,7 +686,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
-            "text": "={{ $json.result.text || $json.text || '' }}",
+            "text": "={{ $json.replyText || '' }}",
             "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
             "fallbackText": "Результат задачи получен"
           }
@@ -1128,7 +1128,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "replyText": "={{ $json.replyText || '' }}",
-            "text": "={{ $json.result.text || $json.text || '' }}",
+            "text": "={{ $json.streamProgressText || '' }}",
             "chatId": "={{ $('Выбираем активную задачу').first().json.task.chat_id }}",
             "fallbackText": "Промежуточный результат"
           }
