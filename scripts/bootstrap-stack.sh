@@ -645,18 +645,25 @@ activate_workflow_by_id() {
     -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
     -H 'Content-Type: application/json' \
     "${N8N_URL}/api/v1/workflows/${wf_id}/activate" >/dev/null 2>&1; then
-    die "Не удалось активировать workflow ${wf_label} (id=${wf_id})"
+    return 0
   fi
+  return 1
 }
 
 activate_and_verify() {
   local wf_id="$1"
   local wf_label="$2"
-  activate_workflow_by_id "$wf_id" "$wf_label"
-  # Верификация через список workflow
-  if ! curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows" | jq -e --arg id "$wf_id" '[.data // . // [] | map(select(.id == $id and .active == true))] | length > 0' >/dev/null 2>&1; then
-    die "Не удалось активировать workflow ${wf_label}."
-  fi
+  # Retry up to 3 times — n8n needs time to rebuild dependency index after import
+  for attempt in 1 2 3; do
+    if activate_workflow_by_id "$wf_id" "$wf_label"; then
+      # Verify activation via workflow list
+      if curl -fsS -H "X-N8N-API-KEY: ${N8N_API_KEY}" "${N8N_URL}/api/v1/workflows" | jq -e --arg id "$wf_id" '[.data // . // [] | map(select(.id == $id and .active == true))] | length > 0' >/dev/null 2>&1; then
+        return 0
+      fi
+    fi
+    [ "$attempt" -lt 3 ] && sleep 3
+  done
+  die "Не удалось активировать workflow ${wf_label} (id=${wf_id})"
 }
 
 log_ok 'Workflow импортированы.'
