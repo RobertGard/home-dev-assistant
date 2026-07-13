@@ -53,7 +53,7 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "appendAttribution": false,
-          "parseMode": "HTML"
+          "parse_mode": "HTML"
         }
       },
       "id": "send-telegram",
