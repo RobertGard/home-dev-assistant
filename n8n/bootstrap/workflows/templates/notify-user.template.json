@@ -51,50 +51,6 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.deepseek.com/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer __DEEPSEEK_API_KEY__"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyContentType": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'deepseek-chat', messages: [{role: 'system', content: \"Ты — обработчик текста для озвучивания через TTS. Получив текст, верни ТОЛЬКО очищенный текст. ПРАВИЛА: 1. Если текст на английском — переведи на русский. 2. Убери пути к файлам, URL, куски кода, массивы, JSON, логи. 3. Убери markdown, бэктики, спецсимволы. 4. Сократи до 3-4 предложений, сохранив СУТЬ. 5. Не добавляй пояснений — только сам текст. 6. Plain text, без форматирования.\"}, {role: 'user', content: ($json.text || '')}], max_tokens: 300, temperature: 0.3 }) }}",
-        "options": {}
-      },
-      "id": "ai-clean",
-      "name": "AI подготовка текста для озвучивания",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        660,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Парсим ответ DeepSeek и очищаем текст для озвучивания\nconst data = $input.first().json\n\n// Извлекаем текст из ответа AI\nlet cleanText = ''\ntry {\n  if (data.choices && data.choices[0] && data.choices[0].message) {\n    cleanText = String(data.choices[0].message.content || '')\n  }\n} catch (_) {}\n\n// Если AI не вернул текст — берём оригинал\nif (!cleanText || cleanText.trim() === '') {\n  try {\n    const normalizeOutput = $('Нормализуем входные данные').first().json\n    cleanText = String(normalizeOutput.text || '')\n  } catch (_) {}\n}\n\n// Финальная очистка: убираем остатки markdown, бэктики, лишние пробелы\ncleanText = cleanText\n  .replace(/```[\\s\\S]*?```/g, '')\n  .replace(/`([^`]*)`/g, '$1')\n  .replace(/[*_~]{1,2}/g, '')\n  .replace(/\\[([^\\]]*)\\]\\([^)]*\\)/g, '$1')\n  .replace(/\\s+/g, ' ')\n  .trim()\n\nreturn { json: { cleanText } }"
-      },
-      "id": "parse-ai",
-      "name": "Парсим ответ AI",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        660,
-        200
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
         "url": "__HA_URL__/api/services/script/1720584135122",
         "sendHeaders": true,
         "headerParameters": {
@@ -128,6 +84,69 @@
         880,
         0
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Готовим текст для AI-очистки перед озвучиванием\nconst text = String($json.text || '')\n\nreturn {\n  json: {\n    systemPrompt: `Ты — обработчик текста для озвучивания через TTS. Получив текст, верни ТОЛЬКО очищенный текст. ПРАВИЛА: 1. Если текст на английском — переведи на русский. 2. Убери пути к файлам, URL, куски кода, массивы, JSON, логи. 3. Убери markdown, бэктики, спецсимволы. 4. Сократи до 3-4 предложений, сохранив СУТЬ. 5. Не добавляй пояснений — только сам текст. 6. Plain text, без форматирования.`,\n    userPrompt: text,\n  },\n}"
+      },
+      "id": "prepare-tts-prompt",
+      "name": "Готовим запрос для очистки текста",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {}
+      },
+      "id": "ds-tts-model",
+      "name": "DeepSeek Chat Model (TTS)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        880,
+        0
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "__DEEPSEEK_CREDENTIAL_ID__",
+          "name": "__DEEPSEEK_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userPrompt }}",
+        "options": {
+          "systemMessage": "={{ $json.systemPrompt }}"
+        }
+      },
+      "id": "tts-cleaner-agent",
+      "name": "AI очистка текста",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Извлекаем очищенный текст из ответа AI\nconst toText = (v) => String(v ?? '').trim()\n\nlet cleanText = ''\ntry {\n  cleanText = toText($('AI очистка текста').first().json.output ?? $('AI очистка текста').first().json.text ?? '')\n} catch (_) {}\n\nif (!cleanText) {\n  // Fallback to original text\n  try {\n    cleanText = toText($('Нормализуем входные данные').first().json.text)\n  } catch (_) {}\n}\n\n// Финальная очистка\ncleanText = cleanText\n  .replace(/```[\\s\\S]*?```/g, '')\n  .replace(/`([^`]*)`/g, '$1')\n  .replace(/[*_~]{1,2}/g, '')\n  .replace(/\\[([^\\]]*)\\]\\([^)]*\\)/g, '$1')\n  .replace(/\\s+/g, ' ')\n  .trim()\n\nreturn { json: { cleanText } }"
+      },
+      "id": "extract-tts-text",
+      "name": "Извлекаем очищенный текст",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        200
+      ]
     }
   ],
   "connections": {
@@ -153,7 +172,7 @@
         ],
         [
           {
-            "node": "AI подготовка текста для озвучивания",
+            "node": "Готовим запрос для очистки текста",
             "type": "main",
             "index": 0
           }
@@ -165,23 +184,45 @@
         []
       ]
     },
-    "AI подготовка текста для озвучивания": {
+    "Озвучивание через HA": {
+      "main": [
+        []
+      ]
+    },
+    "Готовим запрос для очистки текста": {
       "main": [
         [
           {
-            "node": "Парсим ответ AI",
+            "node": "AI очистка текста",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Озвучивание через HA": {
-      "main": [
-        []
+    "DeepSeek Chat Model (TTS)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI очистка текста",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Парсим ответ AI": {
+    "AI очистка текста": {
+      "main": [
+        [
+          {
+            "node": "Извлекаем очищенный текст",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Извлекаем очищенный текст": {
       "main": [
         [
           {

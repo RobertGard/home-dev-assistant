@@ -205,7 +205,6 @@ render_template() {
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//&/\\&}"
   opencode_routing_json_sed_escaped="${opencode_routing_json_sed_escaped//|/\\|}"
   local ha_api_token_escaped="${HA_API_TOKEN//|/\\|}"
-  local deepseek_api_key_escaped="${DEEPSEEK_API_KEY//|/\\|}"
   local ha_host="${HA_HOST:-${PUBLIC_HA_DOMAIN:-host.docker.internal}}"
   # Build HA URL: domain → https without port; IP/internal → http with port
   local ha_url
@@ -220,7 +219,6 @@ render_template() {
     -e "s|__TELEGRAM_CREDENTIAL_NAME__|${cred_name_escaped}|g" \
     -e "s|__DEEPSEEK_CREDENTIAL_ID__|${deepseek_cred_escaped}|g" \
     -e "s|__DEEPSEEK_CREDENTIAL_NAME__|${DEEPSEEK_CREDENTIAL_NAME}|g" \
-    -e "s|__DEEPSEEK_API_KEY__|${deepseek_api_key_escaped}|g" \
     -e "s|__TASKS_TABLE_ID__|${table_id_escaped}|g" \
     -e "s|__CHAT_SETTINGS_TABLE_ID__|${chat_settings_table_escaped}|g" \
     -e "s|__AUTO_GENERATOR_WORKFLOW_ID__|${auto_gen_id_escaped}|g" \
