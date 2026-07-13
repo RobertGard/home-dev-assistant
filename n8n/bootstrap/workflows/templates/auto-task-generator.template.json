@@ -550,6 +550,29 @@
         },
         "options": {}
       }
+    },
+    {
+      "name": "Готовим уведомление: ошибка генерации",
+      "id": "set-gen-error-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3808,
+        -10508
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-gen-error-notify-rt",
+              "name": "replyText",
+              "value": "=Ошибка генерации авто-задачи: {{ $json.error || 'непредвиденная ошибка' }}. Попробуйте позже.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -645,7 +668,7 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: Сообщаем об ошибке генерации",
+            "node": "Готовим уведомление: ошибка генерации",
             "type": "main",
             "index": 0
           }
@@ -792,6 +815,17 @@
         [
           {
             "node": "Уведомление HA: Уведомляем об ответе",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: ошибка генерации": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: Сообщаем об ошибке генерации",
             "type": "main",
             "index": 0
           }

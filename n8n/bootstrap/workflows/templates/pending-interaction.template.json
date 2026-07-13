@@ -763,6 +763,29 @@
         424,
         640
       ]
+    },
+    {
+      "name": "Готовим уведомление: интеракция",
+      "id": "set-interaction-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -21136,
+        -18800
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-interaction-notify-rt",
+              "name": "replyText",
+              "value": "={{ ($json.questionText || $json.pendingQuestion) ? ($json.questionText || $json.pendingQuestion) : 'Требуется ваш ответ' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -850,7 +873,7 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: Отправляем ожидающую интеракцию",
+            "node": "Готовим уведомление: интеракция",
             "type": "main",
             "index": 0
           }
@@ -1077,6 +1100,17 @@
         [
           {
             "node": "Разбираем входные данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: интеракция": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: Отправляем ожидающую интеракцию",
             "type": "main",
             "index": 0
           }

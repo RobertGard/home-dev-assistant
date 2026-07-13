@@ -1933,6 +1933,75 @@
         },
         "options": {}
       }
+    },
+    {
+      "name": "Готовим уведомление о запуске",
+      "id": "set-launch-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20944,
+        -16896
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "launch-rt",
+              "name": "replyText",
+              "type": "string",
+              "value": "=Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [{{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] успешно запущена. Ожидайте результат."
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Готовим уведомление: ошибка запуска",
+      "id": "set-launch-error-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20944,
+        -16640
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-launch-error-notify-rt",
+              "name": "replyText",
+              "value": "=Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [{{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] не запущена: {{ $json.launchError }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Готовим уведомление: ошибка ответа на вопрос",
+      "id": "set-reply-error-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20944,
+        -16256
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-reply-error-notify-rt",
+              "name": "replyText",
+              "value": "=Задача <code>{{ $('Выбираем активную задачу').first().json.task.task_key }}</code> [{{ $('Выбираем активную задачу').first().json.task.worker_alias || 'primary' }}]: ошибка ответа — {{ $('Обработка интеракций').first().json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -2172,14 +2241,14 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: ошибка асинхронного запуска",
+            "node": "Готовим уведомление о запуске",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Уведомление HA: задача запущена",
+            "node": "Готовим уведомление: ошибка запуска",
             "type": "main",
             "index": 0
           }
@@ -2208,14 +2277,14 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: ошибка ответа на вопрос",
+            "node": "Готовим уведомление: ошибка ответа на вопрос",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Завершение задачи",
+            "node": "Готовим уведомление: ошибка ответа на вопрос",
             "type": "main",
             "index": 0
           }
@@ -2468,6 +2537,39 @@
         [
           {
             "node": "Уведомление HA: Сообщаем: вхождение не найдено",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление о запуске": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: задача запущена",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: ошибка запуска": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: ошибка асинхронного запуска",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: ошибка ответа на вопрос": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: ошибка ответа на вопрос",
             "type": "main",
             "index": 0
           }

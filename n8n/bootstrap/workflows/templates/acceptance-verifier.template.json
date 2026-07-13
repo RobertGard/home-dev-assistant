@@ -497,6 +497,52 @@
         },
         "options": {}
       }
+    },
+    {
+      "name": "Готовим уведомление: верификация начата",
+      "id": "set-verify-started-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -23072,
+        -21968
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-verify-started-notify-rt",
+              "name": "replyText",
+              "value": "=Верификация задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [{{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] начата.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Готовим уведомление: приёмка пройдена",
+      "id": "set-verify-passed-notify",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -23072,
+        -21504
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-verify-passed-notify-rt",
+              "name": "replyText",
+              "value": "=Приёмка задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [{{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] пройдена.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -515,7 +561,7 @@
       "main": [
         [
           {
-            "node": "Уведомление HA: верификация начата",
+            "node": "Готовим уведомление: верификация начата",
             "type": "main",
             "index": 0
           }
@@ -617,7 +663,7 @@
         ],
         [
           {
-            "node": "Уведомление HA: приёмка пройдена",
+            "node": "Готовим уведомление: приёмка пройдена",
             "type": "main",
             "index": 0
           }
@@ -699,6 +745,28 @@
         [
           {
             "node": "Уведомление HA: нужен фикс",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: верификация начата": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: верификация начата",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Готовим уведомление: приёмка пройдена": {
+      "main": [
+        [
+          {
+            "node": "Уведомление HA: приёмка пройдена",
             "type": "main",
             "index": 0
           }
