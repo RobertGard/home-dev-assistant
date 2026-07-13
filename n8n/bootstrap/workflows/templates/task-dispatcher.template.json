@@ -1950,7 +1950,7 @@
               "id": "launch-rt",
               "name": "replyText",
               "type": "string",
-              "value": "=🚀 Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [{{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] успешно запущена. Ожидайте результат."
+              "value": "=🚀 Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [воркер {{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] успешно запущена. Ожидайте результат."
             }
           ]
         },
@@ -1972,7 +1972,7 @@
             {
               "id": "set-launch-error-notify-rt",
               "name": "replyText",
-              "value": "=💥 Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [{{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] не запущена: {{ $json.launchError }}",
+              "value": "=💥 Задача <code>{{ $('Запуск задачи').first().json.taskKey }}</code> [воркер {{ $('Выбираем кандидатную задачу').first().json.task.worker_alias || 'primary' }}] не запущена: {{ $json.launchError }}",
               "type": "string"
             }
           ]
@@ -1995,7 +1995,7 @@
             {
               "id": "set-reply-error-notify-rt",
               "name": "replyText",
-              "value": "=⛔ Задача <code>{{ $('Выбираем активную задачу').first().json.task.task_key }}</code> [{{ $('Выбираем активную задачу').first().json.task.worker_alias || 'primary' }}]: ошибка ответа — {{ $('Обработка интеракций').first().json.error }}",
+              "value": "=⛔ Задача <code>{{ $('Выбираем активную задачу').first().json.task.task_key }}</code> [воркер {{ $('Выбираем активную задачу').first().json.task.worker_alias || 'primary' }}]: ошибка ответа — {{ $('Обработка интеракций').first().json.error }}",
               "type": "string"
             }
           ]

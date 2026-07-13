@@ -467,7 +467,7 @@
             {
               "id": "set-verify-task-notify-rt",
               "name": "replyText",
-              "value": "=📋 Задача проверки <code>{{ $('Готовим задачу проверки').first().json.verifyTaskKey }}</code> [{{ $('Готовим задачу проверки').first().json.workerAlias || 'primary' }}] поставлена в очередь.",
+              "value": "=📋 Задача проверки <code>{{ $('Готовим задачу проверки').first().json.verifyTaskKey }}</code> [воркер {{ $('Готовим задачу проверки').first().json.workerAlias || 'primary' }}] поставлена в очередь.",
               "type": "string"
             }
           ]
@@ -490,7 +490,7 @@
             {
               "id": "set-fix-task-notify-rt",
               "name": "replyText",
-              "value": "=🛠️ ️ Задача <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [{{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] не прошла приёмку{{ ($('Извлекаем вердикт').first().json.reason) ? ': ' + $('Извлекаем вердикт').first().json.reason : '' }}. Назначена задача на доработку.",
+              "value": "=🛠️ ️ Задача <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [воркер {{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] не прошла приёмку{{ ($('Извлекаем вердикт').first().json.reason) ? ': ' + $('Извлекаем вердикт').first().json.reason : '' }}. Назначена задача на доработку.",
               "type": "string"
             }
           ]
@@ -513,7 +513,7 @@
             {
               "id": "set-verify-started-notify-rt",
               "name": "replyText",
-              "value": "=🔬 Верификация задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [{{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] начата.",
+              "value": "=🔬 Верификация задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [воркер {{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] начата.",
               "type": "string"
             }
           ]
@@ -536,7 +536,7 @@
             {
               "id": "set-verify-passed-notify-rt",
               "name": "replyText",
-              "value": "=🏆 Приёмка задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [{{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] пройдена{{ ($('Извлекаем вердикт').first().json.reason) ? ': ' + $('Извлекаем вердикт').first().json.reason : '' }}.",
+              "value": "=🏆 Приёмка задачи <code>{{ $('Триггер: вызов из диспетчера').first().json.task_key }}</code> [воркер {{ $('Триггер: вызов из диспетчера').first().json.worker_alias || 'primary' }}] пройдена{{ ($('Извлекаем вердикт').first().json.reason) ? ': ' + $('Извлекаем вердикт').first().json.reason : '' }}.",
               "type": "string"
             }
           ]
