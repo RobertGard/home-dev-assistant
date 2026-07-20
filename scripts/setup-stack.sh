@@ -453,6 +453,10 @@ run_startup_pipeline() {
   # Чистим кэш .storage чтобы HA перечитал YAML заново
   if [ -d "${ROOT_DIR}/ha_config/.storage" ]; then
     sudo rm -rf "${ROOT_DIR}/ha_config/.storage" 2>/dev/null || true
+    # .storage содержит аутентификацию HA — после его очистки старые токены недействительны
+    upsert_env_value HA_API_TOKEN ''
+    upsert_env_value HA_NOTIFY_SERVICE ''
+    log_warn 'HA storage очищен — HA_API_TOKEN и HA_NOTIFY_SERVICE сброшены, bootstrap перезапросит.'
   fi
   "${compose_cmd[@]}" up -d --force-recreate homeassistant 2>/dev/null || true
   if [ "${ENABLE_CADDY_PROXY:-false}" = "true" ]; then

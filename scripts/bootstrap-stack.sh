@@ -427,30 +427,60 @@ if [ -z "$deepseek_credential_id" ]; then
 fi
 
 # Home Assistant token (для голосового управления и HTTP-запросов)
-if [ -z "${HA_API_TOKEN:-}" ]; then
-  HA_HOST="$(hostname -I 2>/dev/null | awk '{print $1}')"
-  wait_for_ha "${HA_HOST:-127.0.0.1}" || true
-  printf '\n══════════════════════════════════════════════════\n'
-  printf '  🔑 Нужен токен Home Assistant для голосового управления\n'
-  printf '══════════════════════════════════════════════════\n'
-  printf '\n'
-  printf '  1. Открой Home Assistant: http://%s:8123\n' "$(hostname -I 2>/dev/null | awk '{print $1}')"
-  printf '  2. Нажми на свой профиль (иконка внизу слева) → вкладка Безопасность\n'
-  printf '  3. Прокрути вниз до раздела "Долгосрочные токены доступа"\n'
-  printf '  4. Нажми "Создать токен", введи имя (например "n8n")\n'
-  printf '  5. Скопируй токен и вставь его ниже\n'
-  printf '\n'
-  printf '  Токен:\n'
-  printf '  → '
-  IFS= read -r ha_token
-  ha_token="$(printf '%s' "$ha_token" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  if [ -z "$ha_token" ]; then
-    die 'HA_API_TOKEN обязателен для голосового управления. Прерываю.'
-  fi
-  HA_API_TOKEN="$ha_token"
-  upsert_env_value HA_API_TOKEN "$HA_API_TOKEN"
-  log_ok 'HA_API_TOKEN записан в .env'
-fi
+ha_prompt_token() {
+  local ha_ip
+  ha_ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  wait_for_ha "${ha_ip:-127.0.0.1}" || true
+  while true; do
+    printf '\n══════════════════════════════════════════════════\n'
+    printf '  🔑 Нужен токен Home Assistant для голосового управления\n'
+    printf '══════════════════════════════════════════════════\n'
+    printf '\n'
+    printf '  1. Открой Home Assistant: http://%s:8123\n' "$ha_ip"
+    printf '  2. Нажми на свой профиль (иконка внизу слева) → вкладка Безопасность\n'
+    printf '  3. Прокрути вниз до раздела "Долгосрочные токены доступа"\n'
+    printf '  4. Нажми "Создать токен", введи имя (например "n8n")\n'
+    printf '  5. Скопируй токен и вставь его ниже\n'
+    printf '\n'
+    printf '  Токен:\n'
+    printf '  → '
+    IFS= read -r ha_token
+    ha_token="$(printf '%s' "$ha_token" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    if [ -z "$ha_token" ]; then
+      log_warn 'Токен обязателен.'
+      continue
+    fi
+    HA_API_TOKEN="$ha_token"
+    upsert_env_value HA_API_TOKEN "$HA_API_TOKEN"
+    upsert_env_value HA_NOTIFY_SERVICE ''
+    break
+  done
+}
+
+log_info 'Проверяю актуальность HA_API_TOKEN...'
+while true; do
+  ha_test_code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 -H "Authorization: Bearer ${HA_API_TOKEN}" "http://127.0.0.1:8123/api/services" 2>/dev/null)" || ha_test_code="000"
+  case "$ha_test_code" in
+    200)
+      log_ok 'HA_API_TOKEN актуален'
+      break
+      ;;
+    401|403)
+      log_warn 'HA_API_TOKEN в .env недействителен — Home Assistant был пересоздан (storage очищен).'
+      ha_prompt_token
+      log_info 'Токен записан в .env, проверяю...'
+      ;;
+    *)
+      if [ -z "${HA_API_TOKEN:-}" ]; then
+        ha_prompt_token
+        log_info 'Токен записан в .env, проверяю...'
+      else
+        log_warn "Не удалось проверить HA_API_TOKEN (HTTP ${ha_test_code}), продолжаю с текущим токеном."
+        break
+      fi
+      ;;
+  esac
+done
 
 if [ -n "${HA_API_TOKEN:-}" ]; then
 
@@ -464,36 +494,35 @@ if [ -n "${HA_API_TOKEN:-}" ]; then
     log_info 'scripts.yaml создан из шаблона'
   fi
 
-  if [ -f "$scripts_yaml" ] && grep -q 'notify.mobile_app_YOUR_DEVICE' "$scripts_yaml"; then
-    if [[ "${HA_NOTIFY_SERVICE:-}" == notify.mobile_app_* ]] && [[ "${HA_NOTIFY_SERVICE}" != *YOUR_DEVICE* ]]; then
-      log_info "Подставляю HA_NOTIFY_SERVICE=${HA_NOTIFY_SERVICE} в scripts.yaml"
-      _apply_device_substitution "${HA_NOTIFY_SERVICE}"
-      log_ok 'scripts.yaml обновлен, Home Assistant перезапущен'
-    else
-      printf '\n══════════════════════════════════════════════════\n'
-      printf '  📱 Нужно указать имя устройства для TTS-уведомлений\n'
-      printf '══════════════════════════════════════════════════\n'
-      printf '\n'
-      printf '  1. Установи HA Companion App на телефон и подключись\n'
-      printf '  2. В HA: Developer Tools → Services → поиск "notify.mobile_app"\n'
-      printf '  3. Скопируй полное имя сервиса (например notify.mobile_app_infinix_x6731b)\n'
-      printf '  4. Вставь его ниже\n'
-      printf '\n'
-      printf '  Имя сервиса:\n'
-      printf '  → '
-      IFS= read -r notify_service
-      notify_service="$(printf '%s' "$notify_service" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-      if [ -z "$notify_service" ]; then
-        log_warn 'Имя сервиса не указано. Отредактируй notify.mobile_app_YOUR_DEVICE в ha_config/scripts.yaml вручную.'
-      elif [[ "$notify_service" != notify.mobile_app_* ]]; then
+  if [ -z "${HA_NOTIFY_SERVICE:-}" ]; then
+    printf '\n══════════════════════════════════════════════════\n'
+    printf '  📱 Имя сервиса уведомлений для TTS (можно пропустить)\n'
+    printf '══════════════════════════════════════════════════\n'
+    printf '\n'
+    printf '  1. Установи HA Companion App на телефон и подключись\n'
+    printf '  2. В HA: Developer Tools → Services → поиск "notify.mobile_app"\n'
+    printf '  3. Скопируй полное имя сервиса (например notify.mobile_app_infinix_x6731b)\n'
+    printf '  4. Вставь его ниже или оставь пустым чтобы пропустить\n'
+    printf '\n'
+    printf '  Имя сервиса:\n'
+    printf '  → '
+    IFS= read -r notify_service
+    notify_service="$(printf '%s' "$notify_service" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    if [ -n "$notify_service" ]; then
+      if [[ "$notify_service" != notify.mobile_app_* ]]; then
         log_error "Имя сервиса должно начинаться с 'notify.mobile_app_'. Получено: ${notify_service}"
-        log_warn 'Отредактируй notify.mobile_app_YOUR_DEVICE в ha_config/scripts.yaml вручную.'
+        log_warn 'Пропускаю. Добавь HA_NOTIFY_SERVICE в .env вручную или запусти bootstrap заново.'
       else
         upsert_env_value HA_NOTIFY_SERVICE "$notify_service"
-        _apply_device_substitution "${notify_service}"
-        log_ok "HA_NOTIFY_SERVICE=${notify_service} записан в .env и scripts.yaml, Home Assistant перезапущен"
+        log_ok "HA_NOTIFY_SERVICE=${notify_service} записан в .env"
       fi
     fi
+  fi
+
+  if [ -n "${HA_NOTIFY_SERVICE:-}" ] && [ -f "$scripts_yaml" ] && grep -q 'notify.mobile_app_YOUR_DEVICE' "$scripts_yaml"; then
+    log_info "Подставляю HA_NOTIFY_SERVICE=${HA_NOTIFY_SERVICE} в scripts.yaml"
+    _apply_device_substitution "${HA_NOTIFY_SERVICE}"
+    log_ok 'scripts.yaml обновлен, Home Assistant перезапущен'
   fi
 
   # ---- Wyoming STT/TTS + voice pipeline ----
