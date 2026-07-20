@@ -464,12 +464,6 @@ run_startup_pipeline() {
   fi
   log_ok 'Контейнеры подняты.'
 
-  if [ "${_API_KEYS_UPDATED:-0}" -eq 1 ]; then
-    log_info 'Обновляю worker-контейнеры с новыми API ключами...'
-    "${compose_cmd[@]}" up -d --force-recreate "${WORKER_SERVICES[@]}" 2>/dev/null || true
-    log_ok 'Worker-ы пересозданы.'
-  fi
-
   prompt_for_n8n_api_key_if_needed
 
   if [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
@@ -901,7 +895,6 @@ recover_existing_configuration() {
 }
 
 prompt_optional_api_keys() {
-  _API_KEYS_UPDATED=0
   local key label current new_val
   while IFS=':' read -r key label; do
     current="${!key:-}"
@@ -913,7 +906,6 @@ prompt_optional_api_keys() {
     if [ -n "$new_val" ]; then
       upsert_env_value "$key" "$new_val"
       log_ok "${key} записан в .env"
-      _API_KEYS_UPDATED=1
     fi
   done <<'API_KEYS_EOF'
 OPENAI_API_KEY:OpenAI API key
