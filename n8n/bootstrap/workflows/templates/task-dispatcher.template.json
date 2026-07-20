@@ -441,7 +441,7 @@
       "id": "ha-launch-error",
       "name": "Уведомление HA: ошибка асинхронного запуска",
       "position": [
-        -19824,
+        -19600,
         -21216
       ]
     },
@@ -2014,7 +2014,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -19824,
+        -20048,
         -21216
       ],
       "alwaysOutputData": true
