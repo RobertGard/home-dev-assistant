@@ -896,12 +896,13 @@ recover_existing_configuration() {
 
 prompt_optional_api_keys() {
   local key label current new_val
+  [ -c /dev/tty ] || return 0
   while IFS=':' read -r key label; do
     current="${!key:-}"
     if [ -n "$current" ]; then
       continue
     fi
-    new_val="$(ask "${label} (можно пусто)" "")"
+    new_val="$(ask "${label} (можно пусто)" "" </dev/tty)"
     new_val="$(trim "$new_val")"
     if [ -n "$new_val" ]; then
       upsert_env_value "$key" "$new_val"
